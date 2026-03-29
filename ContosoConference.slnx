@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Common/">
+    <Project Path="Common/ServiceBus/ServiceBus.csproj" />
+  </Folder>
+  <Folder Name="/ConferenceManagement/">
+    <Project Path="ConferenceManagement/Conference.API/Conference.API.csproj" Id="56263a47-84fc-4cb3-8b74-1ff4697dc18d" />
+  </Folder>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
+</Solution>

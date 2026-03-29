@@ -1,0 +1,12 @@
+services:
+  conference.api:
+    image: ${DOCKER_REGISTRY-}conferenceapi
+    build:
+      context: .
+      dockerfile: ConferenceManagement/Conference.API/Dockerfile
+
+  conferencedb:
+    image: mcr.microsoft.com/mssql/server
+
+  rabbitmq:
+    image: rabbitmq:3-management
