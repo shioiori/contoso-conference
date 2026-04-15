@@ -14,7 +14,10 @@
       "Bash(docker exec:*)",
       "Bash(docker stop:*)",
       "Bash(docker rm:*)",
-      "Bash(SA_PASSWORD=\"StrongP@ssword123\" docker compose up sqlserver -d)"
+      "Bash(SA_PASSWORD=\"StrongP@ssword123\" docker compose up sqlserver -d)",
+      "Bash(find d:/Personal/Projects/contoso-conference -name \"*.csproj\" -exec grep -l \"EventBus\" {} \\\\;)",
+      "Bash(cp -r BuildingBlocks/EventBus EventBus/EventBus)",
+      "Bash(cp -r BuildingBlocks/EventBus.RabbitMQ EventBus/EventBus.RabbitMQ)"
     ]
   }
 }

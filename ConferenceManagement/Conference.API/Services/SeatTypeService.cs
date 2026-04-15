@@ -1,8 +1,8 @@
 using Conference.API.Domains;
+using Conference.API.Infrastructure.Repositories.Abstractions;
 using Conference.API.IntegrationEvents;
-using Conference.API.Repositories.Abstractions;
 using Conference.API.Services.Abstractions;
-using Contoso.ServiceBus.Abstractions;
+using Contoso.EventBus.Abstractions;
 
 namespace Conference.API.Services
 {

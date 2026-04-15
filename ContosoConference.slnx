@@ -1,9 +1,16 @@
 <Solution>
-  <Folder Name="/Common/">
-    <Project Path="Common/ServiceBus/ServiceBus.csproj" />
+  <Folder Name="/EventBus/">
+    <Project Path="EventBus/EventBus.RabbitMQ/EventBus.RabbitMQ.csproj" />
+    <Project Path="EventBus/EventBus/EventBus.csproj" />
   </Folder>
   <Folder Name="/ConferenceManagement/">
     <Project Path="ConferenceManagement/Conference.API/Conference.API.csproj" Id="56263a47-84fc-4cb3-8b74-1ff4697dc18d" />
+  </Folder>
+  <Folder Name="/Registration/">
+    <Project Path="Registration/Registration.API/Registration.API.csproj" Id="c1fcad0a-55c5-408a-88d0-3fa01334d2a3" />
+    <Project Path="Registration/Registration.Application/Registration.Application.csproj" Id="bc786a6e-b9fa-49a3-be62-51a77b71807a" />
+    <Project Path="Registration/Registration.Domain/Registration.Domain.csproj" Id="775da918-1d94-4047-9187-7a80abd48ecd" />
+    <Project Path="Registration/Registration.Infrastructure/Registration.Infrastructure.csproj" Id="bd2fcce3-0622-4116-82aa-7c55af21cb71" />
   </Folder>
   <Project Path="docker-compose.dcproj">
     <Build />

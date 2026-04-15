@@ -13,7 +13,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["ConferenceManagement/Conference.API/Conference.API.csproj", "ConferenceManagement/Conference.API/"]
-COPY ["Common/ServiceBus/ServiceBus.csproj", "Common/ServiceBus/"]
+COPY ["Common/EventBus/EventBus.csproj", "Common/EventBus/"]
 RUN dotnet restore "./ConferenceManagement/Conference.API/Conference.API.csproj"
 COPY . .
 WORKDIR "/src/ConferenceManagement/Conference.API"

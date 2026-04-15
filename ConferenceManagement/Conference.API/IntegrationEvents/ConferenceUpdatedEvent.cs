@@ -1,4 +1,5 @@
-using Contoso.ServiceBus.Abstractions;
+using Contoso.EventBus.Abstractions;
+using Contoso.EventBus.Events;
 
 namespace Conference.API.IntegrationEvents;
 
