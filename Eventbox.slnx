@@ -3,8 +3,8 @@
     <Project Path="Auth/Auth.API/Auth.API.csproj" />
   </Folder>
   <Folder Name="/EventBus/">
+    <Project Path="EventBus/EventBus.Core/EventBus.Core.csproj" />
     <Project Path="EventBus/EventBus.RabbitMQ/EventBus.RabbitMQ.csproj" />
-    <Project Path="EventBus/EventBus/EventBus.Core.csproj" />
   </Folder>
   <Folder Name="/EventManagement/">
     <Project Path="EventManagement/Event.API/Event.API.csproj" Id="56263a47-84fc-4cb3-8b74-1ff4697dc18d" />

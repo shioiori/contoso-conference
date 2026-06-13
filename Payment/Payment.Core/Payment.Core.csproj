@@ -11,8 +11,4 @@
     <PackageReference Include="MediatR" Version="14.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\EventBus\EventBus\EventBus.Core.csproj" />
-  </ItemGroup>
-
 </Project>

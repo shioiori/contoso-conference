@@ -33,7 +33,7 @@ Eventbox v1 covers the core flow for organizers publishing events and customers 
 - Hangfire with PostgreSQL storage for Registration reconciliation jobs
 - Mapster for object mapping
 - xUnit v3 unit tests
-- Docker Compose for local infrastructure and selected services
+- Docker Compose for local infrastructure and API services
 
 ## Solution Structure
 
@@ -170,10 +170,22 @@ Current compose configuration starts:
 
 - `auth.api` on host ports `8082` and `8083`
 - `event.api` with dynamically published host ports for container ports `8080` and `8081`
+- `registration.api` on host ports `5151` and `7291`
+- `payment.api` on host ports `5193` and `7016`
 - `eventdb` PostgreSQL on `localhost:5432`
 - `rabbitmq` on `localhost:5672`, management UI on `http://localhost:15672`
 
-Note: in the current v1 compose file, `Registration.API` and `Payment.API` are part of the solution but are not wired into `docker-compose.yml` yet.
+Compose uses Docker service names for cross-container calls. For example, `payment.api` calls Registration through `http://registration.api:8080`, and API services connect to PostgreSQL and RabbitMQ through `eventdb` and `rabbitmq`.
+
+Default Docker HTTP endpoints:
+
+| Service | URL |
+| --- | --- |
+| Auth API | `http://localhost:8082` |
+| Registration API | `http://localhost:5151` |
+| Payment API | `http://localhost:5193` |
+
+`event.api` currently publishes container ports dynamically. Use `docker compose ps` to see the assigned host ports.
 
 ### Run Locally With Docker Infrastructure
 

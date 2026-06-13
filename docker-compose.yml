@@ -11,6 +11,18 @@ services:
       context: .
       dockerfile: EventManagement/Event.API/Dockerfile
 
+  payment.api:
+    image: ${DOCKER_REGISTRY-}paymentapi
+    build:
+      context: .
+      dockerfile: Payment/Payment.API/Dockerfile
+
+  registration.api:
+    image: ${DOCKER_REGISTRY-}registrationapi
+    build:
+      context: .
+      dockerfile: Registration/Registration.API/Dockerfile
+
   eventdb:
     image: postgres:16
 

@@ -45,9 +45,71 @@ services:
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings__Database=Host=eventdb;Port=5432;Database=EventDb;Username=postgres;Password=Eventbox123!
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__VirtualHost=/
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+      - Jwt__Issuer=Eventbox.Auth
+      - Jwt__Audience=Eventbox.Api
+      - Jwt__SigningKey=eventbox-development-signing-key-change-me
     ports:
       - "8080"
       - "8081"
+    depends_on:
+      - eventdb
+      - rabbitmq
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  payment.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__Database=Host=eventdb;Port=5432;Database=PaymentDb;Username=postgres;Password=Eventbox123!
+      - RegistrationApi__BaseUrl=http://registration.api:8080
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__VirtualHost=/
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+    ports:
+      - "5193:8080"
+      - "7016:8081"
+    depends_on:
+      - eventdb
+      - rabbitmq
+      - registration.api
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  registration.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__Database=Host=eventdb;Port=5432;Database=RegistrationDb;Username=postgres;Password=Eventbox123!
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__VirtualHost=/
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+      - Jwt__Issuer=Eventbox.Auth
+      - Jwt__Audience=Eventbox.Api
+      - Jwt__SigningKey=eventbox-development-signing-key-change-me
+    ports:
+      - "5151:8080"
+      - "7291:8081"
+    depends_on:
+      - eventdb
+      - rabbitmq
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
