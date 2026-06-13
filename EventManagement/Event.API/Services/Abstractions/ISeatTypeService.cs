@@ -1,0 +1,13 @@
+using Eventbox.EventManagement.EventApi.Domains;
+
+namespace Eventbox.EventManagement.EventApi.Services.Abstractions
+{
+    public interface ISeatTypeService
+    {
+        Task<SeatType?> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+        Task<IEnumerable<SeatType>> GetByEventIdAsync(Guid EventId, CancellationToken cancellationToken = default);
+        Task<SeatType> CreateAsync(string name, Guid EventId, int quota, CancellationToken cancellationToken = default);
+        Task<SeatType> AddSeatsAsync(int seatTypeId, int quantity, CancellationToken cancellationToken = default);
+        Task DeleteAsync(int id, CancellationToken cancellationToken = default);
+    }
+}

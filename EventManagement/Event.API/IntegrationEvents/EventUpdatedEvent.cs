@@ -1,0 +1,12 @@
+using Eventbox.EventBus.Events;
+
+namespace Eventbox.EventManagement.EventApi.IntegrationEvents;
+
+public class EventUpdatedEvent : IntegrationEvent
+{
+    public Guid EventId { get; set; }
+    public string Name { get; set; } = "";
+    public string? Description { get; set; }
+    public DateOnly StartDate { get; set; }
+    public DateOnly EndDate { get; set; }
+}

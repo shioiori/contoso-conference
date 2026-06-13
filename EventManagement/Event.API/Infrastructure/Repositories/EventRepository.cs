@@ -1,0 +1,97 @@
+using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
+using Eventbox.EventManagement.EventApi.Domains;
+using Eventbox.EventManagement.EventApi.Infrastructure;
+using Eventbox.EventManagement.EventApi.Infrastructure.Repositories.Common;
+using Microsoft.EntityFrameworkCore;
+
+namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
+{
+    public class EventRepository(EventDbContext dbContext) : BaseRepository<EventDbContext, Domains.Event, Guid>(dbContext), IEventRepository
+    {
+        public async Task<bool> SlugExistsAsync(string slug, CancellationToken cancellationToken = default)
+            => await dbContext.Events.AnyAsync(c => c.Slug == slug, cancellationToken);
+
+        public async Task<Domains.Event?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
+            => await dbContext.Events
+                .AsNoTracking()
+                .Include(c => c.Seats)
+                .FirstOrDefaultAsync(c => c.Slug == slug, cancellationToken);
+
+        public async Task<Domains.Event?> GetByOrganizationAsync(Guid organizationId, Guid eventId, bool includeSeats = false, bool asNoTracking = true, CancellationToken cancellationToken = default)
+        {
+            var query = dbContext.Events.Where(c => c.OrganizationId == organizationId && c.Id == eventId);
+
+            if (includeSeats)
+                query = query.Include(c => c.Seats);
+
+            if (asNoTracking)
+                query = query.AsNoTracking();
+
+            return await query.FirstOrDefaultAsync(cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<Domains.Event>> SearchForOrganizerAsync(Guid organizationId, EventStatus? status, string? query, DateOnly? dateFrom, DateOnly? dateTo, int page, int pageSize, CancellationToken cancellationToken = default)
+        {
+            var events = dbContext.Events
+                .AsNoTracking()
+                .Include(c => c.Seats)
+                .Where(c => c.OrganizationId == organizationId);
+
+            events = ApplyFilters(events, status, query, dateFrom, dateTo);
+
+            return await events
+                .OrderByDescending(c => c.StartDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+        }
+
+        public async Task<IReadOnlyList<Domains.Event>> SearchPublishedAsync(EventStatus? status, string? query, DateOnly? dateFrom, DateOnly? dateTo, int page, int pageSize, CancellationToken cancellationToken = default)
+        {
+            var events = dbContext.Events
+                .AsNoTracking()
+                .Include(c => c.Seats)
+                .Where(c => c.IsPublished);
+
+            events = ApplyFilters(events, status, query, dateFrom, dateTo);
+
+            return await events
+                .OrderBy(c => c.StartDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync(cancellationToken);
+        }
+
+        private static IQueryable<Domains.Event> ApplyFilters(IQueryable<Domains.Event> events, EventStatus? status, string? query, DateOnly? dateFrom, DateOnly? dateTo)
+        {
+            if (status.HasValue)
+            {
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                events = status.Value switch
+                {
+                    EventStatus.Published => events.Where(c => c.IsPublished),
+                    EventStatus.Draft => events.Where(c => !c.IsPublished && c.StartDate > today),
+                    EventStatus.Cancelled => events.Where(c => !c.IsPublished && c.StartDate <= today),
+                    _ => events
+                };
+            }
+
+            if (!string.IsNullOrWhiteSpace(query))
+            {
+                var searchTerm = query.Trim().ToLower();
+                events = events.Where(c =>
+                    c.Name.ToLower().Contains(searchTerm) ||
+                    c.Slug.ToLower().Contains(searchTerm) ||
+                    (c.Description != null && c.Description.ToLower().Contains(searchTerm)));
+            }
+
+            if (dateFrom.HasValue)
+                events = events.Where(c => c.EndDate >= dateFrom.Value);
+
+            if (dateTo.HasValue)
+                events = events.Where(c => c.StartDate <= dateTo.Value);
+
+            return events;
+        }
+    }
+}
