@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 
-namespace Contoso.EventBus.RabbitMQ;
+namespace Eventbox.EventBus.RabbitMQ;
 
 public sealed class RabbitMqConnectionFactory : IAsyncDisposable
 {

@@ -1,11 +1,11 @@
-using Contoso.EventBus.Abstractions;
+using Eventbox.EventBus.Core.Abstractions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 
-namespace Contoso.EventBus.RabbitMQ;
+namespace Eventbox.EventBus.RabbitMQ;
 
-public sealed class RabbitMqCommandBus : ICommandBus, IAsyncDisposable
+public sealed class RabbitMqCommandBus: ICommandBus, IAsyncDisposable
 {
     private readonly RabbitMqConnectionFactory _connectionFactory;
     private readonly IMessageSerializer _serializer;

@@ -1,4 +1,4 @@
-namespace Contoso.EventBus.RabbitMQ;
+namespace Eventbox.EventBus.RabbitMQ;
 
 public sealed class RabbitMqOptions
 {

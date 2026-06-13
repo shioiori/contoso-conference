@@ -1,10 +1,10 @@
-using Contoso.EventBus.Abstractions;
+using Eventbox.EventBus.Core.Abstractions;
 
-namespace Contoso.EventBus.Events;
+namespace Eventbox.EventBus.Events;
 
-public abstract record IntegrationEvent : IIntegrationEvent
+public abstract class IntegrationEvent : IIntegrationEvent
 {
-    public Guid EventId { get; init; } = Guid.NewGuid();
+    public Guid IntegrationEventId { get; init; } = Guid.NewGuid();
     public DateTime OccurredOn { get; init; } = DateTime.UtcNow;
     public string EventType => GetType().Name;
 }

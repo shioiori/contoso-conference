@@ -1,11 +1,11 @@
-using Contoso.EventBus.Abstractions;
+using Eventbox.EventBus.Core.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace Contoso.EventBus.RabbitMQ;
+namespace Eventbox.EventBus.RabbitMQ;
 
 public sealed class RabbitMqEventBus : IEventBus, IAsyncDisposable
 {
@@ -54,7 +54,7 @@ public sealed class RabbitMqEventBus : IEventBus, IAsyncDisposable
         {
             ContentType = "application/json",
             DeliveryMode = DeliveryModes.Persistent,
-            MessageId = @event.EventId.ToString(),
+            MessageId = @event.IntegrationEventId.ToString(),
             Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
             Type = @event.EventType,
         };
@@ -67,8 +67,8 @@ public sealed class RabbitMqEventBus : IEventBus, IAsyncDisposable
             body: body,
             cancellationToken: cancellationToken);
 
-        _logger.LogDebug("Published event {EventType} [{EventId}] to exchange '{Exchange}' with routing key '{RoutingKey}'",
-            @event.EventType, @event.EventId, _options.EventExchange, routingKey);
+        _logger.LogDebug("Published event {EventType} [{IntegrationEventId}] to exchange '{Exchange}' with routing key '{RoutingKey}'",
+            @event.EventType, @event.IntegrationEventId, _options.EventExchange, routingKey);
     }
 
     public async Task SubscribeAsync<TEvent, THandler>(CancellationToken cancellationToken = default)

@@ -1,8 +1,8 @@
-namespace Contoso.EventBus.Abstractions;
+namespace Eventbox.EventBus.Core.Abstractions;
 
 public interface IIntegrationEvent
 {
-    Guid EventId { get; }
+    Guid IntegrationEventId { get; }
     DateTime OccurredOn { get; }
     string EventType { get; }
 }

@@ -1,10 +1,9 @@
-using Contoso.EventBus.Abstractions;
-using Contoso.EventBus.RabbitMQ;
-using Contoso.EventBus.Serialization;
+using Eventbox.EventBus.Core.Abstractions;
+using Eventbox.EventBus.Serialization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Contoso.EventBus.Extensions;
+namespace Eventbox.EventBus.RabbitMQ.Extensions;
 
 public static class ServiceCollectionExtensions
 {
@@ -19,6 +18,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<SubscriptionRegistry>();
         services.AddSingleton<IMessageSerializer, JsonMessageSerializer>();
         services.AddSingleton<IEventBus, RabbitMqEventBus>();
+        services.AddSingleton<IDelayedEventScheduler, RabbitMqDelayedEventScheduler>();
         services.AddSingleton<ICommandBus, RabbitMqCommandBus>();
 
         return services;

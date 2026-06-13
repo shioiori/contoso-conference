@@ -1,8 +1,8 @@
 using System.Text;
-using Contoso.EventBus.Abstractions;
+using Eventbox.EventBus.Core.Abstractions;
 using Newtonsoft.Json;
 
-namespace Contoso.EventBus.Serialization;
+namespace Eventbox.EventBus.Serialization;
 
 public sealed class JsonMessageSerializer : IMessageSerializer
 {

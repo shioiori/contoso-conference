@@ -12,10 +12,10 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["Common/EventBus/EventBus.csproj", "Common/EventBus/"]
-RUN dotnet restore "./Common/EventBus/EventBus.csproj"
+COPY ["EventBus/EventBus/EventBus.csproj", "EventBus/EventBus/"]
+RUN dotnet restore "./EventBus/EventBus/EventBus.csproj"
 COPY . .
-WORKDIR "/src/Common/EventBus"
+WORKDIR "/src/EventBus/EventBus"
 RUN dotnet build "./EventBus.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage

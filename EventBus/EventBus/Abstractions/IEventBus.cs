@@ -1,4 +1,4 @@
-namespace Contoso.EventBus.Abstractions;
+namespace Eventbox.EventBus.Core.Abstractions;
 
 public interface IEventBus
 {
