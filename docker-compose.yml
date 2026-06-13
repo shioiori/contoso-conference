@@ -1,12 +1,18 @@
 services:
-  conference.api:
-    image: ${DOCKER_REGISTRY-}conferenceapi
+  auth.api:
+    image: ${DOCKER_REGISTRY-}authapi
     build:
       context: .
-      dockerfile: ConferenceManagement/Conference.API/Dockerfile
+      dockerfile: Auth/Auth.API/Dockerfile
 
-  conferencedb:
-    image: mcr.microsoft.com/mssql/server
+  event.api:
+    image: ${DOCKER_REGISTRY-}eventapi
+    build:
+      context: .
+      dockerfile: EventManagement/Event.API/Dockerfile
+
+  eventdb:
+    image: postgres:16
 
   rabbitmq:
     image: rabbitmq:3-management

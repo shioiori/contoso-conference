@@ -1,12 +1,33 @@
 services:
-  conferencedb:
-    container_name: conferencedb
+  auth.api:
     environment:
-      - SA_PASSWORD=Str0ng!Pwd9
-      - ACCEPT_EULA=Y
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=8081
+      - ConnectionStrings__Database=Host=eventdb;Port=5432;Database=AuthDb;Username=postgres;Password=Eventbox123!
+      - Jwt__Issuer=Eventbox.Auth
+      - Jwt__Audience=Eventbox.Api
+      - Jwt__SigningKey=eventbox-development-signing-key-change-me
+    ports:
+      - "8082:8080"
+      - "8083:8081"
+    depends_on:
+      - eventdb
+    volumes:
+      - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
+      - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
+      - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
+      - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
+
+  eventdb:
+    container_name: eventdb
+    environment:
+      POSTGRES_DB: EventDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Eventbox123!
     restart: always
     ports:
-      - "1433:1433"
+      - "5432:5432"
 
   rabbitmq:
     container_name: rabbitmq
@@ -18,13 +39,12 @@ services:
       - "15672:15672"
     restart: always
 
-  conference.api:
+  event.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
-      - SA_PASSWORD=Str0ng!Pwd9
-      - ConnectionStrings__Database=Server=conferencedb;Database=ConferenceDb;User Id=sa;Password=Str0ng!Pwd9;Encrypt=False;TrustServerCertificate=True
+      - ConnectionStrings__Database=Host=eventdb;Port=5432;Database=EventDb;Username=postgres;Password=Eventbox123!
     ports:
       - "8080"
       - "8081"
