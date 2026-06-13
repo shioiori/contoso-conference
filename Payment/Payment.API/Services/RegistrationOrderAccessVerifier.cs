@@ -1,0 +1,120 @@
+using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Text.Json;
+
+namespace Eventbox.Payment.Api.Services;
+
+public class RegistrationOrderAccessVerifier(HttpClient httpClient) : IOrderAccessVerifier
+{
+    public async Task<OrderAccessVerificationResult> VerifyAsync(
+        Guid orderId,
+        string? orderAccessCode,
+        string? authorizationHeader,
+        CancellationToken cancellationToken)
+    {
+        OrderAccessVerificationResult? guestResult = null;
+        if (!string.IsNullOrWhiteSpace(orderAccessCode))
+        {
+            guestResult = await VerifyGuestAccessAsync(orderId, orderAccessCode, cancellationToken);
+            if (guestResult == OrderAccessVerificationResult.Authorized)
+            {
+                return guestResult.Value;
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(authorizationHeader))
+        {
+            return await VerifyCustomerAccessAsync(orderId, authorizationHeader, cancellationToken);
+        }
+
+        return guestResult ?? OrderAccessVerificationResult.Unauthorized;
+    }
+
+    private async Task<OrderAccessVerificationResult> VerifyGuestAccessAsync(
+        Guid orderId,
+        string orderAccessCode,
+        CancellationToken cancellationToken)
+    {
+        var requestUri = $"/api/public/self-service/orders?token={Uri.EscapeDataString(orderAccessCode)}";
+        HttpResponseMessage response;
+        try
+        {
+            response = await httpClient.GetAsync(requestUri, cancellationToken);
+        }
+        catch (HttpRequestException)
+        {
+            return OrderAccessVerificationResult.RegistrationUnavailable;
+        }
+
+        using (response)
+        {
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return OrderAccessVerificationResult.Forbidden;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return OrderAccessVerificationResult.RegistrationUnavailable;
+            }
+
+            RegistrationOrderDto? order;
+            try
+            {
+                order = await response.Content.ReadFromJsonAsync<RegistrationOrderDto>(cancellationToken);
+            }
+            catch (JsonException)
+            {
+                return OrderAccessVerificationResult.RegistrationUnavailable;
+            }
+
+            return order?.Id == orderId
+                ? OrderAccessVerificationResult.Authorized
+                : OrderAccessVerificationResult.Forbidden;
+        }
+    }
+
+    private async Task<OrderAccessVerificationResult> VerifyCustomerAccessAsync(
+        Guid orderId,
+        string authorizationHeader,
+        CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"/api/customer/orders/{orderId}");
+        try
+        {
+            request.Headers.Authorization = AuthenticationHeaderValue.Parse(authorizationHeader);
+        }
+        catch (FormatException)
+        {
+            return OrderAccessVerificationResult.Unauthorized;
+        }
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await httpClient.SendAsync(request, cancellationToken);
+        }
+        catch (HttpRequestException)
+        {
+            return OrderAccessVerificationResult.RegistrationUnavailable;
+        }
+
+        using (response)
+        {
+            return response.StatusCode switch
+            {
+                HttpStatusCode.OK => OrderAccessVerificationResult.Authorized,
+                HttpStatusCode.Unauthorized => OrderAccessVerificationResult.Unauthorized,
+                HttpStatusCode.Forbidden => OrderAccessVerificationResult.Forbidden,
+                HttpStatusCode.NotFound => OrderAccessVerificationResult.NotFound,
+                _ => OrderAccessVerificationResult.RegistrationUnavailable
+            };
+        }
+    }
+
+    private sealed class RegistrationOrderDto
+    {
+        public Guid Id { get; init; }
+    }
+}
