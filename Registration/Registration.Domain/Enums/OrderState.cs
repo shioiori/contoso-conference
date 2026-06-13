@@ -1,14 +1,14 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Registration.Domain.Enums
+namespace Eventbox.Registration.Domain.Enums
 {
     public enum OrderState
     {
-        Created,
-        Booked,
+        Pending,
         Confirmed,
-        Rejected
+        Cancelled,
+        Expired
     }
 }

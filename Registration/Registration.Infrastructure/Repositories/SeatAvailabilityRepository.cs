@@ -1,43 +1,29 @@
 using Microsoft.EntityFrameworkCore;
-using Registration.Domain.Entities.SeatAvailabilityAggregate;
-using Registration.Domain.Repositories;
+using Eventbox.Registration.Domain.Entities.SeatAvailabilityAggregate;
+using Eventbox.Registration.Infrastructure.Repositories.Common;
+using Eventbox.Registration.Application.Abstractions.Repositories;
 
-namespace Registration.Infrastructure.Repositories
+namespace Eventbox.Registration.Infrastructure.Repositories
 {
-    public class SeatAvailabilityRepository : ISeatAvailabilityRepository
+    public class SeatAvailabilityRepository(RegistrationDbContext dbContext) : BaseRepository<RegistrationDbContext, SeatAvailability, Guid>(dbContext), ISeatAvailabilityRepository
     {
-        private readonly RegistrationDbContext _context;
+        public async Task<SeatAvailability?> GetByEventIdAsync(Guid EventId, CancellationToken cancellationToken = default)
+            => await dbContext.SeatAvailabilities
+                .Include(s => s.TicketTypes)
+                .FirstOrDefaultAsync(s => s.Id == EventId, cancellationToken);
 
-        public SeatAvailabilityRepository(RegistrationDbContext context)
+        public async Task<bool> TryReserveAsync(Guid eventId, int ticketTypeId, int quantity, CancellationToken cancellationToken = default)
         {
-            _context = context;
+            var affectedRows = await dbContext.Set<TicketTypeAvailability>()
+                .Where(ticketType =>
+                    EF.Property<Guid>(ticketType, "SeatAvailabilityId") == eventId &&
+                    ticketType.TicketTypeId == ticketTypeId &&
+                    ticketType.Remaining >= quantity)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(ticketType => ticketType.Remaining, ticketType => ticketType.Remaining - quantity),
+                    cancellationToken);
+
+            return affectedRows == 1;
         }
-
-        public async Task<SeatAvailability?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-            => await _context.SeatAvailabilities
-                .Include(s => s.SeatTypes)
-                .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-
-        public async Task<IEnumerable<SeatAvailability>> GetAllAsync(CancellationToken cancellationToken = default)
-            => await _context.SeatAvailabilities
-                .Include(s => s.SeatTypes)
-                .ToListAsync(cancellationToken);
-
-        public async Task<SeatAvailability?> GetByConferenceIdAsync(Guid conferenceId, CancellationToken cancellationToken = default)
-            => await _context.SeatAvailabilities
-                .Include(s => s.SeatTypes)
-                .FirstOrDefaultAsync(s => s.Id == conferenceId, cancellationToken);
-
-        public async Task AddAsync(SeatAvailability entity, CancellationToken cancellationToken = default)
-            => await _context.SeatAvailabilities.AddAsync(entity, cancellationToken);
-
-        public void Update(SeatAvailability entity)
-            => _context.SeatAvailabilities.Update(entity);
-
-        public void Delete(SeatAvailability entity)
-            => _context.SeatAvailabilities.Remove(entity);
-
-        public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-            => await _context.SaveChangesAsync(cancellationToken);
     }
 }

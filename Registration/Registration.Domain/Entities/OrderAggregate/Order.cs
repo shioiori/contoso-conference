@@ -1,21 +1,96 @@
-﻿using EventSourcing.SeedWork;
-using Registration.Domain.Enums;
+using Eventbox.Registration.Domain.SeedWork;
+using Eventbox.Registration.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Registration.Domain.Entities.OrderAggregate
+namespace Eventbox.Registration.Domain.Entities.OrderAggregate
 {
     public class Order : Aggregate<Guid>
     {
-        public Guid ConferenceId { get; set; }
-        public Guid UserId { get; set; }
-        public OrderState OrderState { get; set; }
-        public string? AccessCode { get; set; }
-        public DateTime? ReservationExpirationDate { get; set; }
-        public PersonalInfo PersonalInfo { get; set; }
+        private readonly List<OrderItem> _orderItems = new();
 
-        private readonly List<OrderItem> _orderItems;
+        private Order()
+        {
+            PersonalInfo = null!;
+        }
+
+        public Order(Guid eventId, Guid? userId, PersonalInfo personalInfo, IEnumerable<OrderItem> orderItems, string accessCode, DateTimeOffset reservationExpiresAt)
+        {
+            var items = orderItems.ToList();
+            if (eventId == Guid.Empty)
+                throw new ArgumentException("Event id is required.", nameof(eventId));
+
+            if (items.Count == 0)
+                throw new ArgumentException("An order must have at least one item.", nameof(orderItems));
+
+            Id = Guid.NewGuid();
+            EventId = eventId;
+            UserId = userId;
+            OrderState = OrderState.Pending;
+            AccessCode = accessCode;
+            ReservationExpiresAt = reservationExpiresAt;
+            PersonalInfo = personalInfo;
+            _orderItems.AddRange(items);
+        }
+
+        public Guid EventId { get; private set; }
+        public Guid? UserId { get; private set; }
+        public OrderState OrderState { get; private set; }
+        public string? AccessCode { get; private set; }
+        public DateTimeOffset? ReservationExpiresAt { get; private set; }
+        public PersonalInfo PersonalInfo { get; private set; }
+
         public IReadOnlyCollection<OrderItem> OrderItems => _orderItems.AsReadOnly();
+
+        public OrderState GetCurrentState(DateTimeOffset utcNow)
+        {
+            if (OrderState == OrderState.Pending && ReservationExpiresAt <= utcNow)
+                return OrderState.Expired;
+
+            return OrderState;
+        }
+
+        public bool Confirm()
+        {
+            if (OrderState == OrderState.Confirmed)
+                return false;
+
+            if (OrderState is OrderState.Cancelled or OrderState.Expired)
+                throw new InvalidOperationException("Cancelled or expired orders cannot be confirmed.");
+
+            if (ReservationExpiresAt <= DateTimeOffset.UtcNow)
+                throw new InvalidOperationException("Expired reservations cannot be confirmed.");
+
+            OrderState = OrderState.Confirmed;
+            ReservationExpiresAt = null;
+            return true;
+        }
+
+        public bool Cancel()
+        {
+            if (OrderState == OrderState.Confirmed)
+                throw new InvalidOperationException("Confirmed orders cannot be canceled.");
+
+            if (OrderState is OrderState.Cancelled or OrderState.Expired)
+                return false;
+
+            OrderState = OrderState.Cancelled;
+            ReservationExpiresAt = null;
+            return true;
+        }
+
+        public bool Expire(DateTimeOffset utcNow)
+        {
+            if (OrderState != OrderState.Pending)
+                return false;
+
+            if (ReservationExpiresAt > utcNow)
+                return false;
+
+            OrderState = OrderState.Expired;
+            ReservationExpiresAt = null;
+            return true;
+        }
     }
 }
