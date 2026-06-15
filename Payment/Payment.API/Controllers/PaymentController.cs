@@ -1,6 +1,7 @@
 using Eventbox.Payment.Api.Requests;
 using Eventbox.Payment.Api.Services;
 using Eventbox.Payment.Core.Commands;
+using Eventbox.Shared.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,36 +20,25 @@ namespace Eventbox.Payment.Api.Controllers
             [FromBody] CreatePaymentIntentRequest request,
             CancellationToken cancellationToken)
         {
-            try
-            {
-                var accessResult = await orderAccessVerifier.VerifyAsync(
+            var accessResult = await orderAccessVerifier.VerifyAsync(
+                request.OrderId,
+                request.OrderAccessCode,
+                Request.Headers.Authorization.ToString(),
+                cancellationToken);
+
+            EnsureAccess(accessResult);
+
+            var result = await mediator.Send(
+                new CreatePaymentIntentCommand(
                     request.OrderId,
-                    request.OrderAccessCode,
-                    Request.Headers.Authorization.ToString(),
-                    cancellationToken);
+                    request.Amount,
+                    request.Currency ?? "USD",
+                    request.ReturnUrl,
+                    request.CancelUrl,
+                    idempotencyKey),
+                cancellationToken);
 
-                var accessError = ToAccessError(accessResult);
-                if (accessError is not null)
-                {
-                    return accessError;
-                }
-
-                var result = await mediator.Send(
-                    new CreatePaymentIntentCommand(
-                        request.OrderId,
-                        request.Amount,
-                        request.Currency ?? "USD",
-                        request.ReturnUrl,
-                        request.CancelUrl,
-                        idempotencyKey),
-                    cancellationToken);
-
-                return Ok(result);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            return Ok(result);
         }
 
         [HttpPost("simulated-callbacks")]
@@ -60,67 +50,60 @@ namespace Eventbox.Payment.Api.Controllers
             var expectedSignature = configuration["Payment:ProviderSignature"];
             if (string.IsNullOrWhiteSpace(expectedSignature) || providerSignature != expectedSignature)
             {
-                return Unauthorized(new { error = "Invalid payment provider signature." });
+                throw new UnauthorizedApiException("Invalid payment provider signature.");
             }
 
-            try
+            object result;
+            if (string.Equals(request.Status, "Succeeded", StringComparison.OrdinalIgnoreCase))
             {
-                object result;
-                if (string.Equals(request.Status, "Succeeded", StringComparison.OrdinalIgnoreCase))
-                {
-                    result = await mediator.Send(
-                        new SimulatePaymentSucceededCommand(
-                            request.PaymentIntentId,
-                            request.ProviderEventId,
-                            request.OrderId,
-                            request.Amount,
-                            request.Currency,
-                            request.PaidAt ?? DateTimeOffset.UtcNow),
-                        cancellationToken);
-                }
-                else if (string.Equals(request.Status, "Failed", StringComparison.OrdinalIgnoreCase))
-                {
-                    result = await mediator.Send(
-                        new SimulatePaymentFailedCommand(
-                            request.PaymentIntentId,
-                            request.ProviderEventId,
-                            request.OrderId,
-                            request.Amount,
-                            request.Currency,
-                            request.FailedAt ?? DateTimeOffset.UtcNow,
-                            request.FailureReason),
-                        cancellationToken);
-                }
-                else
-                {
-                    return BadRequest(new { error = "Unsupported payment callback status." });
-                }
+                result = await mediator.Send(
+                    new SimulatePaymentSucceededCommand(
+                        request.PaymentIntentId,
+                        request.ProviderEventId,
+                        request.OrderId,
+                        request.Amount,
+                        request.Currency,
+                        request.PaidAt ?? DateTimeOffset.UtcNow),
+                    cancellationToken);
+            }
+            else if (string.Equals(request.Status, "Failed", StringComparison.OrdinalIgnoreCase))
+            {
+                result = await mediator.Send(
+                    new SimulatePaymentFailedCommand(
+                        request.PaymentIntentId,
+                        request.ProviderEventId,
+                        request.OrderId,
+                        request.Amount,
+                        request.Currency,
+                        request.FailedAt ?? DateTimeOffset.UtcNow,
+                        request.FailureReason),
+                    cancellationToken);
+            }
+            else
+            {
+                throw new ValidationApiException("Unsupported payment callback status.");
+            }
 
-                return Ok(result);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(new { error = ex.Message });
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(new { error = ex.Message });
-            }
+            return Ok(result);
         }
 
-        private IActionResult? ToAccessError(OrderAccessVerificationResult accessResult)
-            => accessResult switch
+        private static void EnsureAccess(OrderAccessVerificationResult accessResult)
+        {
+            switch (accessResult)
             {
-                OrderAccessVerificationResult.Authorized => null,
-                OrderAccessVerificationResult.Unauthorized => Unauthorized(new { error = "Authentication or order access code is required." }),
-                OrderAccessVerificationResult.Forbidden => Forbid(),
-                OrderAccessVerificationResult.NotFound => NotFound(new { error = "Order was not found." }),
-                OrderAccessVerificationResult.RegistrationUnavailable => StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = "Registration service is unavailable." }),
-                _ => StatusCode(StatusCodes.Status503ServiceUnavailable, new { error = "Order access could not be verified." })
-            };
+                case OrderAccessVerificationResult.Authorized:
+                    return;
+                case OrderAccessVerificationResult.Unauthorized:
+                    throw new UnauthorizedApiException("Authentication or order access code is required.");
+                case OrderAccessVerificationResult.Forbidden:
+                    throw new ForbiddenApiException("Access to this order is forbidden.");
+                case OrderAccessVerificationResult.NotFound:
+                    throw new NotFoundException("Order was not found.");
+                case OrderAccessVerificationResult.RegistrationUnavailable:
+                    throw new ServiceUnavailableException("Registration service is unavailable.");
+                default:
+                    throw new ServiceUnavailableException("Order access could not be verified.");
+            }
+        }
     }
 }

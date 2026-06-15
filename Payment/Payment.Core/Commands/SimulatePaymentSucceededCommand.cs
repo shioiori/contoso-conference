@@ -1,5 +1,6 @@
 using Eventbox.Payment.Core.Abstractions;
 using Eventbox.Payment.Core.Dtos;
+using Eventbox.Shared.Exceptions;
 using MediatR;
 
 namespace Eventbox.Payment.Core.Commands
@@ -38,7 +39,7 @@ namespace Eventbox.Payment.Core.Commands
             }
 
             var payment = await paymentRepository.GetByIdAsync(request.PaymentIntentId, cancellationToken)
-                ?? throw new KeyNotFoundException($"Payment intent '{request.PaymentIntentId}' was not found.");
+                ?? throw new NotFoundException("Payment intent", request.PaymentIntentId);
 
             var processed = payment.MarkSucceeded(
                 request.ProviderEventId,

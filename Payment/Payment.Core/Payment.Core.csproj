@@ -11,4 +11,8 @@
     <PackageReference Include="MediatR" Version="14.1.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Eventbox.Shared\Eventbox.Shared.csproj" />
+  </ItemGroup>
+
 </Project>

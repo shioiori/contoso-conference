@@ -14,6 +14,7 @@ namespace Eventbox.Payment.Infrastructure.Persistence
             modelBuilder.Entity<PaymentEntity>(payment =>
             {
                 payment.HasKey(p => p.Id);
+                payment.Property(p => p.Amount).HasPrecision(18, 2).IsRequired();
                 payment.Property(p => p.Currency).HasMaxLength(3).IsRequired();
                 payment.Property(p => p.IdempotencyKey).HasMaxLength(200);
                 payment.Property(p => p.ProviderEventId).HasMaxLength(200);
