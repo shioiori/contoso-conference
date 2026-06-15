@@ -3,6 +3,8 @@ using Eventbox.Auth.Api.Endpoints;
 using Eventbox.Auth.Api.Options;
 using Eventbox.Auth.Api.Persistence;
 using Eventbox.Auth.Api.Services;
+using Eventbox.Shared.Auditing;
+using Eventbox.Shared.Exceptions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +13,9 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddEventboxSerilog("Auth.API");
 builder.Services.AddOpenApi();
+builder.Services.AddEventboxExceptionHandling();
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
 var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
@@ -20,8 +24,10 @@ if (string.IsNullOrWhiteSpace(jwtOptions.SigningKey) || jwtOptions.SigningKey.Le
     throw new InvalidOperationException("Jwt:SigningKey must be configured with at least 32 characters.");
 }
 
-builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Database")));
+builder.Services.AddDbContext<AuthDbContext>((serviceProvider, options) =>
+    options
+        .UseNpgsql(builder.Configuration.GetConnectionString("Database"))
+        .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
 builder.Services
     .AddIdentityCore<ApplicationUser>(options =>
@@ -69,7 +75,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseEventboxExceptionHandling();
 app.UseAuthentication();
+app.UseEventboxSerilogRequestLogging();
 app.UseAuthorization();
 
 app.MapAuthEndpoints();

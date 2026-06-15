@@ -1,6 +1,7 @@
 using Eventbox.Auth.Api.Domain;
 using Eventbox.Auth.Api.Requests;
 using Eventbox.Auth.Api.Services;
+using Eventbox.Shared.Exceptions;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
 
@@ -28,7 +29,7 @@ public static class AuthEndpoints
             var user = await userManager.FindByEmailAsync(request.Email);
             if (user is null || !await userManager.CheckPasswordAsync(user, request.Password))
             {
-                return Results.Unauthorized();
+                throw new UnauthorizedApiException("Invalid email or password.");
             }
 
             return Results.Ok(tokenService.CreateToken(user));
@@ -38,7 +39,7 @@ public static class AuthEndpoints
         {
             if (httpContext.User.Identity?.IsAuthenticated != true)
             {
-                return Results.Unauthorized();
+                throw new UnauthorizedApiException("Authentication is required.");
             }
 
             var id = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -68,7 +69,10 @@ public static class AuthEndpoints
         var result = await userManager.CreateAsync(user, request.Password);
         if (!result.Succeeded)
         {
-            return Results.BadRequest(new { errors = result.Errors.Select(e => e.Description) });
+            throw new ValidationApiException(new Dictionary<string, string[]>
+            {
+                ["identity"] = result.Errors.Select(e => e.Description).ToArray()
+            });
         }
 
         return Results.Ok(tokenService.CreateToken(user));
