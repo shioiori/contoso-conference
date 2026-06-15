@@ -3,6 +3,7 @@ using Eventbox.EventManagement.EventApi.Dtos.OrganizerEvents;
 using Eventbox.EventManagement.EventApi.IntegrationEvents;
 using Eventbox.EventManagement.EventApi.Services.Abstractions;
 using Eventbox.EventBus.Core.Abstractions;
+using Eventbox.Shared.Exceptions;
 using Mapster;
 using System.Security.Cryptography;
 
@@ -20,7 +21,7 @@ namespace Eventbox.EventManagement.EventApi.Services
         }
 
         public async Task<OrganizerEventDto?> GetByIdAsync(Guid organizationId, Guid id, CancellationToken cancellationToken = default)
-            => (await _repository.GetByOrganizationAsync(organizationId, id, includeSeats: true, cancellationToken: cancellationToken))?.Adapt<OrganizerEventDto>();
+            => (await _repository.GetByOrganizationAsync(organizationId, id, includeTicketTypes: true, cancellationToken: cancellationToken))?.Adapt<OrganizerEventDto>();
 
         public async Task<IEnumerable<OrganizerEventDto>> SearchAsync(OrganizerEventSearchDto searchDto, CancellationToken cancellationToken = default)
         {
@@ -46,7 +47,7 @@ namespace Eventbox.EventManagement.EventApi.Services
         public async Task<OrganizerEventDto> CreateAsync(Guid? organizationId, string name, string slug, DateOnly startDate, DateOnly endDate, string? description = null, CancellationToken cancellationToken = default)
         {
             if (await _repository.SlugExistsAsync(slug, cancellationToken))
-                throw new InvalidOperationException($"A Event with slug '{slug}' already exists.");
+                throw new ConflictException($"An event with slug '{slug}' already exists.");
 
             var accessCode = GenerateAccessCode();
             var eventEntity = new Domains.Event(Guid.NewGuid(), organizationId ?? Guid.Empty, name, slug, startDate, endDate, description, accessCode);
@@ -70,7 +71,7 @@ namespace Eventbox.EventManagement.EventApi.Services
         public async Task<OrganizerEventDto> UpdateAsync(Guid organizationId, Guid id, string name, DateOnly startDate, DateOnly endDate, string? description = null, CancellationToken cancellationToken = default)
         {
             var eventEntity = await _repository.GetByOrganizationAsync(organizationId, id, asNoTracking: false, cancellationToken: cancellationToken)
-                ?? throw new KeyNotFoundException($"Event '{id}' not found.");
+                ?? throw new NotFoundException("Event", id);
 
             eventEntity.Update(name, startDate, endDate, description);
             await _repository.SaveChangesAsync(cancellationToken);
@@ -90,10 +91,10 @@ namespace Eventbox.EventManagement.EventApi.Services
         public async Task DeleteAsync(Guid organizationId, Guid id, CancellationToken cancellationToken = default)
         {
             var Event = await _repository.GetByOrganizationAsync(organizationId, id, asNoTracking: false, cancellationToken: cancellationToken)
-                ?? throw new KeyNotFoundException($"Event '{id}' not found.");
+                ?? throw new NotFoundException("Event", id);
 
             if (Event.IsPublished)
-                throw new InvalidOperationException($"Cannot delete a published Event. Unpublish it first.");
+                throw new ConflictException("Cannot delete a published event. Unpublish it first.");
 
             _repository.Delete(Event);
             await _repository.SaveChangesAsync(cancellationToken);
@@ -109,13 +110,13 @@ namespace Eventbox.EventManagement.EventApi.Services
 
         public async Task<OrganizerEventDto?> GetPublicReadiness(Guid organizationId, Guid id, CancellationToken cancellationToken = default)
         {
-            var Event = await _repository.GetByOrganizationAsync(organizationId, id, includeSeats: true, asNoTracking: true, cancellationToken: cancellationToken)
-                ?? throw new KeyNotFoundException($"Event '{id}' not found.");
+            var Event = await _repository.GetByOrganizationAsync(organizationId, id, includeTicketTypes: true, asNoTracking: true, cancellationToken: cancellationToken)
+                ?? throw new NotFoundException("Event", id);
 
             if (!string.IsNullOrWhiteSpace(Event.Name) &&
                 !string.IsNullOrWhiteSpace(Event.Slug) &&
                 Event.EndDate > Event.StartDate &&
-                Event.Seats.Any())
+                Event.TicketTypes.Any())
             {
                 return Event.Adapt<OrganizerEventDto>();
             }
@@ -125,19 +126,19 @@ namespace Eventbox.EventManagement.EventApi.Services
 
         public async Task PublishedAsync(Guid organizationId, Guid id, CancellationToken cancellationToken = default)
         {
-            var Event = await _repository.GetByOrganizationAsync(organizationId, id, includeSeats: true, asNoTracking: false, cancellationToken: cancellationToken)
-                ?? throw new KeyNotFoundException($"Event '{id}' not found.");
+            var Event = await _repository.GetByOrganizationAsync(organizationId, id, includeTicketTypes: true, asNoTracking: false, cancellationToken: cancellationToken)
+                ?? throw new NotFoundException("Event", id);
 
             if (!string.IsNullOrWhiteSpace(Event.Name) &&
                 !string.IsNullOrWhiteSpace(Event.Slug) &&
                 Event.EndDate > Event.StartDate &&
-                Event.Seats.Any())
+                Event.TicketTypes.Any())
             {
                 Event.Publish();
             }
             else
             {
-                throw new InvalidOperationException("Event is not ready to publish.");
+                throw new ValidationApiException("Event is not ready to publish.");
             }
 
             await _repository.SaveChangesAsync(cancellationToken);
@@ -152,7 +153,7 @@ namespace Eventbox.EventManagement.EventApi.Services
         public async Task UnpublishedAsync(Guid organizationId, Guid id, CancellationToken cancellationToken = default)
         {
             var Event = await _repository.GetByOrganizationAsync(organizationId, id, asNoTracking: false, cancellationToken: cancellationToken)
-                ?? throw new KeyNotFoundException($"Event '{id}' not found.");
+                ?? throw new NotFoundException("Event", id);
 
             Event.Unpublish();
             await _repository.SaveChangesAsync(cancellationToken);

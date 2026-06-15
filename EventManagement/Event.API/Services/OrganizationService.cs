@@ -2,6 +2,7 @@ using Eventbox.EventManagement.EventApi.Domains;
 using Eventbox.EventManagement.EventApi.Dtos;
 using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
 using Eventbox.EventManagement.EventApi.Services.Abstractions;
+using Eventbox.Shared.Exceptions;
 using Mapster;
 
 namespace Eventbox.EventManagement.EventApi.Services
@@ -22,7 +23,7 @@ namespace Eventbox.EventManagement.EventApi.Services
         public async Task Delete(Guid id, CancellationToken cancellationToken = default)
         {
             var organization = await organizationRepository.GetByIdAsync(id, cancellationToken)
-                ?? throw new KeyNotFoundException($"Organization with id {id} not found.");
+                ?? throw new NotFoundException("Organization", id);
 
             organizationRepository.Delete(organization);
             await organizationRepository.SaveChangesAsync(cancellationToken);
@@ -36,7 +37,7 @@ namespace Eventbox.EventManagement.EventApi.Services
         public async Task<OrganizationDto> Update(Guid id, OrganizationDto organizationDto, CancellationToken cancellationToken = default)
         {
             var organization = await organizationRepository.GetByIdAsync(id, cancellationToken)
-                ?? throw new KeyNotFoundException($"Organization with id {id} not found.");
+                ?? throw new NotFoundException("Organization", id);
 
             organization.Update(organizationDto.Name);
             await organizationRepository.SaveChangesAsync(cancellationToken);

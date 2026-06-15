@@ -1,5 +1,6 @@
 using Eventbox.EventManagement.EventApi.Dtos;
 using Eventbox.EventManagement.EventApi.Services.Abstractions;
+using Eventbox.Shared.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,22 +16,16 @@ namespace Eventbox.EventManagement.EventApi.Controllers
             [FromBody] OrganizationDto organizationDto,
             CancellationToken cancellationToken)
         {
-            try
-            {
-                var organization = await organizationService.Create(organizationDto, cancellationToken);
-                return CreatedAtAction(nameof(GetById), new { id = organization.Id }, organization);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var organization = await organizationService.Create(organizationDto, cancellationToken);
+            return CreatedAtAction(nameof(GetById), new { id = organization.Id }, organization);
         }
 
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<OrganizationDto>> GetById(Guid id, CancellationToken cancellationToken)
         {
             var organization = await organizationService.GetByIdAsync(id, cancellationToken);
-            if (organization is null) return NotFound();
+            if (organization is null)
+                throw new NotFoundException("Organization", id);
 
             return Ok(organization);
         }
@@ -41,33 +36,15 @@ namespace Eventbox.EventManagement.EventApi.Controllers
             [FromBody] OrganizationDto organizationDto,
             CancellationToken cancellationToken)
         {
-            try
-            {
-                var organization = await organizationService.Update(id, organizationDto, cancellationToken);
-                return Ok(organization);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
+            var organization = await organizationService.Update(id, organizationDto, cancellationToken);
+            return Ok(organization);
         }
 
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
         {
-            try
-            {
-                await organizationService.Delete(id, cancellationToken);
-                return NoContent();
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
+            await organizationService.Delete(id, cancellationToken);
+            return NoContent();
         }
     }
 }

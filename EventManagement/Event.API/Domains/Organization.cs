@@ -1,7 +1,9 @@
 ﻿using Eventbox.EventManagement.EventApi.Domains.Common;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Eventbox.EventManagement.EventApi.Domains
 {
+    [Table("Organization")]
     public class Organization : Entity<Guid>
     {
         public string Name { get; private set; }

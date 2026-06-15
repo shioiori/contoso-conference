@@ -1,7 +1,9 @@
 using Eventbox.EventManagement.EventApi.Domains.Common;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Eventbox.EventManagement.EventApi.Domains
 {
+    [Table("Event")]
     public class Event : Entity<Guid>
     {
         public Guid OrganizationId { get; private set; }
@@ -26,8 +28,8 @@ namespace Eventbox.EventManagement.EventApi.Domains
             }
         }
 
-        private readonly List<SeatType> _seats = [];
-        public IReadOnlyCollection<SeatType> Seats => _seats.AsReadOnly();
+        private readonly List<TicketType> _ticketTypes = [];
+        public IReadOnlyCollection<TicketType> TicketTypes => _ticketTypes.AsReadOnly();
 
         private Event() { }
 

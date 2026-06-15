@@ -5,6 +5,8 @@ using Eventbox.EventManagement.EventApi.Mappings;
 using Eventbox.EventManagement.EventApi.Services;
 using Eventbox.EventManagement.EventApi.Services.Abstractions;
 using Eventbox.EventBus.RabbitMQ.Extensions;
+using Eventbox.Shared.Auditing;
+using Eventbox.Shared.Exceptions;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -13,24 +15,28 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddEventboxSerilog("Event.API");
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+builder.Services.AddEventboxExceptionHandling();
 
 var mapsterConfig = TypeAdapterConfig.GlobalSettings;
 mapsterConfig.Apply(new EventMappingConfig());
 
-builder.Services.AddDbContext<EventDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Database")));
+builder.Services.AddDbContext<EventDbContext>((serviceProvider, options) =>
+    options
+        .UseNpgsql(builder.Configuration.GetConnectionString("Database"))
+        .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
 builder.Services.AddRabbitMqEventBus(builder.Configuration);
 
 builder.Services.AddScoped<IEventRepository, EventRepository>();
-builder.Services.AddScoped<ISeatTypeRepository, SeatTypeRepository>();
+builder.Services.AddScoped<ITicketTypeRepository, TicketTypeRepository>();
 builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
 builder.Services.AddScoped<IOrganizerEventService, OrganizerEventService>();
 builder.Services.AddScoped<IOrganizationService, OrganizationService>();
 builder.Services.AddScoped<IPublicEventService, PublicEventService>();
-builder.Services.AddScoped<ISeatTypeService, SeatTypeService>();
+builder.Services.AddScoped<ITicketTypeService, TicketTypeService>();
 
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "Eventbox.Auth";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "Eventbox.Api";
@@ -72,7 +78,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseEventboxExceptionHandling();
 app.UseAuthentication();
+app.UseEventboxSerilogRequestLogging();
 app.UseAuthorization();
 app.MapControllers();
 

@@ -1,6 +1,6 @@
 namespace Eventbox.EventManagement.EventApi.Dtos
 {
-    public class EventResponse
+    public class EventDto
     {
         public Guid Id { get; set; }
         public string Name { get; set; } = "";
@@ -9,6 +9,6 @@ namespace Eventbox.EventManagement.EventApi.Dtos
         public DateOnly StartDate { get; set; }
         public DateOnly EndDate { get; set; }
         public bool IsPublished { get; set; }
-        public IEnumerable<SeatTypeResponse> Seats { get; set; } = [];
+        public IEnumerable<TicketTypeDto> TicketTypes { get; set; } = [];
     }
 }

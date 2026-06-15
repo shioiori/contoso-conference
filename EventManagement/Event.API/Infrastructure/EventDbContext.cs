@@ -1,6 +1,6 @@
 using Eventbox.EventManagement.EventApi.Domains;
 using Microsoft.EntityFrameworkCore;
-
+using Event = Eventbox.EventManagement.EventApi.Domains.Event;
 namespace Eventbox.EventManagement.EventApi.Infrastructure
 {
     public class EventDbContext : DbContext
@@ -9,9 +9,9 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure
         {
         }
 
-        public DbSet<Domains.Event> Events => Set<Domains.Event>();
+        public DbSet<Event> Events => Set<Event>();
         public DbSet<Organization> Organizations => Set<Organization>();
-        public DbSet<Domains.SeatType> SeatTypes => Set<Domains.SeatType>();
+        public DbSet<TicketType> TicketTypes => Set<TicketType>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -14,15 +14,17 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
         public async Task<Domains.Event?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
             => await dbContext.Events
                 .AsNoTracking()
-                .Include(c => c.Seats)
+                .Include(c => c.TicketTypes)
+                    .ThenInclude(t => t.PricingPhases)
                 .FirstOrDefaultAsync(c => c.Slug == slug, cancellationToken);
 
-        public async Task<Domains.Event?> GetByOrganizationAsync(Guid organizationId, Guid eventId, bool includeSeats = false, bool asNoTracking = true, CancellationToken cancellationToken = default)
+        public async Task<Domains.Event?> GetByOrganizationAsync(Guid organizationId, Guid eventId, bool includeTicketTypes = false, bool asNoTracking = true, CancellationToken cancellationToken = default)
         {
             var query = dbContext.Events.Where(c => c.OrganizationId == organizationId && c.Id == eventId);
 
-            if (includeSeats)
-                query = query.Include(c => c.Seats);
+            if (includeTicketTypes)
+                query = query.Include(c => c.TicketTypes)
+                    .ThenInclude(t => t.PricingPhases);
 
             if (asNoTracking)
                 query = query.AsNoTracking();
@@ -34,7 +36,8 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
         {
             var events = dbContext.Events
                 .AsNoTracking()
-                .Include(c => c.Seats)
+                .Include(c => c.TicketTypes)
+                    .ThenInclude(t => t.PricingPhases)
                 .Where(c => c.OrganizationId == organizationId);
 
             events = ApplyFilters(events, status, query, dateFrom, dateTo);
@@ -50,7 +53,8 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
         {
             var events = dbContext.Events
                 .AsNoTracking()
-                .Include(c => c.Seats)
+                .Include(c => c.TicketTypes)
+                    .ThenInclude(t => t.PricingPhases)
                 .Where(c => c.IsPublished);
 
             events = ApplyFilters(events, status, query, dateFrom, dateTo);

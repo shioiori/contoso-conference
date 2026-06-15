@@ -75,7 +75,7 @@ namespace Eventbox.EventManagement.EventApi.Migrations
                     b.HasIndex("Slug")
                         .IsUnique();
 
-                    b.ToTable("Events");
+                    b.ToTable("Event");
                 });
 
             modelBuilder.Entity("Eventbox.EventManagement.EventApi.Domains.Organization", b =>
@@ -103,10 +103,10 @@ namespace Eventbox.EventManagement.EventApi.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Organizations");
+                    b.ToTable("Organization");
                 });
 
-            modelBuilder.Entity("Eventbox.EventManagement.EventApi.Domains.SeatType", b =>
+            modelBuilder.Entity("Eventbox.EventManagement.EventApi.Domains.TicketType", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -114,14 +114,33 @@ namespace Eventbox.EventManagement.EventApi.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AccessCodeHash")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.Property<DateOnly>("CreatedAt")
                         .HasColumnType("date");
 
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
                     b.Property<Guid>("EventId")
                         .HasColumnType("uuid");
+
+                    b.Property<int?>("MaxPerOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MinPerOrder")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -137,27 +156,82 @@ namespace Eventbox.EventManagement.EventApi.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("Visibility")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EventId");
 
-                    b.ToTable("SeatTypes");
+                    b.ToTable("TicketType");
                 });
 
-            modelBuilder.Entity("Eventbox.EventManagement.EventApi.Domains.SeatType", b =>
+            modelBuilder.Entity("Eventbox.EventManagement.EventApi.Domains.TicketType", b =>
                 {
                     b.HasOne("Eventbox.EventManagement.EventApi.Domains.Event", "Event")
-                        .WithMany("Seats")
+                        .WithMany("TicketTypes")
                         .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.OwnsMany("Eventbox.EventManagement.EventApi.Domains.PricingPhase", "PricingPhases", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
+
+                            b1.Property<DateOnly>("CreatedAt")
+                                .HasColumnType("date");
+
+                            b1.Property<string>("CreatedBy")
+                                .HasColumnType("text");
+
+                            b1.Property<DateTimeOffset?>("EndTime")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
+
+                            b1.Property<decimal>("Price")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
+                            b1.Property<DateTimeOffset?>("StartTime")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<int>("TicketTypeId")
+                                .HasColumnType("integer");
+
+                            b1.Property<DateOnly?>("UpdatedAt")
+                                .HasColumnType("date");
+
+                            b1.Property<string>("UpdatedBy")
+                                .HasColumnType("text");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("TicketTypeId");
+
+                            b1.ToTable("PricingPhase");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TicketTypeId");
+                        });
+
                     b.Navigation("Event");
+
+                    b.Navigation("PricingPhases");
                 });
 
             modelBuilder.Entity("Eventbox.EventManagement.EventApi.Domains.Event", b =>
                 {
-                    b.Navigation("Seats");
+                    b.Navigation("TicketTypes");
                 });
 #pragma warning restore 612, 618
         }

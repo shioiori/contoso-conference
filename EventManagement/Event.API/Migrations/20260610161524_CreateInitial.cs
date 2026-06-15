@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -36,7 +36,7 @@ namespace Eventbox.EventManagement.EventApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SeatTypes",
+                name: "TicketTypes",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "integer", nullable: false)
@@ -51,9 +51,9 @@ namespace Eventbox.EventManagement.EventApi.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SeatTypes", x => x.Id);
+                    table.PrimaryKey("PK_TicketTypes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_SeatTypes_Events_EventId",
+                        name: "FK_TicketTypes_Events_EventId",
                         column: x => x.EventId,
                         principalTable: "Events",
                         principalColumn: "Id",
@@ -67,8 +67,8 @@ namespace Eventbox.EventManagement.EventApi.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_SeatTypes_EventId",
-                table: "SeatTypes",
+                name: "IX_TicketTypes_EventId",
+                table: "TicketTypes",
                 column: "EventId");
         }
 
@@ -76,7 +76,7 @@ namespace Eventbox.EventManagement.EventApi.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "SeatTypes");
+                name: "TicketTypes");
 
             migrationBuilder.DropTable(
                 name: "Events");

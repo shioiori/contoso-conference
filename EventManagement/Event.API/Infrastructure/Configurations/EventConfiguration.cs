@@ -39,7 +39,7 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Configurations
             builder.Property(c => c.EndDate)
                 .IsRequired();
 
-            builder.HasMany<SeatType>(c => c.Seats)
+            builder.HasMany<TicketType>(c => c.TicketTypes)
                 .WithOne(s => s.Event)
                 .HasForeignKey(s => s.EventId)
                 .OnDelete(DeleteBehavior.Cascade);

@@ -1,6 +1,8 @@
 using Eventbox.EventManagement.EventApi.Dtos;
 using Eventbox.EventManagement.EventApi.Dtos.OrganizerEvents;
+using Eventbox.EventManagement.EventApi.Requests;
 using Eventbox.EventManagement.EventApi.Services.Abstractions;
+using Eventbox.Shared.Exceptions;
 using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,96 +22,71 @@ namespace Eventbox.EventManagement.EventApi.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<EventResponse>>> GetAll(
+        public async Task<ActionResult<IEnumerable<EventDto>>> GetAll(
             Guid organizationId,
             [FromQuery] OrganizerEventSearchDto searchDto,
             CancellationToken cancellationToken)
         {
             searchDto.OrganizationId = organizationId;
             var Events = await _eventService.SearchAsync(searchDto, cancellationToken);
-            return Ok(Events.Adapt<IEnumerable<EventResponse>>());
+            return Ok(Events.Adapt<IEnumerable<EventDto>>());
         }
 
         [HttpPost]
-        public async Task<ActionResult<EventResponse>> CreateDraft(
+        public async Task<ActionResult<EventDto>> CreateDraft(
             Guid organizationId,
             [FromBody] CreateEventRequest request,
             CancellationToken cancellationToken)
         {
-            try
-            {
-                var Event = await _eventService.CreateAsync(
-                    organizationId,
-                    request.Name,
-                    request.Slug,
-                    DateOnly.FromDateTime(request.StartDate.UtcDateTime),
-                    DateOnly.FromDateTime(request.EndDate.UtcDateTime),
-                    request.Description,
-                    cancellationToken);
+            var Event = await _eventService.CreateAsync(
+                organizationId,
+                request.Name,
+                request.Slug,
+                DateOnly.FromDateTime(request.StartDate.UtcDateTime),
+                DateOnly.FromDateTime(request.EndDate.UtcDateTime),
+                request.Description,
+                cancellationToken);
 
-                return CreatedAtAction(nameof(GetById), new { organizationId, id = Event.Id }, Event.Adapt<EventResponse>());
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return Conflict(ex.Message);
-            }
+            return CreatedAtAction(nameof(GetById), new { organizationId, id = Event.Id }, Event.Adapt<EventDto>());
         }
 
         [HttpGet("{id:guid}")]
-        public async Task<ActionResult<EventResponse>> GetById(Guid organizationId, Guid id, CancellationToken cancellationToken)
+        public async Task<ActionResult<EventDto>> GetById(Guid organizationId, Guid id, CancellationToken cancellationToken)
         {
             var Event = await _eventService.GetByIdAsync(organizationId, id, cancellationToken);
-            if (Event is null) return NotFound();
-            return Ok(Event.Adapt<EventResponse>());
+            if (Event is null)
+                throw new NotFoundException("Event", id);
+
+            return Ok(Event.Adapt<EventDto>());
         }
 
         [HttpPut("{id:guid}")]
-        public async Task<ActionResult<EventResponse>> Update(
+        public async Task<ActionResult<EventDto>> Update(
             Guid id,
             Guid organizationId,
             [FromBody] UpdateEventRequest request,
             CancellationToken cancellationToken)
         {
-            try
-            {
-                var Event = await _eventService.UpdateAsync(
-                    organizationId,
-                    id,
-                    request.Name,
-                    DateOnly.FromDateTime(request.StartDate.UtcDateTime),
-                    DateOnly.FromDateTime(request.EndDate.UtcDateTime),
-                    request.Description,
-                    cancellationToken);
+            var Event = await _eventService.UpdateAsync(
+                organizationId,
+                id,
+                request.Name,
+                DateOnly.FromDateTime(request.StartDate.UtcDateTime),
+                DateOnly.FromDateTime(request.EndDate.UtcDateTime),
+                request.Description,
+                cancellationToken);
 
-                return Ok(Event.Adapt<EventResponse>());
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
+            return Ok(Event.Adapt<EventDto>());
         }
 
         [HttpGet("{id:guid}/publish-readiness")]
-        public async Task<ActionResult<EventResponse>> GetPublishReadiness(Guid organizationId, Guid id, CancellationToken cancellationToken)
+        public async Task<ActionResult<EventDto>> GetPublishReadiness(Guid organizationId, Guid id, CancellationToken cancellationToken)
         {
-            try
-            {
-                var Event = await _eventService.GetPublicReadiness(organizationId, id, cancellationToken);
-                if (Event is null) return BadRequest("Event is not ready to publish.");
-                return Ok(Event.Adapt<EventResponse>());
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
+            var Event = await _eventService.GetPublicReadiness(organizationId, id, cancellationToken);
+            if (Event is null)
+                throw new ValidationApiException("Event is not ready to publish.");
+
+            return Ok(Event.Adapt<EventDto>());
         }
 
         [HttpPost("{id:guid}/publish")]
@@ -119,19 +96,8 @@ namespace Eventbox.EventManagement.EventApi.Controllers
             [FromBody] SetVisibilityRequest request,
             CancellationToken cancellationToken)
         {
-            try
-            {
-                await _eventService.PublishedAsync(organizationId, id, cancellationToken);
-                return NoContent();
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _eventService.PublishedAsync(organizationId, id, cancellationToken);
+            return NoContent();
         }
 
         [HttpPost("{id:guid}/unpublish")]
@@ -141,15 +107,8 @@ namespace Eventbox.EventManagement.EventApi.Controllers
             [FromBody] SetVisibilityRequest request,
             CancellationToken cancellationToken)
         {
-            try
-            {
-                await _eventService.UnpublishedAsync(organizationId, id, cancellationToken);
-                return NoContent();
-            }
-            catch (KeyNotFoundException)
-            {
-                return NotFound();
-            }
+            await _eventService.UnpublishedAsync(organizationId, id, cancellationToken);
+            return NoContent();
         }
     }
 }

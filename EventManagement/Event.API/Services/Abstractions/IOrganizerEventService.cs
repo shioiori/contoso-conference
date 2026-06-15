@@ -20,7 +20,7 @@ namespace Eventbox.EventManagement.EventApi.Services.Abstractions
 
     public interface IPublicEventService
     {
-        Task<PublicEventDto> GetBySlugAsync(string slug, CancellationToken cancellationToken = default);
+        Task<PublicEventDto?> GetBySlugAsync(string slug, string? accessCode = null, CancellationToken cancellationToken = default);
         Task<IEnumerable<PublicEventDto>> SearchAsync(PublicEventSearchDto searchDto, CancellationToken cancellationToken = default);
     }
 }

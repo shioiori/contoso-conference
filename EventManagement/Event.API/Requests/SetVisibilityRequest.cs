@@ -1,4 +1,4 @@
-namespace Eventbox.EventManagement.EventApi.Dtos
+namespace Eventbox.EventManagement.EventApi.Requests
 {
     public class SetVisibilityRequest
     {

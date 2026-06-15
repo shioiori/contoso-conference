@@ -12,7 +12,8 @@ namespace Eventbox.EventManagement.EventApi.Dtos.PublicEvents
         public DateOnly EndDate { get; private set; }
         public bool IsPublished { get; private set; }
         public string? AccessCode { get; private set; }
-        public int SeatCount { get; private set; }
+        public int TicketCount { get; private set; }
+        public IEnumerable<PublicTicketTypeDto> TicketTypes { get; set; } = [];
         public EventStatus Status
         {
             get
