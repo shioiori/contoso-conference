@@ -1,29 +1,32 @@
 <Solution>
   <Folder Name="/Auth/">
-    <Project Path="Auth/Auth.API/Auth.API.csproj" />
+    <Project Path="D:/Personal/Projects/eventbox-api/Auth/Auth.API/Auth.API.csproj" />
   </Folder>
   <Folder Name="/EventBus/">
-    <Project Path="EventBus/EventBus.Core/EventBus.Core.csproj" />
-    <Project Path="EventBus/EventBus.RabbitMQ/EventBus.RabbitMQ.csproj" />
+    <Project Path="D:/Personal/Projects/eventbox-api/EventBus/EventBus.Core/EventBus.Core.csproj" />
+    <Project Path="D:/Personal/Projects/eventbox-api/EventBus/EventBus.RabbitMQ/EventBus.RabbitMQ.csproj" />
   </Folder>
   <Folder Name="/EventManagement/">
-    <Project Path="EventManagement/Event.API/Event.API.csproj" Id="56263a47-84fc-4cb3-8b74-1ff4697dc18d" />
+    <Project Path="D:/Personal/Projects/eventbox-api/EventManagement/Event.API/Event.API.csproj" Id="56263a47-84fc-4cb3-8b74-1ff4697dc18d" />
   </Folder>
   <Folder Name="/Payment/">
-    <Project Path="Payment/Payment.API/Payment.API.csproj" Id="d4779a3a-2cf0-4972-ad9e-654249a01ec0" />
-    <Project Path="Payment/Payment.Core/Payment.Core.csproj" Id="40456d7b-e490-4366-99f1-9b49bfe96efd" />
-    <Project Path="Payment/Payment.Infrastructure/Payment.Infrastructure.csproj" Id="90eedc5d-bd11-48bd-a7c0-f06add9faff1" />
+    <Project Path="D:/Personal/Projects/eventbox-api/Payment/Payment.API/Payment.API.csproj" Id="d4779a3a-2cf0-4972-ad9e-654249a01ec0" />
+    <Project Path="D:/Personal/Projects/eventbox-api/Payment/Payment.Core/Payment.Core.csproj" Id="40456d7b-e490-4366-99f1-9b49bfe96efd" />
+    <Project Path="D:/Personal/Projects/eventbox-api/Payment/Payment.Infrastructure/Payment.Infrastructure.csproj" Id="90eedc5d-bd11-48bd-a7c0-f06add9faff1" />
   </Folder>
-  <Folder Name="/Registration/">
-    <Project Path="Registration/Registration.API/Registration.API.csproj" Id="c1fcad0a-55c5-408a-88d0-3fa01334d2a3" />
-    <Project Path="Registration/Registration.Application/Registration.Application.csproj" Id="bc786a6e-b9fa-49a3-be62-51a77b71807a" />
-    <Project Path="Registration/Registration.Domain/Registration.Domain.csproj" Id="775da918-1d94-4047-9187-7a80abd48ecd" />
-    <Project Path="Registration/Registration.Infrastructure/Registration.Infrastructure.csproj" Id="bd2fcce3-0622-4116-82aa-7c55af21cb71" />
+  <Folder Name="/Shared/">
+    <Project Path="D:/Personal/Projects/eventbox-api/Shared/Eventbox.Shared/Eventbox.Shared.csproj" />
   </Folder>
   <Folder Name="/Tests/">
-    <Project Path="Tests/Eventbox.UnitTests/Eventbox.UnitTests.csproj" />
+    <Project Path="D:/Personal/Projects/eventbox-api/Tests/Eventbox.UnitTests/Eventbox.UnitTests.csproj" />
   </Folder>
-  <Project Path="docker-compose.dcproj">
+  <Folder Name="/Ticketing/">
+    <Project Path="Ticketing/Ticketing.API/Ticketing.API.csproj" />
+    <Project Path="Ticketing/Ticketing.Application/Ticketing.Application.csproj" />
+    <Project Path="Ticketing/Ticketing.Domain/Ticketing.Domain.csproj" />
+    <Project Path="Ticketing/Ticketing.Infrastructure/Ticketing.Infrastructure.csproj" />
+  </Folder>
+  <Project Path="D:/Personal/Projects/eventbox-api/docker-compose.dcproj">
     <Build />
   </Project>
 </Solution>

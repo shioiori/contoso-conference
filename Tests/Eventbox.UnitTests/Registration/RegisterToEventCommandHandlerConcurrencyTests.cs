@@ -1,30 +1,31 @@
 using System.Linq.Expressions;
-using Eventbox.Registration.Application.Abstractions;
-using Eventbox.Registration.Application.Commands;
-using Eventbox.Registration.Application.Dtos;
-using Eventbox.Registration.Domain.Entities.OrderAggregate;
-using Eventbox.Registration.Domain.Entities.SeatAvailabilityAggregate;
-using Eventbox.Registration.Domain.Enums;
-using Eventbox.Registration.Application.Abstractions.Repositories;
-using Eventbox.Registration.Application.Abstractions.Jobs;
+using Eventbox.TicketingApplication.Abstractions;
+using Eventbox.TicketingApplication.Commands;
+using Eventbox.TicketingApplication.Dtos;
+using Eventbox.TicketingDomain.Entities.OrderAggregate;
+using Eventbox.TicketingDomain.Entities.TicketAvailabilityAggregate;
+using Eventbox.TicketingDomain.Enums;
+using Eventbox.TicketingApplication.Abstractions.Repositories;
+using Eventbox.TicketingApplication.Abstractions.Jobs;
+using Eventbox.Shared.Exceptions;
 
 namespace Eventbox.UnitTests.Registration;
 
 public class RegisterToEventCommandHandlerConcurrencyTests
 {
     [Fact]
-    public async Task RegisterToEventAsync_WhenTwoRequestsRaceForLastSeat_DoesNotOversell()
+    public async Task RegisterToEventAsync_WhenTwoRequestsRaceForLastTicket_DoesNotOversell()
     {
         var eventId = Guid.NewGuid();
         var ticketType = new TicketTypeAvailability(ticketTypeId: 7, quantity: 1);
-        var availability = new SeatAvailability(eventId, [ticketType]);
+        var availability = new TicketAvailability(eventId, [ticketType]);
         var orderRepository = new InMemoryOrderRepository();
-        var seatAvailabilityRepository = new InMemorySeatAvailabilityRepository(availability);
+        var ticketAvailabilityRepository = new InMemoryTicketAvailabilityRepository(availability);
         var scheduler = new RecordingOrderExpirationScheduler();
         var unitOfWork = new InMemoryRegistrationUnitOfWork();
         var handler = new RegisterToEventCommandHandler(
             orderRepository,
-            seatAvailabilityRepository,
+            ticketAvailabilityRepository,
             scheduler,
             unitOfWork);
 
@@ -36,7 +37,7 @@ public class RegisterToEventCommandHandlerConcurrencyTests
             CaptureResult(() => handler.Handle(secondRequest, CancellationToken.None)));
 
         Assert.Single(attempts, attempt => attempt.Order is not null);
-        Assert.Single(attempts, attempt => attempt.Exception is InvalidOperationException);
+        Assert.Single(attempts, attempt => attempt.Exception is ConflictException);
         Assert.Equal(0, ticketType.Remaining);
         Assert.Single(orderRepository.Orders);
         Assert.Single(scheduler.ScheduledOrderIds);
@@ -50,8 +51,7 @@ public class RegisterToEventCommandHandlerConcurrencyTests
             Name = "Buyer",
             Email = email,
             TicketTypeId = 7,
-            Quantity = 1,
-            ReservationExpiresAt = DateTimeOffset.UtcNow.AddMinutes(5)
+            Quantity = 1
         };
 
     private static async Task<(OrderDto? Order, Exception? Exception)> CaptureResult(Func<Task<OrderDto>> action)
@@ -66,11 +66,11 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         }
     }
 
-    private sealed class InMemorySeatAvailabilityRepository(SeatAvailability availability) : ISeatAvailabilityRepository
+    private sealed class InMemoryTicketAvailabilityRepository(TicketAvailability availability) : ITicketAvailabilityRepository
     {
         private readonly object _gate = new();
 
-        public Task<SeatAvailability?> GetByEventIdAsync(Guid EventId, CancellationToken cancellationToken = default)
+        public Task<TicketAvailability?> GetByEventIdAsync(Guid EventId, CancellationToken cancellationToken = default)
             => Task.FromResult(EventId == availability.Id ? availability : null);
 
         public Task<bool> TryReserveAsync(Guid eventId, int ticketTypeId, int quantity, CancellationToken cancellationToken = default)
@@ -92,23 +92,23 @@ public class RegisterToEventCommandHandlerConcurrencyTests
             }
         }
 
-        public Task<SeatAvailability?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+        public Task<TicketAvailability?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
             => GetByEventIdAsync(id, cancellationToken);
 
-        public Task AddAsync(SeatAvailability entity, CancellationToken cancellationToken = default)
+        public Task AddAsync(TicketAvailability entity, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
 
-        public void Update(SeatAvailability entity)
+        public void Update(TicketAvailability entity)
         {
         }
 
-        public void Delete(SeatAvailability entity)
+        public void Delete(TicketAvailability entity)
         {
         }
 
-        public IQueryable<SeatAvailability> Get(
-            Expression<Func<SeatAvailability, bool>> filter = null!,
-            Func<IQueryable<SeatAvailability>, IOrderedQueryable<SeatAvailability>> orderBy = null!,
+        public IQueryable<TicketAvailability> Get(
+            Expression<Func<TicketAvailability, bool>> filter = null!,
+            Func<IQueryable<TicketAvailability>, IOrderedQueryable<TicketAvailability>> orderBy = null!,
             string includeProperties = null!,
             bool needAsNoTracking = true)
         {
@@ -160,6 +160,9 @@ public class RegisterToEventCommandHandlerConcurrencyTests
 
         public Task<IEnumerable<Order>> GetByStateAsync(OrderState state, CancellationToken cancellationToken = default)
             => Task.FromResult(_orders.Where(order => order.OrderState == state));
+
+        public Task<Order?> GetByIdWithDetailsAsync(Guid orderId, CancellationToken cancellationToken = default)
+            => GetByIdAsync(orderId, cancellationToken);
 
         public Task<Order?> GetByAccessCodeAsync(string accessCode, CancellationToken cancellationToken = default)
             => Task.FromResult(_orders.FirstOrDefault(order => order.AccessCode == accessCode));
