@@ -1,18 +1,15 @@
-using MediatR;
-using Eventbox.TicketingApplication.Abstractions;
-using Eventbox.TicketingApplication.Abstractions.Repositories;
 using Eventbox.Shared.Exceptions;
+using Eventbox.Ticketing.Application.Abstractions;
+using MediatR;
 
-namespace Eventbox.TicketingApplication.Commands
+namespace Eventbox.Ticketing.Application.Commands
 {
     public class CancelOrderCommandHandler(
-        IOrderRepository orderRepository,
-        ITicketAvailabilityRepository ticketAvailabilityRepository,
-        IRegistrationUnitOfWork unitOfWork) : IRequestHandler<CancelOrderCommand, bool>
+        IUnitOfWork unitOfWork) : IRequestHandler<CancelOrderCommand, bool>
     {
         public async Task<bool> Handle(CancelOrderCommand request, CancellationToken cancellationToken)
         {
-            var order = orderRepository
+            var order = unitOfWork.Orders
                 .Get(
                     x => x.Id == request.OrderId,
                     includeProperties: "OrderItems",
@@ -24,7 +21,7 @@ namespace Eventbox.TicketingApplication.Commands
 
             if (stateChanged)
             {
-                var ticketAvailability = await ticketAvailabilityRepository.GetByEventIdAsync(order.EventId, cancellationToken);
+                var ticketAvailability = await unitOfWork.TicketAvailabilities.GetByEventIdAsync(order.EventId, cancellationToken);
                 if (ticketAvailability is not null)
                 {
                     foreach (var item in order.OrderItems)
@@ -32,10 +29,10 @@ namespace Eventbox.TicketingApplication.Commands
                         ticketAvailability.Release(item.TicketTypeId, item.Quantity);
                     }
 
-                    ticketAvailabilityRepository.Update(ticketAvailability);
+                    unitOfWork.TicketAvailabilities.Update(ticketAvailability);
                 }
 
-                orderRepository.Update(order);
+                unitOfWork.Orders.Update(order);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
 

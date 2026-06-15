@@ -1,19 +1,16 @@
-using Eventbox.TicketingApplication.Abstractions;
-using Eventbox.TicketingApplication.Abstractions.Jobs;
-using Eventbox.TicketingDomain.Enums;
-using Eventbox.TicketingApplication.Abstractions.Repositories;
+using Eventbox.Ticketing.Application.Abstractions;
+using Eventbox.Ticketing.Application.Abstractions.Jobs;
+using Eventbox.Ticketing.Domain.Enums;
 
-namespace Eventbox.TicketingInfrastructure.Jobs
+namespace Eventbox.Ticketing.Infrastructure.Jobs
 {
     public class OrderExpirationReconciliationJob(
-        IOrderRepository orderRepository,
-        ITicketAvailabilityRepository ticketAvailabilityRepository,
-        IRegistrationUnitOfWork unitOfWork) : IOrderExpirationReconciliationJob
+        IUnitOfWork unitOfWork) : IOrderExpirationReconciliationJob
     {
         public async Task RunAsync(CancellationToken cancellationToken)
         {
             var utcNow = DateTimeOffset.UtcNow;
-            var expiredOrders = orderRepository
+            var expiredOrders = unitOfWork.Orders
                 .Get(
                     x => x.OrderState == OrderState.Pending
                         && x.ReservationExpiresAt <= utcNow,
@@ -26,7 +23,7 @@ namespace Eventbox.TicketingInfrastructure.Jobs
                 var stateChanged = order.Expire(utcNow);
                 if (stateChanged)
                 {
-                    var ticketAvailability = await ticketAvailabilityRepository.GetByEventIdAsync(order.EventId, cancellationToken);
+                    var ticketAvailability = await unitOfWork.TicketAvailabilities.GetByEventIdAsync(order.EventId, cancellationToken);
                     if (ticketAvailability is not null)
                     {
                         foreach (var item in order.OrderItems)
@@ -34,10 +31,10 @@ namespace Eventbox.TicketingInfrastructure.Jobs
                             ticketAvailability.Release(item.TicketTypeId, item.Quantity);
                         }
 
-                        ticketAvailabilityRepository.Update(ticketAvailability);
+                        unitOfWork.TicketAvailabilities.Update(ticketAvailability);
                     }
 
-                    orderRepository.Update(order);
+                    unitOfWork.Orders.Update(order);
                 }
             }
 

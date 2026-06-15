@@ -1,10 +1,10 @@
-using Eventbox.TicketingApplication.Abstractions.Repositories;
-using Eventbox.TicketingDomain.Entities;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
+using Eventbox.Ticketing.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace Eventbox.TicketingInfrastructure.Repositories;
+namespace Eventbox.Ticketing.Infrastructure.Repositories;
 
-public class EventScheduleRepository(RegistrationDbContext dbContext) : IEventScheduleRepository
+public class EventScheduleRepository(TicketingDbContext dbContext) : IEventScheduleRepository
 {
     public Task<EventSchedule?> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default)
         => dbContext.EventSchedules.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);

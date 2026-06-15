@@ -4,43 +4,33 @@ using Eventbox.EventManagement.EventApi.IntegrationEvents;
 using Eventbox.EventManagement.EventApi.Services.Abstractions;
 using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.Shared.Exceptions;
+using Eventbox.EventManagement.EventApi.Application.Abstractions;
 
 namespace Eventbox.EventManagement.EventApi.Services
 {
-    public class TicketTypeService : ITicketTypeService
+    public class TicketTypeService(IUnitOfWork unitOfWork, IEventBus eventBus) : ITicketTypeService
     {
-        private readonly ITicketTypeRepository _repository;
-        private readonly IEventRepository _eventRepository;
-        private readonly IEventBus _eventBus;
-
-        public TicketTypeService(ITicketTypeRepository repository, IEventRepository EventRepository, IEventBus eventBus)
-        {
-            _repository = repository;
-            _eventRepository = EventRepository;
-            _eventBus = eventBus;
-        }
-
         public async Task<TicketType?> GetByIdAsync(Guid organizationId, Guid eventId, int id, CancellationToken cancellationToken = default)
         {
             await EnsureEventBelongsToOrganizationAsync(organizationId, eventId, cancellationToken);
-            var ticketType = await _repository.GetByIdAsync(id, cancellationToken);
+            var ticketType = await unitOfWork.TicketTypes.GetByIdAsync(id, cancellationToken);
             return ticketType is not null && ticketType.EventId == eventId ? ticketType : null;
         }
 
         public async Task<IEnumerable<TicketType>> GetByEventIdAsync(Guid organizationId, Guid eventId, CancellationToken cancellationToken = default)
         {
             await EnsureEventBelongsToOrganizationAsync(organizationId, eventId, cancellationToken);
-            return await _repository.GetByEventIdAsync(eventId, cancellationToken);
+            return await unitOfWork.TicketTypes.GetByEventIdAsync(eventId, cancellationToken);
         }
 
         public async Task<TicketType> CreateAsync(Guid organizationId, TicketType ticketType, CancellationToken cancellationToken = default)
         {
             await EnsureEventBelongsToOrganizationAsync(organizationId, ticketType.EventId, cancellationToken);
 
-            await _repository.AddAsync(ticketType, cancellationToken);
-            await _repository.SaveChangesAsync(cancellationToken);
+            await unitOfWork.TicketTypes.AddAsync(ticketType, cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
-            await _eventBus.PublishAsync(new TicketTypeCreatedEvent
+            await eventBus.PublishAsync(new TicketTypeCreatedEvent
             {
                 Id = ticketType.Id,
                 EventId = ticketType.EventId,
@@ -69,7 +59,7 @@ namespace Eventbox.EventManagement.EventApi.Services
         {
             await EnsureEventBelongsToOrganizationAsync(organizationId, eventId, cancellationToken);
 
-            var ticketType = await _repository.GetByIdAsync(ticketTypeId, cancellationToken)
+            var ticketType = await unitOfWork.TicketTypes.GetByIdAsync(ticketTypeId, cancellationToken)
                 ?? throw new NotFoundException("TicketType", ticketTypeId);
 
             if (ticketType.EventId != eventId)
@@ -77,9 +67,9 @@ namespace Eventbox.EventManagement.EventApi.Services
 
             var previousQuota = ticketType.Quota;
             ticketType.IncreaseQuota(quantity);
-            await _repository.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
-            await _eventBus.PublishAsync(new TicketCapacityAddedEvent
+            await eventBus.PublishAsync(new TicketCapacityAddedEvent
             {
                 Id = ticketType.Id,
                 EventId = ticketType.EventId,
@@ -93,7 +83,7 @@ namespace Eventbox.EventManagement.EventApi.Services
 
         private async Task EnsureEventBelongsToOrganizationAsync(Guid organizationId, Guid eventId, CancellationToken cancellationToken)
         {
-            _ = await _eventRepository.GetByOrganizationAsync(
+            _ = await unitOfWork.Events.GetByOrganizationAsync(
                     organizationId,
                     eventId,
                     includeTicketTypes: false,
@@ -104,10 +94,10 @@ namespace Eventbox.EventManagement.EventApi.Services
 
         public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
         {
-            var ticketType = await _repository.GetByIdAsync(id, cancellationToken)
+            var ticketType = await unitOfWork.TicketTypes.GetByIdAsync(id, cancellationToken)
                 ?? throw new NotFoundException("TicketType", id);
-            _repository.Delete(ticketType);
-            await _repository.SaveChangesAsync(cancellationToken);
+            unitOfWork.TicketTypes.Delete(ticketType);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
     }
 }

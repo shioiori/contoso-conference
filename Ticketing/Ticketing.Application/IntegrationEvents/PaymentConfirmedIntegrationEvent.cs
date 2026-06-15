@@ -1,6 +1,6 @@
 using Eventbox.EventBus.Core.Abstractions;
 
-namespace Eventbox.TicketingApplication.IntegrationEvents;
+namespace Eventbox.Ticketing.Application.IntegrationEvents;
 
 public sealed class PaymentConfirmedIntegrationEvent : IIntegrationEvent
 {

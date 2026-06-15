@@ -1,7 +1,7 @@
-using Eventbox.TicketingDomain.SeedWork;
+using Eventbox.Ticketing.Domain.SeedWork;
 using System.Linq.Expressions;
 
-namespace Eventbox.TicketingApplication.Abstractions.Repositories
+namespace Eventbox.Ticketing.Application.Abstractions.Repositories
 {
     public interface IRepository<TEntity, TId>
     {

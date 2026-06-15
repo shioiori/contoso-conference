@@ -1,11 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Eventbox.TicketingApi.Requests;
-using Eventbox.TicketingApplication.Commands;
-using Eventbox.TicketingDomain.Enums;
+using Eventbox.Ticketing.Api.Requests;
+using Eventbox.Ticketing.Application.Commands;
+using Eventbox.Ticketing.Domain.Enums;
 using MediatR;
 
-namespace Eventbox.TicketingApi.Endpoints;
+namespace Eventbox.Ticketing.Api.Endpoints;
 
 public static class CheckInEndpoints
 {

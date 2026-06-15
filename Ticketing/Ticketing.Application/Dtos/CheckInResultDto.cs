@@ -1,6 +1,6 @@
-using Eventbox.TicketingDomain.Enums;
+using Eventbox.Ticketing.Domain.Enums;
 
-namespace Eventbox.TicketingApplication.Dtos;
+namespace Eventbox.Ticketing.Application.Dtos;
 
 public record CheckInResultDto(
     CheckInAttemptResult Result,

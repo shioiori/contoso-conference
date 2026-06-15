@@ -1,6 +1,6 @@
-using Eventbox.TicketingDomain.Enums;
+using Eventbox.Ticketing.Domain.Enums;
 
-namespace Eventbox.TicketingDomain.Entities.TicketAvailabilityAggregate
+namespace Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate
 {
     public class TicketTypeAvailability
     {

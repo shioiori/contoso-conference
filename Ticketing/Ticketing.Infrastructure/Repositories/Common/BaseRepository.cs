@@ -1,5 +1,5 @@
-using Eventbox.TicketingApplication.Abstractions.Repositories;
-using Eventbox.TicketingDomain.SeedWork;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
+using Eventbox.Ticketing.Domain.SeedWork;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq.Expressions;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Eventbox.TicketingInfrastructure.Repositories.Common
+namespace Eventbox.Ticketing.Infrastructure.Repositories.Common
 {
     public class BaseRepository<TContext, TEntity, TPrimarykey> : IRepository<TEntity, TPrimarykey>
         where TEntity : Entity<TPrimarykey>

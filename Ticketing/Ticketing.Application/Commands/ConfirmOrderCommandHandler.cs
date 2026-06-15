@@ -1,13 +1,13 @@
 using MediatR;
-using Eventbox.TicketingApplication.Abstractions;
-using Eventbox.TicketingApplication.Abstractions.Repositories;
+using Eventbox.Ticketing.Application.Abstractions;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Shared.Exceptions;
 
-namespace Eventbox.TicketingApplication.Commands
+namespace Eventbox.Ticketing.Application.Commands
 {
     public class ConfirmOrderCommandHandler(
         IOrderRepository orderRepository,
-        IRegistrationUnitOfWork unitOfWork,
+        IUnitOfWork unitOfWork,
         IQrTokenGenerator qrTokenGenerator,
         IQrTokenHasher qrTokenHasher) : IRequestHandler<ConfirmOrderCommand, bool>
     {

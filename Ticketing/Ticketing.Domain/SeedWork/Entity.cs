@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Eventbox.TicketingDomain.SeedWork
+namespace Eventbox.Ticketing.Domain.SeedWork
 {
     public abstract class Entity<T> : IAuditableEntity
     {

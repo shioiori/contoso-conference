@@ -1,4 +1,4 @@
-namespace Eventbox.TicketingApplication.Constants;
+namespace Eventbox.Ticketing.Application.Constants;
 
 public static class RegistrationConstants
 {

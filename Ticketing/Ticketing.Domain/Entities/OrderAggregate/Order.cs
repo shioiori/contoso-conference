@@ -1,10 +1,10 @@
-using Eventbox.TicketingDomain.SeedWork;
-using Eventbox.TicketingDomain.Enums;
+using Eventbox.Ticketing.Domain.SeedWork;
+using Eventbox.Ticketing.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Eventbox.TicketingDomain.Entities.OrderAggregate
+namespace Eventbox.Ticketing.Domain.Entities.OrderAggregate
 {
     public class Order : Aggregate<Guid>
     {

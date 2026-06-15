@@ -1,11 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using Eventbox.TicketingDomain.Entities.TicketAvailabilityAggregate;
-using Eventbox.TicketingInfrastructure.Repositories.Common;
-using Eventbox.TicketingApplication.Abstractions.Repositories;
+using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Infrastructure.Repositories.Common;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
 
-namespace Eventbox.TicketingInfrastructure.Repositories
+namespace Eventbox.Ticketing.Infrastructure.Repositories
 {
-    public class TicketAvailabilityRepository(RegistrationDbContext dbContext) : BaseRepository<RegistrationDbContext, TicketAvailability, Guid>(dbContext), ITicketAvailabilityRepository
+    public class TicketAvailabilityRepository(TicketingDbContext dbContext) : BaseRepository<TicketingDbContext, TicketAvailability, Guid>(dbContext), ITicketAvailabilityRepository
     {
         public async Task<TicketAvailability?> GetByEventIdAsync(Guid EventId, CancellationToken cancellationToken = default)
             => await dbContext.TicketAvailabilities

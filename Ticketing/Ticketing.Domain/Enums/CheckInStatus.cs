@@ -1,4 +1,4 @@
-namespace Eventbox.TicketingDomain.Enums;
+namespace Eventbox.Ticketing.Domain.Enums;
 
 public enum CheckInStatus
 {

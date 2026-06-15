@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace Eventbox.TicketingInfrastructure.Migrations
+namespace Eventbox.Ticketing.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class AddAuditableEntityFields : Migration

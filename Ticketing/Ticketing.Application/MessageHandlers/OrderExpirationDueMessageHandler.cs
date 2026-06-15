@@ -1,9 +1,9 @@
 using Eventbox.EventBus.Core.Abstractions;
-using Eventbox.TicketingApplication.Commands;
-using Eventbox.TicketingApplication.Messages;
+using Eventbox.Ticketing.Application.Commands;
+using Eventbox.Ticketing.Application.Messages;
 using MediatR;
 
-namespace Eventbox.TicketingApplication.MessageHandlers;
+namespace Eventbox.Ticketing.Application.MessageHandlers;
 
 public sealed class OrderExpirationDueMessageHandler
     : IIntegrationEventHandler<OrderExpirationDueMessage>

@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
-    <RootNamespace>Eventbox.TicketingApi</RootNamespace>
+    <RootNamespace>Eventbox.Ticketing.Api</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>9fc4ce92-0baa-486b-822f-cd3cdeb615e0</UserSecretsId>

@@ -1,6 +1,6 @@
-using Eventbox.TicketingDomain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
 
-namespace Eventbox.TicketingApplication.Abstractions.Repositories
+namespace Eventbox.Ticketing.Application.Abstractions.Repositories
 {
     public interface ITicketAvailabilityRepository : IRepository<TicketAvailability, Guid>
     {

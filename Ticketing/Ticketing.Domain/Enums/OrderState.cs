@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Eventbox.TicketingDomain.Enums
+namespace Eventbox.Ticketing.Domain.Enums
 {
     public enum OrderState
     {

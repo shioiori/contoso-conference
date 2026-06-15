@@ -1,10 +1,10 @@
 using Eventbox.EventBus.Core.Abstractions;
-using Eventbox.TicketingApplication.IntegrationEventHandlers;
-using Eventbox.TicketingApplication.IntegrationEvents;
-using Eventbox.TicketingApplication.MessageHandlers;
-using Eventbox.TicketingApplication.Messages;
+using Eventbox.Ticketing.Application.IntegrationEventHandlers;
+using Eventbox.Ticketing.Application.IntegrationEvents;
+using Eventbox.Ticketing.Application.MessageHandlers;
+using Eventbox.Ticketing.Application.Messages;
 
-namespace Eventbox.TicketingApi.HostedServices;
+namespace Eventbox.Ticketing.Api.HostedServices;
 
 public sealed class RabbitMqSubscriptionHostedService : BackgroundService
 {

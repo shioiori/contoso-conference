@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace Eventbox.TicketingApplication.Commands
+namespace Eventbox.Ticketing.Application.Commands
 {
     public class ExpireOrderCommand : IRequest<bool>
     {

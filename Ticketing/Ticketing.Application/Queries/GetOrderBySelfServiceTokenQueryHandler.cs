@@ -1,13 +1,13 @@
-using Eventbox.TicketingApplication.Abstractions.Repositories;
-using Eventbox.TicketingApplication.Dtos;
+using Eventbox.Ticketing.Application.Abstractions;
+using Eventbox.Ticketing.Application.Dtos;
 using Mapster;
 using MediatR;
 
-namespace Eventbox.TicketingApplication.Queries;
+namespace Eventbox.Ticketing.Application.Queries;
 
-public class GetOrderBySelfServiceTokenQueryHandler(IOrderRepository orderRepository)
+public class GetOrderBySelfServiceTokenQueryHandler(IUnitOfWork unitOfWork)
     : IRequestHandler<GetOrderBySelfServiceTokenQuery, OrderDto?>
 {
     public async Task<OrderDto?> Handle(GetOrderBySelfServiceTokenQuery request, CancellationToken cancellationToken)
-        => (await orderRepository.GetByAccessCodeAsync(request.Token, cancellationToken))?.Adapt<OrderDto>();
+        => (await unitOfWork.Orders.GetByAccessCodeAsync(request.Token, cancellationToken))?.Adapt<OrderDto>();
 }

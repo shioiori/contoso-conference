@@ -1,6 +1,5 @@
 using Eventbox.EventManagement.EventApi.Infrastructure;
-using Eventbox.EventManagement.EventApi.Infrastructure.Repositories;
-using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
+using Eventbox.EventManagement.EventApi.Application.Abstractions;
 using Eventbox.EventManagement.EventApi.Mappings;
 using Eventbox.EventManagement.EventApi.Services;
 using Eventbox.EventManagement.EventApi.Services.Abstractions;
@@ -12,6 +11,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
+using Eventbox.EventManagement.EventApi.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,6 +36,7 @@ builder.Services.AddRabbitMqEventBus(builder.Configuration);
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<ITicketTypeRepository, TicketTypeRepository>();
 builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IOrganizerEventService, OrganizerEventService>();
 builder.Services.AddScoped<IOrganizationService, OrganizationService>();
 builder.Services.AddScoped<IPublicEventService, PublicEventService>();

@@ -1,11 +1,11 @@
-using Eventbox.TicketingApplication.Abstractions;
-using Eventbox.TicketingApplication.Abstractions.Repositories;
-using Eventbox.TicketingApplication.Dtos;
-using Eventbox.TicketingDomain.Enums;
+using Eventbox.Ticketing.Application.Abstractions;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
+using Eventbox.Ticketing.Application.Dtos;
+using Eventbox.Ticketing.Domain.Enums;
 using Mapster;
 using MediatR;
 
-namespace Eventbox.TicketingApplication.Commands;
+namespace Eventbox.Ticketing.Application.Commands;
 
 public class CheckInByQrTokenCommandHandler(
     IOrderRepository orderRepository,

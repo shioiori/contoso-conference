@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Eventbox.TicketingApplication.Abstractions.Jobs
+namespace Eventbox.Ticketing.Application.Abstractions.Jobs
 {
     public interface IOrderExpirationReconciliationJob
     {

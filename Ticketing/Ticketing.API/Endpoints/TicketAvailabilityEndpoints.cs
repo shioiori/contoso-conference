@@ -1,7 +1,7 @@
-using Eventbox.TicketingApplication.Queries;
+using Eventbox.Ticketing.Application.Queries;
 using MediatR;
 
-namespace Eventbox.TicketingApi.Endpoints
+namespace Eventbox.Ticketing.Api.Endpoints
 {
     public static class TicketAvailabilityEndpoints
     {

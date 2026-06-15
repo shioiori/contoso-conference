@@ -1,4 +1,4 @@
-namespace Eventbox.TicketingApplication.Abstractions;
+namespace Eventbox.Ticketing.Application.Abstractions;
 
 public interface IQrTokenGenerator
 {

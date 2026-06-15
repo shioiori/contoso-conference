@@ -1,9 +1,9 @@
-using Eventbox.TicketingApplication.Abstractions.Repositories;
-using Eventbox.TicketingApplication.Dtos;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
+using Eventbox.Ticketing.Application.Dtos;
 using Mapster;
 using MediatR;
 
-namespace Eventbox.TicketingApplication.Queries;
+namespace Eventbox.Ticketing.Application.Queries;
 
 public class GetOrderDetailQueryHandler(
     IOrderRepository orderRepository)

@@ -1,4 +1,4 @@
-namespace Eventbox.TicketingDomain.Entities.TicketAvailabilityAggregate;
+namespace Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
 
 public class PricingPhaseAvailability
 {

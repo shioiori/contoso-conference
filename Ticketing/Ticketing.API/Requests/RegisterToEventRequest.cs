@@ -1,4 +1,4 @@
-namespace Eventbox.TicketingApi.Requests;
+namespace Eventbox.Ticketing.Api.Requests;
 
 public class RegisterToEventRequest
 {

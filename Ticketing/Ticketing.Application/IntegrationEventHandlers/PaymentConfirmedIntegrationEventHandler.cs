@@ -1,9 +1,9 @@
 using Eventbox.EventBus.Core.Abstractions;
-using Eventbox.TicketingApplication.Commands;
-using Eventbox.TicketingApplication.IntegrationEvents;
+using Eventbox.Ticketing.Application.Commands;
+using Eventbox.Ticketing.Application.IntegrationEvents;
 using MediatR;
 
-namespace Eventbox.TicketingApplication.IntegrationEventHandlers;
+namespace Eventbox.Ticketing.Application.IntegrationEventHandlers;
 
 public sealed class PaymentConfirmedIntegrationEventHandler
     : IIntegrationEventHandler<PaymentConfirmedIntegrationEvent>

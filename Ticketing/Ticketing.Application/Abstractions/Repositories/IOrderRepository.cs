@@ -1,7 +1,7 @@
-using Eventbox.TicketingDomain.Entities.OrderAggregate;
-using Eventbox.TicketingDomain.Enums;
+using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
+using Eventbox.Ticketing.Domain.Enums;
 
-namespace Eventbox.TicketingApplication.Abstractions.Repositories
+namespace Eventbox.Ticketing.Application.Abstractions.Repositories
 {
     public interface IOrderRepository : IRepository<Order, Guid>
     {

@@ -1,9 +1,9 @@
-using Eventbox.TicketingDomain.SeedWork;
+using Eventbox.Ticketing.Domain.SeedWork;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Eventbox.TicketingDomain.Entities.OrderAggregate
+namespace Eventbox.Ticketing.Domain.Entities.OrderAggregate
 {
     public class OrderItem : Entity<Guid>
     {

@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Eventbox.TicketingInfrastructure.Migrations
+namespace Eventbox.Ticketing.Infrastructure.Migrations
 {
     /// <inheritdoc />
     public partial class AddPricingDetailsToRegistration : Migration

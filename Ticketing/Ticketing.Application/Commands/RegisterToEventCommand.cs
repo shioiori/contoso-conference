@@ -1,7 +1,7 @@
 using MediatR;
-using Eventbox.TicketingApplication.Dtos;
+using Eventbox.Ticketing.Application.Dtos;
 
-namespace Eventbox.TicketingApplication.Commands
+namespace Eventbox.Ticketing.Application.Commands
 {
     public class RegisterToEventCommand : IRequest<OrderDto>
     {

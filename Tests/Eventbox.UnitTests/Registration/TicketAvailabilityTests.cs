@@ -1,4 +1,4 @@
-using Eventbox.TicketingDomain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
 
 namespace Eventbox.UnitTests.Registration;
 

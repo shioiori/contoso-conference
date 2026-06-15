@@ -1,39 +1,39 @@
 using Eventbox.EventBus.RabbitMQ.Extensions;
-using Eventbox.TicketingApi.Endpoints;
-using Eventbox.TicketingApplication.Abstractions;
-using Eventbox.TicketingApplication.Abstractions.Jobs;
-using Eventbox.TicketingApi.HostedServices;
-using Eventbox.TicketingApplication.Commands;
-using Eventbox.TicketingApplication.IntegrationEventHandlers;
-using Eventbox.TicketingApplication.IntegrationEvents;
-using Eventbox.TicketingApplication.Mappings;
-using Eventbox.TicketingApplication.MessageHandlers;
-using Eventbox.TicketingApplication.Messages;
-using Eventbox.TicketingInfrastructure;
-using Eventbox.TicketingInfrastructure.Jobs;
-using Eventbox.TicketingInfrastructure.Messaging;
-using Eventbox.TicketingInfrastructure.Repositories;
-using Eventbox.TicketingInfrastructure.Security;
+using Eventbox.Ticketing.Api.Endpoints;
+using Eventbox.Ticketing.Application.Abstractions;
+using Eventbox.Ticketing.Application.Abstractions.Jobs;
+using Eventbox.Ticketing.Api.HostedServices;
+using Eventbox.Ticketing.Application.Commands;
+using Eventbox.Ticketing.Application.IntegrationEventHandlers;
+using Eventbox.Ticketing.Application.IntegrationEvents;
+using Eventbox.Ticketing.Application.MessageHandlers;
+using Eventbox.Ticketing.Application.Messages;
+using Eventbox.Ticketing.Infrastructure;
+using Eventbox.Ticketing.Infrastructure.Jobs;
+using Eventbox.Ticketing.Infrastructure.Messaging;
+using Eventbox.Ticketing.Infrastructure.Repositories;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Eventbox.TicketingApplication.Abstractions.Repositories;
-using Eventbox.Shared.Auditing;
-using Eventbox.Shared.Exceptions;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using System.Text;
+using Eventbox.Shared.Auditing;
+using Eventbox.Ticketing.Infrastructure.Security;
+using Eventbox.Shared.Exceptions;
+using Eventbox.Ticketing.Application.Mappings;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AddEventboxSerilog("TicketingAPI");
+builder.AddEventboxSerilog("Ticketing.Api");
 builder.Services.AddEventboxExceptionHandling();
 
 var mapsterConfig = TypeAdapterConfig.GlobalSettings;
-mapsterConfig.Apply(new RegistrationMapping());
+mapsterConfig.Apply(new TicketingMapping());
 
-builder.Services.AddDbContext<RegistrationDbContext>((serviceProvider, options) =>
+builder.Services.AddDbContext<TicketingDbContext>((serviceProvider, options) =>
     options
         .UseNpgsql(builder.Configuration.GetConnectionString("Database"))
         .AddInterceptors(
@@ -43,7 +43,7 @@ builder.Services.AddDbContext<RegistrationDbContext>((serviceProvider, options) 
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<ITicketAvailabilityRepository, TicketAvailabilityRepository>();
 builder.Services.AddScoped<IEventScheduleRepository, EventScheduleRepository>();
-builder.Services.AddScoped<IRegistrationUnitOfWork, RegistrationUnitOfWork>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IOrderExpirationScheduler, OrderExpirationScheduler>();
 builder.Services.AddSingleton<IQrTokenGenerator, QrTokenGenerator>();
 builder.Services.AddSingleton<IQrTokenHasher, Sha256QrTokenHasher>();
@@ -116,7 +116,7 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<RegistrationDbContext>();
+    var db = scope.ServiceProvider.GetRequiredService<TicketingDbContext>();
     db.Database.Migrate();
 }
 
@@ -132,7 +132,7 @@ app.MapCheckInEndpoints();
 app.UseHangfireDashboard("/hangfire");
 
 RecurringJob.AddOrUpdate<IOrderExpirationReconciliationJob>(
-    "registration-expire-orders-reconciliation",
+    "Ticketing-expire-orders-reconciliation",
     job => job.RunAsync(CancellationToken.None),
     "*/5 * * * *");
 

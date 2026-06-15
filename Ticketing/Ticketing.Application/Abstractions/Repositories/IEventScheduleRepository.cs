@@ -1,6 +1,6 @@
-using Eventbox.TicketingDomain.Entities;
+using Eventbox.Ticketing.Domain.Entities;
 
-namespace Eventbox.TicketingApplication.Abstractions.Repositories;
+namespace Eventbox.Ticketing.Application.Abstractions.Repositories;
 
 public interface IEventScheduleRepository
 {

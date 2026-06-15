@@ -1,7 +1,7 @@
-using Eventbox.TicketingApplication.Dtos;
+using Eventbox.Ticketing.Application.Dtos;
 using MediatR;
 
-namespace Eventbox.TicketingApplication.Commands;
+namespace Eventbox.Ticketing.Application.Commands;
 
 public class CheckInByQrTokenCommand : IRequest<CheckInResultDto>
 {

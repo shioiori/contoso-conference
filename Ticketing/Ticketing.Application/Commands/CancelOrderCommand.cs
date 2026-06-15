@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Eventbox.TicketingApplication.Commands
+namespace Eventbox.Ticketing.Application.Commands
 {
     public class CancelOrderCommand : IRequest<bool>
     {

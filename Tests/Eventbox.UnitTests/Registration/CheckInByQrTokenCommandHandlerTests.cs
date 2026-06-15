@@ -1,10 +1,10 @@
 using System.Linq.Expressions;
-using Eventbox.TicketingApplication.Abstractions;
-using Eventbox.TicketingApplication.Abstractions.Repositories;
-using Eventbox.TicketingApplication.Commands;
-using Eventbox.TicketingDomain.Entities;
-using Eventbox.TicketingDomain.Entities.OrderAggregate;
-using Eventbox.TicketingDomain.Enums;
+using Eventbox.Ticketing.Application.Abstractions;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
+using Eventbox.Ticketing.Application.Commands;
+using Eventbox.Ticketing.Domain.Entities;
+using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
+using Eventbox.Ticketing.Domain.Enums;
 
 namespace Eventbox.UnitTests.Registration;
 

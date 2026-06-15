@@ -1,13 +1,13 @@
 using Eventbox.EventBus.Core.Abstractions;
-using Eventbox.TicketingApplication.Abstractions;
-using Eventbox.TicketingApplication.Abstractions.Repositories;
-using Eventbox.TicketingApplication.IntegrationEvents;
+using Eventbox.Ticketing.Application.Abstractions;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
+using Eventbox.Ticketing.Application.IntegrationEvents;
 
-namespace Eventbox.TicketingApplication.IntegrationEventHandlers;
+namespace Eventbox.Ticketing.Application.IntegrationEventHandlers;
 
 public class EventUpdatedEventHandler(
     IEventScheduleRepository eventScheduleRepository,
-    IRegistrationUnitOfWork unitOfWork) : IIntegrationEventHandler<EventUpdatedEvent>
+    IUnitOfWork unitOfWork) : IIntegrationEventHandler<EventUpdatedEvent>
 {
     public async Task HandleAsync(EventUpdatedEvent @event, CancellationToken cancellationToken = default)
     {

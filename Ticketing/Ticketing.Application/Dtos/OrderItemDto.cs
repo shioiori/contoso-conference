@@ -1,4 +1,4 @@
-namespace Eventbox.TicketingApplication.Dtos
+namespace Eventbox.Ticketing.Application.Dtos
 {
     public class OrderItemDto
     {

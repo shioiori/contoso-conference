@@ -1,14 +1,14 @@
 using Eventbox.EventBus.Core.Abstractions;
-using Eventbox.TicketingApplication.Abstractions;
-using Eventbox.TicketingApplication.Abstractions.Repositories;
-using Eventbox.TicketingApplication.IntegrationEvents;
+using Eventbox.Ticketing.Application.Abstractions;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
+using Eventbox.Ticketing.Application.IntegrationEvents;
 using Eventbox.Shared.Exceptions;
 
-namespace Eventbox.TicketingApplication.IntegrationEventHandlers;
+namespace Eventbox.Ticketing.Application.IntegrationEventHandlers;
 
 public class TicketCapacityAddedEventHandler(
     ITicketAvailabilityRepository ticketAvailabilityRepository,
-    IRegistrationUnitOfWork unitOfWork) : IIntegrationEventHandler<TicketCapacityAddedEvent>
+    IUnitOfWork unitOfWork) : IIntegrationEventHandler<TicketCapacityAddedEvent>
 {
     public async Task HandleAsync(TicketCapacityAddedEvent @event, CancellationToken cancellationToken = default)
     {

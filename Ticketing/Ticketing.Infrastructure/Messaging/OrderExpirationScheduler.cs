@@ -1,8 +1,8 @@
 using Eventbox.EventBus.Core.Abstractions;
-using Eventbox.TicketingApplication.Abstractions.Jobs;
-using Eventbox.TicketingApplication.Messages;
+using Eventbox.Ticketing.Application.Abstractions.Jobs;
+using Eventbox.Ticketing.Application.Messages;
 
-namespace Eventbox.TicketingInfrastructure.Messaging;
+namespace Eventbox.Ticketing.Infrastructure.Messaging;
 
 public sealed class OrderExpirationScheduler : IOrderExpirationScheduler
 {

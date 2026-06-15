@@ -1,15 +1,15 @@
 using Eventbox.EventBus.Core.Abstractions;
-using Eventbox.TicketingApplication.Abstractions;
-using Eventbox.TicketingApplication.Abstractions.Repositories;
-using Eventbox.TicketingApplication.IntegrationEvents;
-using Eventbox.TicketingDomain.Entities.TicketAvailabilityAggregate;
-using Eventbox.TicketingDomain.Enums;
+using Eventbox.Ticketing.Application.Abstractions;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
+using Eventbox.Ticketing.Application.IntegrationEvents;
+using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Domain.Enums;
 
-namespace Eventbox.TicketingApplication.IntegrationEventHandlers;
+namespace Eventbox.Ticketing.Application.IntegrationEventHandlers;
 
 public class TicketTypeCreatedEventHandler(
     ITicketAvailabilityRepository ticketAvailabilityRepository,
-    IRegistrationUnitOfWork unitOfWork) : IIntegrationEventHandler<TicketTypeCreatedEvent>
+    IUnitOfWork unitOfWork) : IIntegrationEventHandler<TicketTypeCreatedEvent>
 {
     public async Task HandleAsync(TicketTypeCreatedEvent @event, CancellationToken cancellationToken = default)
     {

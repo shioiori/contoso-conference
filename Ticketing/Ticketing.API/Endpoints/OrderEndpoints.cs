@@ -1,12 +1,12 @@
 using MediatR;
-using Eventbox.TicketingApi.Requests;
-using Eventbox.TicketingApplication.Commands;
-using Eventbox.TicketingApplication.Queries;
+using Eventbox.Ticketing.Api.Requests;
+using Eventbox.Ticketing.Application.Commands;
+using Eventbox.Ticketing.Application.Queries;
 using Eventbox.Shared.Exceptions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace Eventbox.TicketingApi.Endpoints
+namespace Eventbox.Ticketing.Api.Endpoints
 {
     public static class OrderEndpoints
     {

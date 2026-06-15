@@ -1,7 +1,7 @@
-using Eventbox.TicketingApplication.Dtos;
+using Eventbox.Ticketing.Application.Dtos;
 using MediatR;
 
-namespace Eventbox.TicketingApplication.Queries;
+namespace Eventbox.Ticketing.Application.Queries;
 
 public class GetOrderBySelfServiceTokenQuery : IRequest<OrderDto?>
 {

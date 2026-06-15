@@ -1,8 +1,8 @@
 using System.Security.Cryptography;
 using System.Text;
-using Eventbox.TicketingApplication.Abstractions;
+using Eventbox.Ticketing.Application.Abstractions;
 
-namespace Eventbox.TicketingInfrastructure.Security;
+namespace Eventbox.Ticketing.Infrastructure.Security;
 
 public class Sha256QrTokenHasher : IQrTokenHasher
 {

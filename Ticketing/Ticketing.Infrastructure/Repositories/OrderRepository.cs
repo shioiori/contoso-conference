@@ -1,14 +1,14 @@
 using Microsoft.EntityFrameworkCore;
-using Eventbox.TicketingDomain.Entities.OrderAggregate;
-using Eventbox.TicketingDomain.Enums;
-using Eventbox.TicketingInfrastructure.Repositories.Common;
-using Eventbox.TicketingApplication.Abstractions.Repositories;
+using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
+using Eventbox.Ticketing.Domain.Enums;
+using Eventbox.Ticketing.Infrastructure.Repositories.Common;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
 
-namespace Eventbox.TicketingInfrastructure.Repositories
+namespace Eventbox.Ticketing.Infrastructure.Repositories
 {
-    public class OrderRepository : BaseRepository<RegistrationDbContext, Order, Guid>, IOrderRepository
+    public class OrderRepository : BaseRepository<TicketingDbContext, Order, Guid>, IOrderRepository
     {
-        public OrderRepository(RegistrationDbContext dbContext) : base(dbContext)
+        public OrderRepository(TicketingDbContext dbContext) : base(dbContext)
         {
         }
 

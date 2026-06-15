@@ -1,6 +1,6 @@
-using Eventbox.TicketingDomain.SeedWork;
+using Eventbox.Ticketing.Domain.SeedWork;
 
-namespace Eventbox.TicketingDomain.Entities;
+namespace Eventbox.Ticketing.Domain.Entities;
 
 public class EventSchedule : Entity<Guid>
 {

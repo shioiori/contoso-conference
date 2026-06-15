@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
-using Eventbox.TicketingDomain.Entities;
-using Eventbox.TicketingDomain.Entities.OrderAggregate;
-using Eventbox.TicketingDomain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Domain.Entities;
+using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
+using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
 
-namespace Eventbox.TicketingInfrastructure
+namespace Eventbox.Ticketing.Infrastructure
 {
-    public class RegistrationDbContext : DbContext
+    public class TicketingDbContext : DbContext
     {
-        public RegistrationDbContext(DbContextOptions<RegistrationDbContext> options) : base(options)
+        public TicketingDbContext(DbContextOptions<TicketingDbContext> options) : base(options)
         {
         }
 
@@ -20,7 +20,7 @@ namespace Eventbox.TicketingInfrastructure
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-            modelBuilder.ApplyConfigurationsFromAssembly(typeof(RegistrationDbContext).Assembly);
+            modelBuilder.ApplyConfigurationsFromAssembly(typeof(TicketingDbContext).Assembly);
 
             modelBuilder.Entity<Order>(order =>
             {

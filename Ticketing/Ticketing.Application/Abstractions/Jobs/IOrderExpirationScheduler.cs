@@ -1,4 +1,4 @@
-namespace Eventbox.TicketingApplication.Abstractions.Jobs;
+namespace Eventbox.Ticketing.Application.Abstractions.Jobs;
 
 public interface IOrderExpirationScheduler
 {

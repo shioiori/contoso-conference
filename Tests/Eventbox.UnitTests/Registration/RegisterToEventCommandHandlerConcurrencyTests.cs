@@ -1,12 +1,12 @@
 using System.Linq.Expressions;
-using Eventbox.TicketingApplication.Abstractions;
-using Eventbox.TicketingApplication.Commands;
-using Eventbox.TicketingApplication.Dtos;
-using Eventbox.TicketingDomain.Entities.OrderAggregate;
-using Eventbox.TicketingDomain.Entities.TicketAvailabilityAggregate;
-using Eventbox.TicketingDomain.Enums;
-using Eventbox.TicketingApplication.Abstractions.Repositories;
-using Eventbox.TicketingApplication.Abstractions.Jobs;
+using Eventbox.Ticketing.Application.Abstractions;
+using Eventbox.Ticketing.Application.Commands;
+using Eventbox.Ticketing.Application.Dtos;
+using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
+using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Domain.Enums;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
+using Eventbox.Ticketing.Application.Abstractions.Jobs;
 using Eventbox.Shared.Exceptions;
 
 namespace Eventbox.UnitTests.Registration;
@@ -22,10 +22,8 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         var orderRepository = new InMemoryOrderRepository();
         var ticketAvailabilityRepository = new InMemoryTicketAvailabilityRepository(availability);
         var scheduler = new RecordingOrderExpirationScheduler();
-        var unitOfWork = new InMemoryRegistrationUnitOfWork();
+        var unitOfWork = new InMemoryRegistrationUnitOfWork(orderRepository, ticketAvailabilityRepository);
         var handler = new RegisterToEventCommandHandler(
-            orderRepository,
-            ticketAvailabilityRepository,
             scheduler,
             unitOfWork);
 
@@ -199,8 +197,13 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         }
     }
 
-    private sealed class InMemoryRegistrationUnitOfWork : IRegistrationUnitOfWork
+    private sealed class InMemoryRegistrationUnitOfWork(
+        IOrderRepository orderRepository,
+        ITicketAvailabilityRepository ticketAvailabilityRepository) : IUnitOfWork
     {
+        public IOrderRepository Orders { get; } = orderRepository;
+        public ITicketAvailabilityRepository TicketAvailabilities { get; } = ticketAvailabilityRepository;
+
         public int SaveCount { get; private set; }
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

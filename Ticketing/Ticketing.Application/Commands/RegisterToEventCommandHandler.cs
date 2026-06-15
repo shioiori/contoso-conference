@@ -1,22 +1,19 @@
+using Eventbox.Shared.Exceptions;
+using Eventbox.Ticketing.Application.Abstractions;
+using Eventbox.Ticketing.Application.Abstractions.Jobs;
+using Eventbox.Ticketing.Application.Constants;
+using Eventbox.Ticketing.Application.Dtos;
+using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
+using Mapster;
 using MediatR;
 using System.Security.Cryptography;
 using System.Text;
-using Eventbox.TicketingApplication.Abstractions;
-using Eventbox.TicketingApplication.Abstractions.Jobs;
-using Eventbox.TicketingApplication.Constants;
-using Eventbox.TicketingApplication.Dtos;
-using Eventbox.TicketingDomain.Entities.OrderAggregate;
-using Eventbox.TicketingApplication.Abstractions.Repositories;
-using Eventbox.Shared.Exceptions;
-using Mapster;
 
-namespace Eventbox.TicketingApplication.Commands
+namespace Eventbox.Ticketing.Application.Commands
 {
     public class RegisterToEventCommandHandler(
-        IOrderRepository orderRepository,
-        ITicketAvailabilityRepository ticketAvailabilityRepository,
         IOrderExpirationScheduler orderExpirationScheduler,
-        IRegistrationUnitOfWork unitOfWork) : IRequestHandler<RegisterToEventCommand, OrderDto>
+        IUnitOfWork unitOfWork) : IRequestHandler<RegisterToEventCommand, OrderDto>
     {
         public async Task<OrderDto> Handle(RegisterToEventCommand request, CancellationToken cancellationToken)
         {
@@ -32,7 +29,7 @@ namespace Eventbox.TicketingApplication.Commands
             var utcNow = DateTimeOffset.UtcNow;
             var reservationExpiresAt = utcNow.AddMinutes(RegistrationConstants.ReservationExpirationMinutes);
 
-            var ticketAvailability = await ticketAvailabilityRepository.GetByEventIdAsync(request.EventId, cancellationToken)
+            var ticketAvailability = await unitOfWork.TicketAvailabilities.GetByEventIdAsync(request.EventId, cancellationToken)
                 ?? throw new NotFoundException($"Ticket availability for event '{request.EventId}' was not found.");
 
             var ticketType = ticketAvailability.GetTicketType(request.TicketTypeId);
@@ -41,7 +38,7 @@ namespace Eventbox.TicketingApplication.Commands
             ticketType.EnsureOrderQuantityAllowed(request.Quantity);
             var pricingPhase = ticketType.GetActivePricingPhase(utcNow);
 
-            var hasActivePendingOrder = await orderRepository.HasActivePendingOrderAsync(
+            var hasActivePendingOrder = await unitOfWork.Orders.HasActivePendingOrderAsync(
                 request.EventId,
                 request.UserId,
                 request.Email,
@@ -70,7 +67,7 @@ namespace Eventbox.TicketingApplication.Commands
 
             await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                var reserved = await ticketAvailabilityRepository.TryReserveAsync(
+                var reserved = await unitOfWork.TicketAvailabilities.TryReserveAsync(
                     request.EventId,
                     request.TicketTypeId,
                     request.Quantity,
@@ -79,7 +76,7 @@ namespace Eventbox.TicketingApplication.Commands
                 if (!reserved)
                     throw new ConflictException("Not enough tickets remaining.");
 
-                await orderRepository.AddAsync(order, cancellationToken);
+                await unitOfWork.Orders.AddAsync(order, cancellationToken);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }, cancellationToken);
 

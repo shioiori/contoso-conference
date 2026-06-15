@@ -1,5 +1,5 @@
-using Eventbox.TicketingDomain.Entities.OrderAggregate;
-using Eventbox.TicketingDomain.Enums;
+using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
+using Eventbox.Ticketing.Domain.Enums;
 
 namespace Eventbox.UnitTests.Registration;
 

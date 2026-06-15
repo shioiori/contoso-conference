@@ -1,6 +1,6 @@
-using Eventbox.TicketingDomain.SeedWork;
+using Eventbox.Ticketing.Domain.SeedWork;
 
-namespace Eventbox.TicketingDomain.Entities.TicketAvailabilityAggregate
+namespace Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate
 {
     public class TicketAvailability : Entity<Guid>
     {

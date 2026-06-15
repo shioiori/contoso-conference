@@ -1,6 +1,6 @@
 using Eventbox.EventBus.Core.Abstractions;
 
-namespace Eventbox.TicketingApplication.Messages;
+namespace Eventbox.Ticketing.Application.Messages;
 
 public sealed class OrderExpirationDueMessage : IIntegrationEvent
 {

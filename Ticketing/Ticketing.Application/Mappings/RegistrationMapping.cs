@@ -1,11 +1,11 @@
-using Eventbox.TicketingApplication.Dtos;
-using Eventbox.TicketingDomain.Entities.OrderAggregate;
-using Eventbox.TicketingDomain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Application.Dtos;
+using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
+using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
 using Mapster;
 
-namespace Eventbox.TicketingApplication.Mappings
+namespace Eventbox.Ticketing.Application.Mappings
 {
-    public class RegistrationMapping : IRegister
+    public class TicketingMapping : IRegister
     {
         public void Register(TypeAdapterConfig config)
         {
@@ -18,11 +18,11 @@ namespace Eventbox.TicketingApplication.Mappings
             config.NewConfig<OrderItem, OrderItemDto>();
 
             config.NewConfig<Ticket, TicketDto>()
-                .Map(dest => dest.CheckInStatus, src => src.TicketState == Eventbox.TicketingDomain.Enums.TicketState.Cancelled
-                    ? Eventbox.TicketingDomain.Enums.CheckInStatus.Cancelled
+                .Map(dest => dest.CheckInStatus, src => src.TicketState == Eventbox.Ticketing.Domain.Enums.TicketState.Cancelled
+                    ? Eventbox.Ticketing.Domain.Enums.CheckInStatus.Cancelled
                     : src.CheckedInAt.HasValue
-                        ? Eventbox.TicketingDomain.Enums.CheckInStatus.CheckedIn
-                        : Eventbox.TicketingDomain.Enums.CheckInStatus.Active);
+                        ? Eventbox.Ticketing.Domain.Enums.CheckInStatus.CheckedIn
+                        : Eventbox.Ticketing.Domain.Enums.CheckInStatus.Active);
 
             config.NewConfig<TicketAvailability, TicketAvailabilityDto>()
                 .Map(dest => dest.EventId, src => src.Id)
