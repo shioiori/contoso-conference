@@ -1,15 +1,15 @@
-using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
+using Eventbox.EventManagement.EventApi.Application.Abstractions;
 using Eventbox.EventManagement.EventApi.Dtos.PublicEvents;
 using Eventbox.EventManagement.EventApi.Services.Abstractions;
 using Mapster;
 
 namespace Eventbox.EventManagement.EventApi.Services
 {
-    public class PublicEventService(IEventRepository EventRepository) : IPublicEventService
+    public class PublicEventService(IUnitOfWork unitOfWork) : IPublicEventService
     {
         public async Task<PublicEventDto> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
         {
-            var Event = await EventRepository.GetBySlugAsync(slug, cancellationToken);
+            var Event = await unitOfWork.Events.GetBySlugAsync(slug, cancellationToken);
             return Event?.Adapt<PublicEventDto>();
         }
 
@@ -21,7 +21,7 @@ namespace Eventbox.EventManagement.EventApi.Services
             var page = searchDto.Page <= 0 ? 1 : searchDto.Page;
             var pageSize = searchDto.PageSize <= 0 ? 20 : Math.Min(searchDto.PageSize, 100);
 
-            var Events = await EventRepository.SearchPublishedAsync(
+            var Events = await unitOfWork.Events.SearchPublishedAsync(
                 searchDto.Status,
                 searchDto.Q,
                 dateFrom,

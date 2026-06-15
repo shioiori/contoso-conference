@@ -31,11 +31,6 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories.Common
             return await _dbSet.FindAsync(new object[] { id }, cancellationToken);
         }
 
-        public async Task SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            await DbContext.SaveChangesAsync(cancellationToken);
-        }
-
         public void Update(TEntity entity)
         {
             _dbSet.Update(entity);

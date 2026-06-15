@@ -21,10 +21,8 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         var orderRepository = new InMemoryOrderRepository();
         var seatAvailabilityRepository = new InMemorySeatAvailabilityRepository(availability);
         var scheduler = new RecordingOrderExpirationScheduler();
-        var unitOfWork = new InMemoryRegistrationUnitOfWork();
+        var unitOfWork = new InMemoryRegistrationUnitOfWork(orderRepository, seatAvailabilityRepository);
         var handler = new RegisterToEventCommandHandler(
-            orderRepository,
-            seatAvailabilityRepository,
             scheduler,
             unitOfWork);
 
@@ -180,8 +178,13 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         }
     }
 
-    private sealed class InMemoryRegistrationUnitOfWork : IRegistrationUnitOfWork
+    private sealed class InMemoryRegistrationUnitOfWork(
+        IOrderRepository orderRepository,
+        ISeatAvailabilityRepository seatAvailabilityRepository) : IUnitOfWork
     {
+        public IOrderRepository Orders { get; } = orderRepository;
+        public ISeatAvailabilityRepository SeatAvailabilities { get; } = seatAvailabilityRepository;
+
         public int SaveCount { get; private set; }
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

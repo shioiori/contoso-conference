@@ -5,16 +5,13 @@ using Eventbox.Registration.Application.Abstractions.Jobs;
 using Eventbox.Registration.Application.Constants;
 using Eventbox.Registration.Application.Dtos;
 using Eventbox.Registration.Domain.Entities.OrderAggregate;
-using Eventbox.Registration.Application.Abstractions.Repositories;
 using Mapster;
 
 namespace Eventbox.Registration.Application.Commands
 {
     public class RegisterToEventCommandHandler(
-        IOrderRepository orderRepository,
-        ISeatAvailabilityRepository seatAvailabilityRepository,
         IOrderExpirationScheduler orderExpirationScheduler,
-        IRegistrationUnitOfWork unitOfWork) : IRequestHandler<RegisterToEventCommand, OrderDto>
+        IUnitOfWork unitOfWork) : IRequestHandler<RegisterToEventCommand, OrderDto>
     {
         public async Task<OrderDto> Handle(RegisterToEventCommand request, CancellationToken cancellationToken)
         {
@@ -32,7 +29,7 @@ namespace Eventbox.Registration.Application.Commands
             if (reservationExpiresAt <= utcNow)
                 throw new InvalidOperationException("Reservation expiration must be in the future.");
 
-            var hasActivePendingOrder = await orderRepository.HasActivePendingOrderAsync(
+            var hasActivePendingOrder = await unitOfWork.Orders.HasActivePendingOrderAsync(
                 request.EventId,
                 request.UserId,
                 request.Email,
@@ -51,7 +48,7 @@ namespace Eventbox.Registration.Application.Commands
 
             await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                var reserved = await seatAvailabilityRepository.TryReserveAsync(
+                var reserved = await unitOfWork.SeatAvailabilities.TryReserveAsync(
                     request.EventId,
                     request.TicketTypeId,
                     request.Quantity,
@@ -60,7 +57,7 @@ namespace Eventbox.Registration.Application.Commands
                 if (!reserved)
                     throw new InvalidOperationException("Not enough seats remaining.");
 
-                await orderRepository.AddAsync(order, cancellationToken);
+                await unitOfWork.Orders.AddAsync(order, cancellationToken);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }, cancellationToken);
 

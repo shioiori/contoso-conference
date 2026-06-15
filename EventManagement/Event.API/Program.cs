@@ -1,6 +1,5 @@
 using Eventbox.EventManagement.EventApi.Infrastructure;
-using Eventbox.EventManagement.EventApi.Infrastructure.Repositories;
-using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
+using Eventbox.EventManagement.EventApi.Application.Abstractions;
 using Eventbox.EventManagement.EventApi.Mappings;
 using Eventbox.EventManagement.EventApi.Services;
 using Eventbox.EventManagement.EventApi.Services.Abstractions;
@@ -24,9 +23,7 @@ builder.Services.AddDbContext<EventDbContext>(options =>
 
 builder.Services.AddRabbitMqEventBus(builder.Configuration);
 
-builder.Services.AddScoped<IEventRepository, EventRepository>();
-builder.Services.AddScoped<ISeatTypeRepository, SeatTypeRepository>();
-builder.Services.AddScoped<IOrganizationRepository, OrganizationRepository>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IOrganizerEventService, OrganizerEventService>();
 builder.Services.AddScoped<IOrganizationService, OrganizationService>();
 builder.Services.AddScoped<IPublicEventService, PublicEventService>();

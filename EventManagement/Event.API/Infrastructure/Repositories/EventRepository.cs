@@ -1,8 +1,8 @@
 using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
 using Eventbox.EventManagement.EventApi.Domains;
-using Eventbox.EventManagement.EventApi.Infrastructure;
 using Eventbox.EventManagement.EventApi.Infrastructure.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
+using Event = Eventbox.EventManagement.EventApi.Domains.Event;
 
 namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
 {
@@ -11,13 +11,13 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
         public async Task<bool> SlugExistsAsync(string slug, CancellationToken cancellationToken = default)
             => await dbContext.Events.AnyAsync(c => c.Slug == slug, cancellationToken);
 
-        public async Task<Domains.Event?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
+        public async Task<Event?> GetBySlugAsync(string slug, CancellationToken cancellationToken = default)
             => await dbContext.Events
                 .AsNoTracking()
                 .Include(c => c.Seats)
                 .FirstOrDefaultAsync(c => c.Slug == slug, cancellationToken);
 
-        public async Task<Domains.Event?> GetByOrganizationAsync(Guid organizationId, Guid eventId, bool includeSeats = false, bool asNoTracking = true, CancellationToken cancellationToken = default)
+        public async Task<Event?> GetByOrganizationAsync(Guid organizationId, Guid eventId, bool includeSeats = false, bool asNoTracking = true, CancellationToken cancellationToken = default)
         {
             var query = dbContext.Events.Where(c => c.OrganizationId == organizationId && c.Id == eventId);
 
@@ -30,7 +30,7 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
             return await query.FirstOrDefaultAsync(cancellationToken);
         }
 
-        public async Task<IReadOnlyList<Domains.Event>> SearchForOrganizerAsync(Guid organizationId, EventStatus? status, string? query, DateOnly? dateFrom, DateOnly? dateTo, int page, int pageSize, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<Event>> SearchForOrganizerAsync(Guid organizationId, EventStatus? status, string? query, DateOnly? dateFrom, DateOnly? dateTo, int page, int pageSize, CancellationToken cancellationToken = default)
         {
             var events = dbContext.Events
                 .AsNoTracking()
@@ -46,7 +46,7 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
                 .ToListAsync(cancellationToken);
         }
 
-        public async Task<IReadOnlyList<Domains.Event>> SearchPublishedAsync(EventStatus? status, string? query, DateOnly? dateFrom, DateOnly? dateTo, int page, int pageSize, CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyList<Event>> SearchPublishedAsync(EventStatus? status, string? query, DateOnly? dateFrom, DateOnly? dateTo, int page, int pageSize, CancellationToken cancellationToken = default)
         {
             var events = dbContext.Events
                 .AsNoTracking()
@@ -62,7 +62,7 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
                 .ToListAsync(cancellationToken);
         }
 
-        private static IQueryable<Domains.Event> ApplyFilters(IQueryable<Domains.Event> events, EventStatus? status, string? query, DateOnly? dateFrom, DateOnly? dateTo)
+        private static IQueryable<Event> ApplyFilters(IQueryable<Event> events, EventStatus? status, string? query, DateOnly? dateFrom, DateOnly? dateTo)
         {
             if (status.HasValue)
             {

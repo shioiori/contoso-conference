@@ -1,19 +1,16 @@
 using Eventbox.Registration.Application.Abstractions;
 using Eventbox.Registration.Application.Abstractions.Jobs;
 using Eventbox.Registration.Domain.Enums;
-using Eventbox.Registration.Application.Abstractions.Repositories;
 
 namespace Eventbox.Registration.Infrastructure.Jobs
 {
     public class OrderExpirationReconciliationJob(
-        IOrderRepository orderRepository,
-        ISeatAvailabilityRepository seatAvailabilityRepository,
-        IRegistrationUnitOfWork unitOfWork) : IOrderExpirationReconciliationJob
+        IUnitOfWork unitOfWork) : IOrderExpirationReconciliationJob
     {
         public async Task RunAsync(CancellationToken cancellationToken)
         {
             var utcNow = DateTimeOffset.UtcNow;
-            var expiredOrders = orderRepository
+            var expiredOrders = unitOfWork.Orders
                 .Get(
                     x => x.OrderState == OrderState.Pending
                         && x.ReservationExpiresAt <= utcNow,
@@ -26,7 +23,7 @@ namespace Eventbox.Registration.Infrastructure.Jobs
                 var stateChanged = order.Expire(utcNow);
                 if (stateChanged)
                 {
-                    var seatAvailability = await seatAvailabilityRepository.GetByEventIdAsync(order.EventId, cancellationToken);
+                    var seatAvailability = await unitOfWork.SeatAvailabilities.GetByEventIdAsync(order.EventId, cancellationToken);
                     if (seatAvailability is not null)
                     {
                         foreach (var item in order.OrderItems)
@@ -34,10 +31,10 @@ namespace Eventbox.Registration.Infrastructure.Jobs
                             seatAvailability.Release(item.TicketTypeId, item.Quantity);
                         }
 
-                        seatAvailabilityRepository.Update(seatAvailability);
+                        unitOfWork.SeatAvailabilities.Update(seatAvailability);
                     }
 
-                    orderRepository.Update(order);
+                    unitOfWork.Orders.Update(order);
                 }
             }
 

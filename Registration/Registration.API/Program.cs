@@ -12,14 +12,12 @@ using Eventbox.Registration.Application.Messages;
 using Eventbox.Registration.Infrastructure;
 using Eventbox.Registration.Infrastructure.Jobs;
 using Eventbox.Registration.Infrastructure.Messaging;
-using Eventbox.Registration.Infrastructure.Repositories;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Eventbox.Registration.Application.Abstractions.Repositories;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,9 +28,7 @@ mapsterConfig.Apply(new RegistrationMapping());
 builder.Services.AddDbContext<RegistrationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Database")));
 
-builder.Services.AddScoped<IOrderRepository, OrderRepository>();
-builder.Services.AddScoped<ISeatAvailabilityRepository, SeatAvailabilityRepository>();
-builder.Services.AddScoped<IRegistrationUnitOfWork, RegistrationUnitOfWork>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IOrderExpirationScheduler, OrderExpirationScheduler>();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<RegisterToEventCommand>());
 

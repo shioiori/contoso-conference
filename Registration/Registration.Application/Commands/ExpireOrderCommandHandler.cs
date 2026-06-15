@@ -1,17 +1,14 @@
 using Eventbox.Registration.Application.Abstractions;
-using Eventbox.Registration.Application.Abstractions.Repositories;
 using MediatR;
 
 namespace Eventbox.Registration.Application.Commands
 {
     public class ExpireOrderCommandHandler(
-        IOrderRepository orderRepository,
-        ISeatAvailabilityRepository seatAvailabilityRepository,
-        IRegistrationUnitOfWork unitOfWork) : IRequestHandler<ExpireOrderCommand, bool>
+        IUnitOfWork unitOfWork) : IRequestHandler<ExpireOrderCommand, bool>
     {
         public async Task<bool> Handle(ExpireOrderCommand request, CancellationToken cancellationToken)
         {
-            var order = orderRepository
+            var order = unitOfWork.Orders
                 .Get(
                     x => x.Id == request.OrderId,
                     includeProperties: "OrderItems",
@@ -23,7 +20,7 @@ namespace Eventbox.Registration.Application.Commands
             var stateChanged = order.Expire(DateTimeOffset.UtcNow);
             if (stateChanged)
             {
-                var seatAvailability = await seatAvailabilityRepository.GetByEventIdAsync(order.EventId, cancellationToken);
+                var seatAvailability = await unitOfWork.SeatAvailabilities.GetByEventIdAsync(order.EventId, cancellationToken);
                 if (seatAvailability is not null)
                 {
                     foreach (var item in order.OrderItems)
@@ -31,10 +28,10 @@ namespace Eventbox.Registration.Application.Commands
                         seatAvailability.Release(item.TicketTypeId, item.Quantity);
                     }
 
-                    seatAvailabilityRepository.Update(seatAvailability);
+                    unitOfWork.SeatAvailabilities.Update(seatAvailability);
                 }
 
-                orderRepository.Update(order);
+                unitOfWork.Orders.Update(order);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
 
