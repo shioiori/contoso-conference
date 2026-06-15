@@ -10,7 +10,5 @@ namespace Eventbox.EventManagement.EventApi.Dtos.PublicEvents
         public DateOnly? DateTo { get; set; }
         public DateOnly? StartDate { get; set; }
         public DateOnly? EndDate { get; set; }
-        public string? Format { get; set; }
-
     }
 }

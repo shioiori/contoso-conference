@@ -8,8 +8,8 @@ namespace Eventbox.EventManagement.EventApi.Dtos.PublicEvents
         public string Name { get; private set; } = default!;
         public string? Description { get; private set; }
         public string Slug { get; private set; } = default!;
-        public DateOnly StartDate { get; private set; }
-        public DateOnly EndDate { get; private set; }
+        public DateTimeOffset From { get; private set; }
+        public DateTimeOffset To { get; private set; }
         public bool IsPublished { get; private set; }
         public string? AccessCode { get; private set; }
         public int TicketCount { get; private set; }
@@ -20,7 +20,7 @@ namespace Eventbox.EventManagement.EventApi.Dtos.PublicEvents
             {
                 if (IsPublished)
                     return EventStatus.Published;
-                else if (StartDate > DateOnly.FromDateTime(DateTime.UtcNow))
+                else if (From > DateTimeOffset.UtcNow)
                     return EventStatus.Draft;
                 else
                     return EventStatus.Cancelled;

@@ -22,109 +22,33 @@ namespace Eventbox.TicketingInfrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("Eventbox.TicketingDomain.Entities.CheckInAggregate.CheckInAttempt", b =>
+            modelBuilder.Entity("Eventbox.TicketingDomain.Entities.EventSchedule", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("CheckInPassId")
-                        .HasColumnType("uuid");
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
 
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("FailureReason")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<string>("QrTokenHash")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<int>("Result")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset>("ScannedAt")
+                    b.Property<DateTimeOffset>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("StaffUserId")
-                        .HasColumnType("uuid");
+                    b.Property<DateTimeOffset>("From")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("To")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CheckInPassId");
-
-                    b.HasIndex("EventId", "ScannedAt");
-
-                    b.ToTable("CheckInAttempts");
-                });
-
-            modelBuilder.Entity("Eventbox.TicketingDomain.Entities.CheckInAggregate.CheckInPass", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("AttendeeEmail")
-                        .IsRequired()
-                        .HasMaxLength(320)
-                        .HasColumnType("character varying(320)");
-
-                    b.Property<string>("AttendeeName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)");
-
-                    b.Property<DateTimeOffset?>("CheckedInAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid?>("CheckedInByUserId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("EventId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("QrToken")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<string>("QrTokenHash")
-                        .IsRequired()
-                        .HasMaxLength(128)
-                        .HasColumnType("character varying(128)");
-
-                    b.Property<Guid>("RegistrationOrderId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("RegistrationTicketId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TicketTypeId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("QrToken")
-                        .IsUnique();
-
-                    b.HasIndex("QrTokenHash")
-                        .IsUnique();
-
-                    b.HasIndex("RegistrationTicketId")
-                        .IsUnique();
-
-                    b.HasIndex("EventId", "Status");
-
-                    b.ToTable("CheckInPasses");
+                    b.ToTable("EventSchedules");
                 });
 
             modelBuilder.Entity("Eventbox.TicketingDomain.Entities.OrderAggregate.Order", b =>
@@ -136,6 +60,12 @@ namespace Eventbox.TicketingInfrastructure.Migrations
                     b.Property<string>("AccessCode")
                         .HasColumnType("text");
 
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("EventId")
                         .HasColumnType("uuid");
 
@@ -143,6 +73,12 @@ namespace Eventbox.TicketingInfrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTimeOffset?>("ReservationExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UserId")
@@ -158,6 +94,12 @@ namespace Eventbox.TicketingInfrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Currency")
                         .IsRequired()
@@ -190,6 +132,12 @@ namespace Eventbox.TicketingInfrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
@@ -203,11 +151,31 @@ namespace Eventbox.TicketingInfrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateTimeOffset>("CreatedAt")
+                    b.Property<DateTimeOffset?>("CheckedInAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CheckedInByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("QrToken")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<string>("QrTokenHash")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
 
                     b.Property<int>("SequenceNumber")
                         .HasColumnType("integer");
@@ -218,9 +186,23 @@ namespace Eventbox.TicketingInfrastructure.Migrations
                     b.Property<int>("TicketTypeId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OrderId");
+
+                    b.HasIndex("QrToken")
+                        .IsUnique();
+
+                    b.HasIndex("QrTokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("EventId", "TicketState");
 
                     b.ToTable("Tickets");
                 });
@@ -231,17 +213,21 @@ namespace Eventbox.TicketingInfrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
+
                     b.HasKey("Id");
 
                     b.ToTable("TicketAvailabilities");
-                });
-
-            modelBuilder.Entity("Eventbox.TicketingDomain.Entities.CheckInAggregate.CheckInAttempt", b =>
-                {
-                    b.HasOne("Eventbox.TicketingDomain.Entities.CheckInAggregate.CheckInPass", null)
-                        .WithMany()
-                        .HasForeignKey("CheckInPassId")
-                        .OnDelete(DeleteBehavior.SetNull);
                 });
 
             modelBuilder.Entity("Eventbox.TicketingDomain.Entities.OrderAggregate.Order", b =>

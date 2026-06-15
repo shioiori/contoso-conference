@@ -13,10 +13,10 @@ namespace Eventbox.EventManagement.EventApi.Requests
         public string Slug { get; set; } = "";
 
         [Required]
-        public DateTimeOffset StartDate { get; set; }
+        public DateTimeOffset From { get; set; }
 
         [Required]
-        public DateTimeOffset EndDate { get; set; }
+        public DateTimeOffset To { get; set; }
 
         [MaxLength(500)]
         public string? Summary { get; set; }

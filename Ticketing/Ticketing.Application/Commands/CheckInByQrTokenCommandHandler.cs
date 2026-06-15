@@ -1,17 +1,15 @@
 using Eventbox.TicketingApplication.Abstractions;
 using Eventbox.TicketingApplication.Abstractions.Repositories;
 using Eventbox.TicketingApplication.Dtos;
-using Eventbox.TicketingApplication.Mappings;
-using Eventbox.TicketingDomain.Entities.CheckInAggregate;
 using Eventbox.TicketingDomain.Enums;
+using Mapster;
 using MediatR;
 
 namespace Eventbox.TicketingApplication.Commands;
 
 public class CheckInByQrTokenCommandHandler(
-    ICheckInPassRepository checkInPassRepository,
-    ICheckInAttemptRepository checkInAttemptRepository,
-    IRegistrationUnitOfWork unitOfWork,
+    IOrderRepository orderRepository,
+    IEventScheduleRepository eventScheduleRepository,
     IQrTokenHasher qrTokenHasher) : IRequestHandler<CheckInByQrTokenCommand, CheckInResultDto>
 {
     public async Task<CheckInResultDto> Handle(CheckInByQrTokenCommand request, CancellationToken cancellationToken)
@@ -20,67 +18,31 @@ public class CheckInByQrTokenCommandHandler(
             return new CheckInResultDto(CheckInAttemptResult.InvalidToken, "QR token is required.", null);
 
         var qrTokenHash = qrTokenHasher.Hash(request.QrToken);
-        CheckInResultDto result = null!;
+        var ticket = await orderRepository.GetTicketByQrTokenHashAsync(qrTokenHash, cancellationToken);
+        var now = DateTimeOffset.UtcNow;
 
-        await unitOfWork.ExecuteInTransactionAsync(async () =>
-        {
-            var pass = await checkInPassRepository.GetByQrTokenHashAsync(qrTokenHash, cancellationToken);
-            result = await BuildResultAndRecordAttemptAsync(request, qrTokenHash, pass, cancellationToken);
-        }, cancellationToken);
+        if (ticket is null)
+            return new CheckInResultDto(CheckInAttemptResult.InvalidToken, "QR token is invalid.", null);
 
-        return result;
-    }
+        if (ticket.EventId != request.EventId)
+            return new CheckInResultDto(CheckInAttemptResult.WrongEvent, "QR token does not belong to this event.", ticket.Adapt<TicketDto>());
 
-    private async Task<CheckInResultDto> BuildResultAndRecordAttemptAsync(
-        CheckInByQrTokenCommand request,
-        string qrTokenHash,
-        CheckInPass? pass,
-        CancellationToken cancellationToken)
-    {
-        var scannedAt = DateTimeOffset.UtcNow;
-        CheckInAttemptResult attemptResult;
-        string message;
+        if (ticket.TicketState == TicketState.Cancelled)
+            return new CheckInResultDto(CheckInAttemptResult.Cancelled, "Ticket has been cancelled.", ticket.Adapt<TicketDto>());
 
-        if (pass is null)
-        {
-            attemptResult = CheckInAttemptResult.InvalidToken;
-            message = "QR token is invalid.";
-        }
-        else if (pass.EventId != request.EventId)
-        {
-            attemptResult = CheckInAttemptResult.WrongEvent;
-            message = "QR token does not belong to this event.";
-        }
-        else if (pass.Status == CheckInPassStatus.Cancelled)
-        {
-            attemptResult = CheckInAttemptResult.Cancelled;
-            message = "Check-in pass has been cancelled.";
-        }
-        else if (!pass.CheckIn(request.StaffUserId ?? Guid.Empty, scannedAt))
-        {
-            attemptResult = CheckInAttemptResult.AlreadyCheckedIn;
-            message = "Check-in pass was already used.";
-        }
-        else
-        {
-            checkInPassRepository.Update(pass);
-            attemptResult = CheckInAttemptResult.Success;
-            message = "Check-in completed.";
-        }
+        var schedule = await eventScheduleRepository.GetByEventIdAsync(request.EventId, cancellationToken);
+        if (schedule is not null && !schedule.IsCheckInAvailable(now))
+            return new CheckInResultDto(CheckInAttemptResult.CheckInUnavailable, "Check-in is not available for this event time window.", ticket.Adapt<TicketDto>());
 
-        await checkInAttemptRepository.AddAsync(
-            new CheckInAttempt(
-                request.EventId,
-                pass?.Id,
-                request.StaffUserId,
-                qrTokenHash,
-                attemptResult,
-                attemptResult == CheckInAttemptResult.Success ? null : message,
-                scannedAt),
-            cancellationToken);
+        if (ticket.CheckedInAt.HasValue)
+            return new CheckInResultDto(CheckInAttemptResult.AlreadyCheckedIn, "Ticket was already checked in.", ticket.Adapt<TicketDto>());
 
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        var updated = await orderRepository.TryMarkTicketCheckedInAsync(ticket.Id, request.StaffUserId, now, cancellationToken);
+        ticket = await orderRepository.GetTicketByQrTokenHashAsync(qrTokenHash, cancellationToken) ?? ticket;
 
-        return new CheckInResultDto(attemptResult, message, pass?.ToDto());
+        if (updated == 0)
+            return new CheckInResultDto(CheckInAttemptResult.AlreadyCheckedIn, "Ticket was already checked in.", ticket.Adapt<TicketDto>());
+
+        return new CheckInResultDto(CheckInAttemptResult.Success, "Check-in completed.", ticket.Adapt<TicketDto>());
     }
 }

@@ -181,6 +181,22 @@ public class RegisterToEventCommandHandlerConcurrencyTests
 
             return Task.FromResult(hasOrder);
         }
+
+        public Task<Ticket?> GetTicketByQrTokenHashAsync(string qrTokenHash, CancellationToken cancellationToken = default)
+            => Task.FromResult(_orders.SelectMany(order => order.Tickets).FirstOrDefault(ticket => ticket.QrTokenHash == qrTokenHash));
+
+        public Task<bool> ExistsTicketByQrTokenHashAsync(string qrTokenHash, CancellationToken cancellationToken = default)
+            => Task.FromResult(_orders.SelectMany(order => order.Tickets).Any(ticket => ticket.QrTokenHash == qrTokenHash));
+
+        public Task<int> TryMarkTicketCheckedInAsync(Guid ticketId, Guid? staffUserId, DateTimeOffset checkedInAt, CancellationToken cancellationToken = default)
+        {
+            var ticket = _orders.SelectMany(order => order.Tickets).FirstOrDefault(ticket => ticket.Id == ticketId);
+            if (ticket is null || ticket.TicketState != TicketState.Active || ticket.CheckedInAt.HasValue)
+                return Task.FromResult(0);
+
+            ticket.CheckIn(staffUserId ?? Guid.Empty, checkedInAt);
+            return Task.FromResult(1);
+        }
     }
 
     private sealed class InMemoryRegistrationUnitOfWork : IRegistrationUnitOfWork

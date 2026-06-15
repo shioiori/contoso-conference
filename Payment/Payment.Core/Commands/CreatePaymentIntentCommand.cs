@@ -1,5 +1,6 @@
 using Eventbox.Payment.Core.Abstractions;
 using Eventbox.Payment.Core.Dtos;
+using Mapster;
 using MediatR;
 using PaymentEntity = Eventbox.Payment.Core.Entities.Payment;
 
@@ -27,7 +28,7 @@ namespace Eventbox.Payment.Core.Commands
                     cancellationToken);
 
                 if (existing is not null)
-                    return ToDto(existing);
+                    return existing.Adapt<PaymentIntentDto>();
             }
 
             var payment = PaymentEntity.CreateIntent(
@@ -41,19 +42,7 @@ namespace Eventbox.Payment.Core.Commands
             await paymentRepository.AddAsync(payment, cancellationToken);
             await paymentRepository.SaveChangesAsync(cancellationToken);
 
-            return ToDto(payment);
+            return payment.Adapt<PaymentIntentDto>();
         }
-
-        private static PaymentIntentDto ToDto(PaymentEntity payment)
-            => new()
-            {
-                PaymentIntentId = payment.Id,
-                OrderId = payment.OrderId,
-                Amount = payment.Amount,
-                Currency = payment.Currency,
-                Status = payment.Status,
-                ReturnUrl = payment.ReturnUrl,
-                CancelUrl = payment.CancelUrl
-            };
     }
 }

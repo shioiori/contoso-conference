@@ -1,14 +1,12 @@
 using MediatR;
 using Eventbox.TicketingApplication.Abstractions;
 using Eventbox.TicketingApplication.Abstractions.Repositories;
-using Eventbox.TicketingDomain.Entities.CheckInAggregate;
 using Eventbox.Shared.Exceptions;
 
 namespace Eventbox.TicketingApplication.Commands
 {
     public class ConfirmOrderCommandHandler(
         IOrderRepository orderRepository,
-        ICheckInPassRepository checkInPassRepository,
         IRegistrationUnitOfWork unitOfWork,
         IQrTokenGenerator qrTokenGenerator,
         IQrTokenHasher qrTokenHasher) : IRequestHandler<ConfirmOrderCommand, bool>
@@ -23,25 +21,11 @@ namespace Eventbox.TicketingApplication.Commands
             {
                 foreach (var ticket in order.Tickets)
                 {
-                    if (await checkInPassRepository.ExistsByRegistrationTicketIdAsync(ticket.Id, cancellationToken))
+                    if (!string.IsNullOrWhiteSpace(ticket.QrTokenHash))
                         continue;
 
                     var qrToken = await GenerateUniqueQrTokenAsync(cancellationToken);
-                    var attendeeName = string.IsNullOrWhiteSpace(order.PersonalInfo.Name)
-                        ? order.PersonalInfo.Email
-                        : order.PersonalInfo.Name;
-
-                    await checkInPassRepository.AddAsync(
-                        new CheckInPass(
-                            order.EventId,
-                            order.Id,
-                            ticket.Id,
-                            ticket.TicketTypeId,
-                            attendeeName,
-                            order.PersonalInfo.Email,
-                            qrToken,
-                            qrTokenHasher.Hash(qrToken)),
-                        cancellationToken);
+                    ticket.AssignQrToken(qrToken, qrTokenHasher.Hash(qrToken));
                 }
 
                 orderRepository.Update(order);
@@ -61,7 +45,7 @@ namespace Eventbox.TicketingApplication.Commands
                 qrToken = qrTokenGenerator.Generate();
                 qrTokenHash = qrTokenHasher.Hash(qrToken);
             }
-            while (await checkInPassRepository.ExistsByQrTokenHashAsync(qrTokenHash, cancellationToken));
+            while (await orderRepository.ExistsTicketByQrTokenHashAsync(qrTokenHash, cancellationToken));
 
             return qrToken;
         }

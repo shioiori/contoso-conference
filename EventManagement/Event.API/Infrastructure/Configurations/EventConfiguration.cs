@@ -33,10 +33,10 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Configurations
             builder.Property(c => c.IsPublished)
                 .IsRequired();
 
-            builder.Property(c => c.StartDate)
+            builder.Property(c => c.From)
                 .IsRequired();
 
-            builder.Property(c => c.EndDate)
+            builder.Property(c => c.To)
                 .IsRequired();
 
             builder.HasMany<TicketType>(c => c.TicketTypes)

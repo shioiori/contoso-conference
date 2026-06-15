@@ -22,7 +22,6 @@ namespace Eventbox.EventManagement.EventApi.Domains
         public void Update(string name)
         {
             SetName(name);
-            UpdatedAt = DateOnly.FromDateTime(DateTime.UtcNow);
         }
 
         private void SetName(string name)

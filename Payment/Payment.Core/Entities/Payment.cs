@@ -1,8 +1,9 @@
+using Eventbox.Shared.Auditing;
 using Eventbox.Payment.Core.Enums;
 
 namespace Eventbox.Payment.Core.Entities
 {
-    public class Payment
+    public class Payment : IAuditableEntity
     {
         private Payment()
         {
@@ -34,7 +35,6 @@ namespace Eventbox.Payment.Core.Entities
             CancelUrl = cancelUrl;
             IdempotencyKey = string.IsNullOrWhiteSpace(idempotencyKey) ? null : idempotencyKey.Trim();
             Status = Enums.PaymentStatus.Pending;
-            CreatedAt = DateTimeOffset.UtcNow;
         }
 
         public Guid Id { get; private set; }
@@ -42,7 +42,10 @@ namespace Eventbox.Payment.Core.Entities
         public decimal Amount { get; private set; }
         public string Currency { get; private set; }
         public Enums.PaymentStatus Status { get; private set; }
-        public DateTimeOffset CreatedAt { get; private set; }
+        public DateTimeOffset CreatedDate { get; private set; }
+        public DateTimeOffset? UpdatedDate { get; private set; }
+        public string? CreatedBy { get; private set; }
+        public string? UpdatedBy { get; private set; }
         public DateTimeOffset? CompletedAt { get; private set; }
         public DateTimeOffset? FailedAt { get; private set; }
         public string? IdempotencyKey { get; private set; }
@@ -59,6 +62,20 @@ namespace Eventbox.Payment.Core.Entities
             string? cancelUrl,
             string? idempotencyKey)
             => new(orderId, amount, currency, returnUrl, cancelUrl, idempotencyKey);
+
+        public void MarkCreated(string? userId, DateTimeOffset utcNow)
+        {
+            CreatedDate = utcNow;
+            CreatedBy = userId;
+            UpdatedDate = null;
+            UpdatedBy = null;
+        }
+
+        public void MarkUpdated(string? userId, DateTimeOffset utcNow)
+        {
+            UpdatedDate = utcNow;
+            UpdatedBy = userId;
+        }
 
         public bool MarkSucceeded(
             string providerEventId,

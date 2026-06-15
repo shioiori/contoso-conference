@@ -18,7 +18,7 @@ Eventbox v1 covers the core flow for organizers publishing events and customers 
 | --- | --- | --- |
 | Auth API | `Auth/Auth.API` | Customer/organizer registration, login, JWT issuance, current-user endpoint. |
 | Event API | `EventManagement/Event.API` | Organizations, organizer event management, public event discovery, ticket type management. |
-| Registration API | `Registration/Registration.API` | Public checkout, customer orders, order cancellation/confirmation, seat availability, order expiration jobs. |
+| Registration API | `Registration/Registration.API` | Public checkout, customer orders, order cancellation/confirmation, ticket availability, order expiration jobs. |
 | Payment API | `Payment/Payment.API` | Payment intent creation and simulated payment provider callbacks. |
 | EventBus | `EventBus/EventBus` and `EventBus/EventBus.RabbitMQ` | Shared abstractions and RabbitMQ implementation for events, commands, delayed scheduling, and serialization. |
 
@@ -103,7 +103,7 @@ Organizer routes require a JWT with `account_type = Organizer`:
 | `GET` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types` | List ticket types for an event. |
 | `POST` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types` | Create a ticket type. |
 | `PATCH` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types/{ticketTypeId}` | Fetch/update ticket type placeholder route in current code. |
-| `POST` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types/{ticketTypeId}/seats` | Add seats to a ticket type. |
+| `POST` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types/{ticketTypeId}/capacity` | Add capacity to a ticket type. |
 | `GET` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types/{ticketTypeId}/availability` | Get ticket type availability. |
 
 ### Registration API
@@ -114,7 +114,7 @@ Public routes:
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/public/events/{eventId}/seat-availability` | Get seat availability by event id. |
+| `GET` | `/api/public/events/{eventId}/ticket-availability` | Get ticket availability by event id. |
 | `POST` | `/api/public/events/{eventId}/orders` | Create an order/reservation. Supports guest checkout when email is supplied. |
 | `POST` | `/api/public/order-lookup-requests` | Placeholder for requesting a self-service order lookup email. |
 | `GET` | `/api/public/self-service/orders?token={token}` | Get an order by self-service token. |
@@ -144,8 +144,8 @@ Base URL when running locally: `http://localhost:5193`
 
 1. Organizer registers through Auth API and receives a JWT with `account_type = Organizer`.
 2. Organizer creates an organization, creates an event, creates ticket types, adds seats, and publishes the event.
-3. Event API publishes integration events such as event creation/publication and seat changes.
-4. Registration service consumes relevant events and maintains seat availability.
+3. Event API publishes integration events such as event creation/publication and ticket capacity changes.
+4. Registration service consumes relevant events and maintains ticket availability.
 5. Customer or guest creates an order through Registration API.
 6. Registration reserves seats, schedules order expiration, and exposes order/customer APIs.
 7. Payment API verifies order access with Registration API, creates a payment intent, and handles simulated provider callbacks.
@@ -296,7 +296,7 @@ dotnet test Eventbox.slnx
 
 Current unit test coverage focuses on:
 
-- Registration seat availability behavior
+- Registration ticket availability behavior
 - Registration concurrency for event registration
 - Payment callback behavior
 

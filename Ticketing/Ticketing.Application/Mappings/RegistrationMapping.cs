@@ -17,6 +17,13 @@ namespace Eventbox.TicketingApplication.Mappings
 
             config.NewConfig<OrderItem, OrderItemDto>();
 
+            config.NewConfig<Ticket, TicketDto>()
+                .Map(dest => dest.CheckInStatus, src => src.TicketState == Eventbox.TicketingDomain.Enums.TicketState.Cancelled
+                    ? Eventbox.TicketingDomain.Enums.CheckInStatus.Cancelled
+                    : src.CheckedInAt.HasValue
+                        ? Eventbox.TicketingDomain.Enums.CheckInStatus.CheckedIn
+                        : Eventbox.TicketingDomain.Enums.CheckInStatus.Active);
+
             config.NewConfig<TicketAvailability, TicketAvailabilityDto>()
                 .Map(dest => dest.EventId, src => src.Id)
                 .Map(dest => dest.TicketTypes, src => src.TicketTypes.Adapt<IReadOnlyCollection<TicketTypeAvailabilityDto>>());

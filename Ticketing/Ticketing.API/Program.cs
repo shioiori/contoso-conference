@@ -36,12 +36,13 @@ mapsterConfig.Apply(new RegistrationMapping());
 builder.Services.AddDbContext<RegistrationDbContext>((serviceProvider, options) =>
     options
         .UseNpgsql(builder.Configuration.GetConnectionString("Database"))
-        .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
+        .AddInterceptors(
+            serviceProvider.GetRequiredService<AuditableEntitySaveChangesInterceptor>(),
+            serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<ITicketAvailabilityRepository, TicketAvailabilityRepository>();
-builder.Services.AddScoped<ICheckInPassRepository, CheckInPassRepository>();
-builder.Services.AddScoped<ICheckInAttemptRepository, CheckInAttemptRepository>();
+builder.Services.AddScoped<IEventScheduleRepository, EventScheduleRepository>();
 builder.Services.AddScoped<IRegistrationUnitOfWork, RegistrationUnitOfWork>();
 builder.Services.AddScoped<IOrderExpirationScheduler, OrderExpirationScheduler>();
 builder.Services.AddSingleton<IQrTokenGenerator, QrTokenGenerator>();
@@ -56,6 +57,12 @@ builder.Services.AddIntegrationEventHandler<
 builder.Services.AddIntegrationEventHandler<
     PaymentConfirmedIntegrationEvent,
     PaymentConfirmedIntegrationEventHandler>();
+builder.Services.AddIntegrationEventHandler<
+    EventCreatedEvent,
+    EventCreatedEventHandler>();
+builder.Services.AddIntegrationEventHandler<
+    EventUpdatedEvent,
+    EventUpdatedEventHandler>();
 builder.Services.AddIntegrationEventHandler<
     TicketTypeCreatedEvent,
     TicketTypeCreatedEventHandler>();

@@ -26,7 +26,9 @@ mapsterConfig.Apply(new EventMappingConfig());
 builder.Services.AddDbContext<EventDbContext>((serviceProvider, options) =>
     options
         .UseNpgsql(builder.Configuration.GetConnectionString("Database"))
-        .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
+        .AddInterceptors(
+            serviceProvider.GetRequiredService<AuditableEntitySaveChangesInterceptor>(),
+            serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
 builder.Services.AddRabbitMqEventBus(builder.Configuration);
 

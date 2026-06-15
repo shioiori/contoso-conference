@@ -42,8 +42,8 @@ namespace Eventbox.EventManagement.EventApi.Controllers
                 organizationId,
                 request.Name,
                 request.Slug,
-                DateOnly.FromDateTime(request.StartDate.UtcDateTime),
-                DateOnly.FromDateTime(request.EndDate.UtcDateTime),
+                request.From,
+                request.To,
                 request.Description,
                 cancellationToken);
 
@@ -71,8 +71,8 @@ namespace Eventbox.EventManagement.EventApi.Controllers
                 organizationId,
                 id,
                 request.Name,
-                DateOnly.FromDateTime(request.StartDate.UtcDateTime),
-                DateOnly.FromDateTime(request.EndDate.UtcDateTime),
+                request.From,
+                request.To,
                 request.Description,
                 cancellationToken);
 

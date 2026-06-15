@@ -59,5 +59,21 @@ namespace Eventbox.TicketingInfrastructure.Repositories
                         || o.PersonalInfo.Email.ToUpper() == normalizedEmail),
                 cancellationToken);
         }
+
+        public Task<Ticket?> GetTicketByQrTokenHashAsync(string qrTokenHash, CancellationToken cancellationToken = default)
+            => DbContext.Tickets.FirstOrDefaultAsync(t => t.QrTokenHash == qrTokenHash, cancellationToken);
+
+        public Task<bool> ExistsTicketByQrTokenHashAsync(string qrTokenHash, CancellationToken cancellationToken = default)
+            => DbContext.Tickets.AnyAsync(t => t.QrTokenHash == qrTokenHash, cancellationToken);
+
+        public Task<int> TryMarkTicketCheckedInAsync(Guid ticketId, Guid? staffUserId, DateTimeOffset checkedInAt, CancellationToken cancellationToken = default)
+            => DbContext.Tickets
+                .Where(t => t.Id == ticketId
+                    && t.TicketState == TicketState.Active
+                    && t.CheckedInAt == null)
+                .ExecuteUpdateAsync(setters => setters
+                    .SetProperty(t => t.CheckedInAt, checkedInAt)
+                    .SetProperty(t => t.CheckedInByUserId, staffUserId),
+                    cancellationToken);
     }
 }

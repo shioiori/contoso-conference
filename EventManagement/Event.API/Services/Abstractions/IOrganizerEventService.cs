@@ -12,8 +12,8 @@ namespace Eventbox.EventManagement.EventApi.Services.Abstractions
         Task<IEnumerable<OrganizerEventDto>> SearchAsync(OrganizerEventSearchDto searchDto, CancellationToken cancellationToken = default);
         Task PublishedAsync(Guid organizationId, Guid id, CancellationToken cancellationToken = default);
         Task UnpublishedAsync(Guid organizationId, Guid id, CancellationToken cancellationToken = default);
-        Task<OrganizerEventDto> CreateAsync(Guid? organizationId, string name, string slug, DateOnly startDate, DateOnly endDate, string? description = null, CancellationToken cancellationToken = default);
-        Task<OrganizerEventDto> UpdateAsync(Guid organizationId, Guid id, string name, DateOnly startDate, DateOnly endDate, string? description = null, CancellationToken cancellationToken = default);
+        Task<OrganizerEventDto> CreateAsync(Guid? organizationId, string name, string slug, DateTimeOffset from, DateTimeOffset to, string? description = null, CancellationToken cancellationToken = default);
+        Task<OrganizerEventDto> UpdateAsync(Guid organizationId, Guid id, string name, DateTimeOffset from, DateTimeOffset to, string? description = null, CancellationToken cancellationToken = default);
         //Task SetVisibilityAsync(Guid id, bool isPublished, CancellationToken cancellationToken = default);
         Task DeleteAsync(Guid organizationId, Guid id, CancellationToken cancellationToken = default);
     }

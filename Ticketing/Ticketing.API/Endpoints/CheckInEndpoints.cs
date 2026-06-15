@@ -43,6 +43,7 @@ public static class CheckInEndpoints
             CheckInAttemptResult.InvalidToken => Results.NotFound(body),
             CheckInAttemptResult.WrongEvent => Results.BadRequest(body),
             CheckInAttemptResult.Cancelled => Results.BadRequest(body),
+            CheckInAttemptResult.CheckInUnavailable => Results.BadRequest(body),
             CheckInAttemptResult.AlreadyCheckedIn => Results.Conflict(body),
             _ => Results.BadRequest(body)
         };

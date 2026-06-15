@@ -27,7 +27,9 @@ if (string.IsNullOrWhiteSpace(jwtOptions.SigningKey) || jwtOptions.SigningKey.Le
 builder.Services.AddDbContext<AuthDbContext>((serviceProvider, options) =>
     options
         .UseNpgsql(builder.Configuration.GetConnectionString("Database"))
-        .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
+        .AddInterceptors(
+            serviceProvider.GetRequiredService<AuditableEntitySaveChangesInterceptor>(),
+            serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
 builder.Services
     .AddIdentityCore<ApplicationUser>(options =>

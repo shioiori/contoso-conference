@@ -32,18 +32,18 @@ namespace Eventbox.EventManagement.EventApi.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("character varying(10)");
 
-                    b.Property<DateOnly>("CreatedAt")
-                        .HasColumnType("date");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
-                    b.Property<DateOnly>("EndDate")
-                        .HasColumnType("date");
+                    b.Property<DateTimeOffset>("From")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
@@ -61,14 +61,14 @@ namespace Eventbox.EventManagement.EventApi.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<DateOnly>("StartDate")
-                        .HasColumnType("date");
-
-                    b.Property<DateOnly?>("UpdatedAt")
-                        .HasColumnType("date");
+                    b.Property<DateTimeOffset>("To")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -84,22 +84,22 @@ namespace Eventbox.EventManagement.EventApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<DateOnly>("CreatedAt")
-                        .HasColumnType("date");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
-                    b.Property<DateOnly?>("UpdatedAt")
-                        .HasColumnType("date");
-
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -118,11 +118,11 @@ namespace Eventbox.EventManagement.EventApi.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("character varying(256)");
 
-                    b.Property<DateOnly>("CreatedAt")
-                        .HasColumnType("date");
-
                     b.Property<string>("CreatedBy")
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Currency")
                         .IsRequired()
@@ -150,11 +150,11 @@ namespace Eventbox.EventManagement.EventApi.Migrations
                     b.Property<int>("Quota")
                         .HasColumnType("integer");
 
-                    b.Property<DateOnly?>("UpdatedAt")
-                        .HasColumnType("date");
-
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Visibility")
                         .IsRequired()
@@ -184,11 +184,11 @@ namespace Eventbox.EventManagement.EventApi.Migrations
 
                             NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
 
-                            b1.Property<DateOnly>("CreatedAt")
-                                .HasColumnType("date");
-
                             b1.Property<string>("CreatedBy")
                                 .HasColumnType("text");
+
+                            b1.Property<DateTimeOffset>("CreatedDate")
+                                .HasColumnType("timestamp with time zone");
 
                             b1.Property<DateTimeOffset?>("EndTime")
                                 .HasColumnType("timestamp with time zone");
@@ -208,11 +208,11 @@ namespace Eventbox.EventManagement.EventApi.Migrations
                             b1.Property<int>("TicketTypeId")
                                 .HasColumnType("integer");
 
-                            b1.Property<DateOnly?>("UpdatedAt")
-                                .HasColumnType("date");
-
                             b1.Property<string>("UpdatedBy")
                                 .HasColumnType("text");
+
+                            b1.Property<DateTimeOffset?>("UpdatedDate")
+                                .HasColumnType("timestamp with time zone");
 
                             b1.HasKey("Id");
 

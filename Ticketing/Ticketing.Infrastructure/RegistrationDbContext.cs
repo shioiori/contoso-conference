@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Eventbox.TicketingDomain.Entities.CheckInAggregate;
+using Eventbox.TicketingDomain.Entities;
 using Eventbox.TicketingDomain.Entities.OrderAggregate;
 using Eventbox.TicketingDomain.Entities.TicketAvailabilityAggregate;
 
@@ -14,8 +14,7 @@ namespace Eventbox.TicketingInfrastructure
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
         public DbSet<Ticket> Tickets => Set<Ticket>();
-        public DbSet<CheckInPass> CheckInPasses => Set<CheckInPass>();
-        public DbSet<CheckInAttempt> CheckInAttempts => Set<CheckInAttempt>();
+        public DbSet<EventSchedule> EventSchedules => Set<EventSchedule>();
         public DbSet<TicketAvailability> TicketAvailabilities => Set<TicketAvailability>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -53,31 +52,18 @@ namespace Eventbox.TicketingInfrastructure
             modelBuilder.Entity<Ticket>(ticket =>
             {
                 ticket.HasKey(t => t.Id);
+                ticket.Property(t => t.QrToken).HasMaxLength(128);
+                ticket.Property(t => t.QrTokenHash).HasMaxLength(128);
+                ticket.HasIndex(t => t.QrToken).IsUnique();
+                ticket.HasIndex(t => t.QrTokenHash).IsUnique();
+                ticket.HasIndex(t => new { t.EventId, t.TicketState });
             });
 
-            modelBuilder.Entity<CheckInPass>(pass =>
+            modelBuilder.Entity<EventSchedule>(schedule =>
             {
-                pass.HasKey(p => p.Id);
-                pass.Property(p => p.AttendeeName).HasMaxLength(200).IsRequired();
-                pass.Property(p => p.AttendeeEmail).HasMaxLength(320).IsRequired();
-                pass.Property(p => p.QrToken).HasMaxLength(128).IsRequired();
-                pass.Property(p => p.QrTokenHash).HasMaxLength(128).IsRequired();
-                pass.HasIndex(p => p.QrToken).IsUnique();
-                pass.HasIndex(p => p.QrTokenHash).IsUnique();
-                pass.HasIndex(p => p.RegistrationTicketId).IsUnique();
-                pass.HasIndex(p => new { p.EventId, p.Status });
-            });
-
-            modelBuilder.Entity<CheckInAttempt>(attempt =>
-            {
-                attempt.HasKey(a => a.Id);
-                attempt.Property(a => a.QrTokenHash).HasMaxLength(128).IsRequired();
-                attempt.Property(a => a.FailureReason).HasMaxLength(500);
-                attempt.HasIndex(a => new { a.EventId, a.ScannedAt });
-                attempt.HasOne<CheckInPass>()
-                    .WithMany()
-                    .HasForeignKey(a => a.CheckInPassId)
-                    .OnDelete(DeleteBehavior.SetNull);
+                schedule.HasKey(e => e.Id);
+                schedule.Property(e => e.From).IsRequired();
+                schedule.Property(e => e.To).IsRequired();
             });
 
             modelBuilder.Entity<TicketAvailability>(ticketAvailability =>

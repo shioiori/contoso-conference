@@ -44,13 +44,13 @@ namespace Eventbox.EventManagement.EventApi.Services
             return events.Adapt<IEnumerable<OrganizerEventDto>>();
         }
 
-        public async Task<OrganizerEventDto> CreateAsync(Guid? organizationId, string name, string slug, DateOnly startDate, DateOnly endDate, string? description = null, CancellationToken cancellationToken = default)
+        public async Task<OrganizerEventDto> CreateAsync(Guid? organizationId, string name, string slug, DateTimeOffset from, DateTimeOffset to, string? description = null, CancellationToken cancellationToken = default)
         {
             if (await _repository.SlugExistsAsync(slug, cancellationToken))
                 throw new ConflictException($"An event with slug '{slug}' already exists.");
 
             var accessCode = GenerateAccessCode();
-            var eventEntity = new Domains.Event(Guid.NewGuid(), organizationId ?? Guid.Empty, name, slug, startDate, endDate, description, accessCode);
+            var eventEntity = new Domains.Event(Guid.NewGuid(), organizationId ?? Guid.Empty, name, slug, from, to, description, accessCode);
             await _repository.AddAsync(eventEntity, cancellationToken);
             await _repository.SaveChangesAsync(cancellationToken);
 
@@ -60,20 +60,20 @@ namespace Eventbox.EventManagement.EventApi.Services
                 Name = eventEntity.Name,
                 Slug = eventEntity.Slug,
                 Description = eventEntity.Description,
-                StartDate = eventEntity.StartDate,
-                EndDate = eventEntity.EndDate,
+                From = eventEntity.From,
+                To = eventEntity.To,
                 AccessCode = eventEntity.AccessCode!,
             }, cancellationToken);
 
             return eventEntity.Adapt<OrganizerEventDto>();
         }
 
-        public async Task<OrganizerEventDto> UpdateAsync(Guid organizationId, Guid id, string name, DateOnly startDate, DateOnly endDate, string? description = null, CancellationToken cancellationToken = default)
+        public async Task<OrganizerEventDto> UpdateAsync(Guid organizationId, Guid id, string name, DateTimeOffset from, DateTimeOffset to, string? description = null, CancellationToken cancellationToken = default)
         {
             var eventEntity = await _repository.GetByOrganizationAsync(organizationId, id, asNoTracking: false, cancellationToken: cancellationToken)
                 ?? throw new NotFoundException("Event", id);
 
-            eventEntity.Update(name, startDate, endDate, description);
+            eventEntity.Update(name, from, to, description);
             await _repository.SaveChangesAsync(cancellationToken);
 
             await _eventBus.PublishAsync(new EventUpdatedEvent
@@ -81,8 +81,8 @@ namespace Eventbox.EventManagement.EventApi.Services
                 EventId = eventEntity.Id,
                 Name = eventEntity.Name,
                 Description = eventEntity.Description,
-                StartDate = eventEntity.StartDate,
-                EndDate = eventEntity.EndDate,
+                From = eventEntity.From,
+                To = eventEntity.To,
             }, cancellationToken);
 
             return eventEntity.Adapt<OrganizerEventDto>();
@@ -115,7 +115,7 @@ namespace Eventbox.EventManagement.EventApi.Services
 
             if (!string.IsNullOrWhiteSpace(Event.Name) &&
                 !string.IsNullOrWhiteSpace(Event.Slug) &&
-                Event.EndDate > Event.StartDate &&
+                Event.To > Event.From &&
                 Event.TicketTypes.Any())
             {
                 return Event.Adapt<OrganizerEventDto>();
@@ -131,7 +131,7 @@ namespace Eventbox.EventManagement.EventApi.Services
 
             if (!string.IsNullOrWhiteSpace(Event.Name) &&
                 !string.IsNullOrWhiteSpace(Event.Slug) &&
-                Event.EndDate > Event.StartDate &&
+                Event.To > Event.From &&
                 Event.TicketTypes.Any())
             {
                 Event.Publish();

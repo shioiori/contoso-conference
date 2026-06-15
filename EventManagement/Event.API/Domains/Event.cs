@@ -10,8 +10,8 @@ namespace Eventbox.EventManagement.EventApi.Domains
         public string Name { get; private set; } = default!;
         public string? Description { get; private set; }
         public string Slug { get; private set; } = default!;
-        public DateOnly StartDate { get; private set; }
-        public DateOnly EndDate { get; private set; }
+        public DateTimeOffset From { get; private set; }
+        public DateTimeOffset To { get; private set; }
         public bool IsPublished { get; private set; }
         public string? AccessCode { get; private set; }
 
@@ -21,7 +21,7 @@ namespace Eventbox.EventManagement.EventApi.Domains
             {
                 if (IsPublished)
                     return EventStatus.Published;
-                else if (StartDate > DateOnly.FromDateTime(DateTime.UtcNow))
+                else if (From > DateTimeOffset.UtcNow)
                     return EventStatus.Draft;
                 else
                     return EventStatus.Cancelled;
@@ -33,29 +33,35 @@ namespace Eventbox.EventManagement.EventApi.Domains
 
         private Event() { }
 
-        public Event(Guid id, Guid organizationId, string name, string slug, DateOnly startDate, DateOnly endDate, string? description, string accessCode)
+        public Event(Guid id, Guid organizationId, string name, string slug, DateTimeOffset from, DateTimeOffset to, string? description, string accessCode)
         {
-            if (endDate <= startDate)
-                throw new ArgumentException("EndDate must be after StartDate.", nameof(endDate));
+            from = from.ToUniversalTime();
+            to = to.ToUniversalTime();
+
+            if (to <= from)
+                throw new ArgumentException("To must be after From.", nameof(to));
 
             Id = id;
             OrganizationId = organizationId;
             Name = name;
             Slug = slug;
-            StartDate = startDate;
-            EndDate = endDate;
+            From = from;
+            To = to;
             Description = description;
             AccessCode = accessCode;
         }
 
-        public void Update(string name, DateOnly startDate, DateOnly endDate, string? description)
+        public void Update(string name, DateTimeOffset from, DateTimeOffset to, string? description)
         {
-            if (endDate <= startDate)
-                throw new ArgumentException("EndDate must be after StartDate.", nameof(endDate));
+            from = from.ToUniversalTime();
+            to = to.ToUniversalTime();
+
+            if (to <= from)
+                throw new ArgumentException("To must be after From.", nameof(to));
 
             Name = name;
-            StartDate = startDate;
-            EndDate = endDate;
+            From = from;
+            To = to;
             Description = description;
         }
 

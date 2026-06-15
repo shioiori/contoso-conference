@@ -6,8 +6,7 @@ using MediatR;
 namespace Eventbox.TicketingApplication.Queries;
 
 public class GetOrderDetailQueryHandler(
-    IOrderRepository orderRepository,
-    ICheckInPassRepository checkInPassRepository)
+    IOrderRepository orderRepository)
     : IRequestHandler<GetOrderDetailQuery, OrderDto?>
 {
     public async Task<OrderDto?> Handle(GetOrderDetailQuery request, CancellationToken cancellationToken)
@@ -18,9 +17,6 @@ public class GetOrderDetailQueryHandler(
 
         if (order is null)
             return null;
-
-        var checkInPasses = await checkInPassRepository.GetByRegistrationOrderIdAsync(order.Id, cancellationToken);
-        var passesByTicketId = checkInPasses.ToDictionary(pass => pass.RegistrationTicketId);
 
         return new OrderDto
         {
@@ -35,20 +31,7 @@ public class GetOrderDetailQueryHandler(
             Items = order.OrderItems.Adapt<IReadOnlyCollection<OrderItemDto>>(),
             Tickets = order.Tickets
                 .OrderBy(ticket => ticket.SequenceNumber)
-                .Select(ticket =>
-                {
-                    passesByTicketId.TryGetValue(ticket.Id, out var pass);
-                    return new TicketDto
-                    {
-                        Id = ticket.Id,
-                        TicketTypeId = ticket.TicketTypeId,
-                        SequenceNumber = ticket.SequenceNumber,
-                        TicketState = ticket.TicketState,
-                        QrToken = pass?.QrToken,
-                        CheckInStatus = pass?.Status,
-                        CheckedInAt = pass?.CheckedInAt
-                    };
-                })
+                .Select(ticket => ticket.Adapt<TicketDto>())
                 .ToArray()
         };
     }

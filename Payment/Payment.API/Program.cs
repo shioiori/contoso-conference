@@ -3,10 +3,12 @@ using Eventbox.Payment.Api.Options;
 using Eventbox.Payment.Api.Services;
 using Eventbox.Payment.Core.Abstractions;
 using Eventbox.Payment.Core.Commands;
+using Eventbox.Payment.Core.Mappings;
 using Eventbox.Payment.Infrastructure.Messaging;
 using Eventbox.Payment.Infrastructure.Persistence;
 using Eventbox.Shared.Auditing;
 using Eventbox.Shared.Exceptions;
+using Mapster;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -14,6 +16,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddEventboxSerilog("Payment.API");
 builder.Services.AddControllers();
 builder.Services.AddEventboxExceptionHandling();
+TypeAdapterConfig.GlobalSettings.Apply(new PaymentMapping());
 var registrationApiOptions = builder.Configuration
     .GetSection(RegistrationApiOptions.SectionName)
     .Get<RegistrationApiOptions>() ?? new RegistrationApiOptions();
@@ -25,7 +28,9 @@ if (string.IsNullOrWhiteSpace(registrationApiOptions.BaseUrl))
 builder.Services.AddDbContext<PaymentDbContext>((serviceProvider, options) =>
     options
         .UseNpgsql(builder.Configuration.GetConnectionString("Database"))
-        .AddInterceptors(serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
+        .AddInterceptors(
+            serviceProvider.GetRequiredService<AuditableEntitySaveChangesInterceptor>(),
+            serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CreatePaymentIntentCommand>());
 builder.Services.AddEventboxMediatRAuditLogging();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();

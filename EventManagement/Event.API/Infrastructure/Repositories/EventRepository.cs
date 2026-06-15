@@ -43,7 +43,7 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
             events = ApplyFilters(events, status, query, dateFrom, dateTo);
 
             return await events
-                .OrderByDescending(c => c.StartDate)
+                .OrderByDescending(c => c.From)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
@@ -60,7 +60,7 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
             events = ApplyFilters(events, status, query, dateFrom, dateTo);
 
             return await events
-                .OrderBy(c => c.StartDate)
+                .OrderBy(c => c.From)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync(cancellationToken);
@@ -70,12 +70,12 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
         {
             if (status.HasValue)
             {
-                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                var now = DateTimeOffset.UtcNow;
                 events = status.Value switch
                 {
                     EventStatus.Published => events.Where(c => c.IsPublished),
-                    EventStatus.Draft => events.Where(c => !c.IsPublished && c.StartDate > today),
-                    EventStatus.Cancelled => events.Where(c => !c.IsPublished && c.StartDate <= today),
+                    EventStatus.Draft => events.Where(c => !c.IsPublished && c.From > now),
+                    EventStatus.Cancelled => events.Where(c => !c.IsPublished && c.From <= now),
                     _ => events
                 };
             }
@@ -90,10 +90,16 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
             }
 
             if (dateFrom.HasValue)
-                events = events.Where(c => c.EndDate >= dateFrom.Value);
+            {
+                var from = new DateTimeOffset(dateFrom.Value.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
+                events = events.Where(c => c.To >= from);
+            }
 
             if (dateTo.HasValue)
-                events = events.Where(c => c.StartDate <= dateTo.Value);
+            {
+                var to = new DateTimeOffset(dateTo.Value.ToDateTime(TimeOnly.MaxValue), TimeSpan.Zero);
+                events = events.Where(c => c.From <= to);
+            }
 
             return events;
         }

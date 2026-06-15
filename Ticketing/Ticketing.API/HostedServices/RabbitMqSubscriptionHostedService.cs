@@ -32,6 +32,14 @@ public sealed class RabbitMqSubscriptionHostedService : BackgroundService
             PaymentConfirmedIntegrationEventHandler>(stoppingToken);
 
         await _eventBus.SubscribeAsync<
+            EventCreatedEvent,
+            EventCreatedEventHandler>(stoppingToken);
+
+        await _eventBus.SubscribeAsync<
+            EventUpdatedEvent,
+            EventUpdatedEventHandler>(stoppingToken);
+
+        await _eventBus.SubscribeAsync<
             TicketTypeCreatedEvent,
             TicketTypeCreatedEventHandler>(stoppingToken);
 

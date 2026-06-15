@@ -111,7 +111,7 @@ namespace Eventbox.TicketingDomain.Entities.OrderAggregate
             {
                 for (var i = 0; i < item.Quantity; i++)
                 {
-                    _tickets.Add(new Ticket(item.TicketTypeId, sequenceNumber++));
+                    _tickets.Add(new Ticket(EventId, item.TicketTypeId, sequenceNumber++));
                 }
             }
         }

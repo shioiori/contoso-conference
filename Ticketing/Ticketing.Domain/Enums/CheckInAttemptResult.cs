@@ -6,5 +6,6 @@ public enum CheckInAttemptResult
     AlreadyCheckedIn = 2,
     InvalidToken = 3,
     WrongEvent = 4,
-    Cancelled = 5
+    Cancelled = 5,
+    CheckInUnavailable = 6
 }

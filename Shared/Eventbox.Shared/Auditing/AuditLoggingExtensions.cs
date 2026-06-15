@@ -28,6 +28,7 @@ public static class AuditLoggingExtensions
         services.AddHttpContextAccessor();
         services.AddScoped<IAuditContextAccessor, HttpAuditContextAccessor>();
         services.AddTransient<SerilogPropertiesMiddleware>();
+        services.AddScoped<AuditableEntitySaveChangesInterceptor>();
         services.AddScoped<AuditSaveChangesInterceptor>();
         services.AddScoped<SaveChangesInterceptor>(provider =>
             provider.GetRequiredService<AuditSaveChangesInterceptor>());
