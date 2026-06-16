@@ -14,7 +14,7 @@ namespace Eventbox.Payment.Core.Commands
         string? CancelUrl,
         string? IdempotencyKey) : IRequest<PaymentIntentDto>;
 
-    public class CreatePaymentIntentCommandHandler(IPaymentRepository paymentRepository)
+    public class CreatePaymentIntentCommandHandler(IUnitOfWork unitOfWork)
         : IRequestHandler<CreatePaymentIntentCommand, PaymentIntentDto>
     {
         public async Task<PaymentIntentDto> Handle(
@@ -23,7 +23,7 @@ namespace Eventbox.Payment.Core.Commands
         {
             if (!string.IsNullOrWhiteSpace(request.IdempotencyKey))
             {
-                var existing = await paymentRepository.GetByIdempotencyKeyAsync(
+                var existing = await unitOfWork.Payments.GetByIdempotencyKeyAsync(
                     request.IdempotencyKey,
                     cancellationToken);
 
@@ -39,8 +39,8 @@ namespace Eventbox.Payment.Core.Commands
                 request.CancelUrl,
                 request.IdempotencyKey);
 
-            await paymentRepository.AddAsync(payment, cancellationToken);
-            await paymentRepository.SaveChangesAsync(cancellationToken);
+            await unitOfWork.Payments.AddAsync(payment, cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             return payment.Adapt<PaymentIntentDto>();
         }

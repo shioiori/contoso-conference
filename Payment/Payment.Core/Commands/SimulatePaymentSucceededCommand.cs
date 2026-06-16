@@ -1,7 +1,9 @@
 using Eventbox.Payment.Core.Abstractions;
 using Eventbox.Payment.Core.Dtos;
 using Eventbox.Shared.Exceptions;
+using Eventbox.Shared.Outbox;
 using MediatR;
+using System.Text.Json;
 
 namespace Eventbox.Payment.Core.Commands
 {
@@ -14,7 +16,8 @@ namespace Eventbox.Payment.Core.Commands
         DateTimeOffset PaidAt) : IRequest<PaymentCallbackResponse>;
 
     public class SimulatePaymentSucceededCommandHandler(
-        IPaymentRepository paymentRepository,
+        IUnitOfWork unitOfWork,
+        IOutbox outbox,
         IPaymentEventPublisher paymentEventPublisher)
         : IRequestHandler<SimulatePaymentSucceededCommand, PaymentCallbackResponse>
     {
@@ -22,7 +25,7 @@ namespace Eventbox.Payment.Core.Commands
             SimulatePaymentSucceededCommand request,
             CancellationToken cancellationToken)
         {
-            var duplicate = await paymentRepository.GetByProviderEventIdAsync(
+            var duplicate = await unitOfWork.Payments.GetByProviderEventIdAsync(
                 request.ProviderEventId,
                 cancellationToken);
 
@@ -38,7 +41,7 @@ namespace Eventbox.Payment.Core.Commands
                 };
             }
 
-            var payment = await paymentRepository.GetByIdAsync(request.PaymentIntentId, cancellationToken)
+            var payment = await unitOfWork.Payments.GetByIdAsync(request.PaymentIntentId, cancellationToken)
                 ?? throw new NotFoundException("Payment intent", request.PaymentIntentId);
 
             var processed = payment.MarkSucceeded(
@@ -48,15 +51,48 @@ namespace Eventbox.Payment.Core.Commands
                 request.Currency,
                 request.PaidAt);
 
-            await paymentRepository.SaveChangesAsync(cancellationToken);
+            OutboxMessage? outboxMessage = null;
 
             if (processed)
             {
-                await paymentEventPublisher.PublishPaymentConfirmedAsync(
+                outboxMessage = new OutboxMessage
+                {
+                    Id = Guid.NewGuid(),
+                    IntergrationEventType = "PaymentConfirmedIntegrationEvent",
+                    Content = JsonSerializer.Serialize(new
+                    {
+                        PaymentId = payment.Id,
+                        ProviderEventId = request.ProviderEventId,
+                        OrderId = payment.OrderId,
+                        Amount = payment.Amount,
+                        Currency = payment.Currency,
+                        PaidAt = request.PaidAt
+                    }),
+                    OccurredOnUtc = DateTime.UtcNow,
+                    Status = ProcessStatus.Pending
+                };
+
+                await outbox.AddOutboxMessageAsync(outboxMessage, cancellationToken);
+            }
+
+            var result = await unitOfWork.SaveChangesAsync(cancellationToken);
+
+            if (result > 0 && processed)
+            {
+                var isSuccessful = await paymentEventPublisher.PublishPaymentConfirmedAsync(
                     payment,
                     request.ProviderEventId,
                     request.PaidAt,
                     cancellationToken);
+
+                if (outboxMessage != null)
+                {
+                    outboxMessage.Status = isSuccessful ? ProcessStatus.Processed : ProcessStatus.Failed;
+                    outboxMessage.ProcessedOnUtc = isSuccessful ? DateTime.UtcNow : null;
+
+                    await outbox.UpdateOutboxMessageAsync(outboxMessage, cancellationToken);
+                    await unitOfWork.SaveChangesAsync(cancellationToken);
+                }
             }
 
             return new PaymentCallbackResponse

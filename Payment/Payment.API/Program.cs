@@ -34,6 +34,9 @@ builder.Services.AddDbContext<PaymentDbContext>((serviceProvider, options) =>
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CreatePaymentIntentCommand>());
 builder.Services.AddEventboxMediatRAuditLogging();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
+builder.Services.AddScoped<UnitOfWork>();
+builder.Services.AddScoped<IUnitOfWork>(serviceProvider => serviceProvider.GetRequiredService<UnitOfWork>());
+builder.Services.AddScoped<IOutbox>(serviceProvider => serviceProvider.GetRequiredService<UnitOfWork>());
 builder.Services.AddScoped<IPaymentEventPublisher, RabbitMqPaymentEventPublisher>();
 builder.Services.AddHttpClient<IOrderAccessVerifier, TicketingOrderAccessVerifier>(client =>
 {

@@ -14,14 +14,14 @@ namespace Eventbox.Payment.Core.Commands
         DateTimeOffset FailedAt,
         string? FailureReason) : IRequest<PaymentCallbackResponse>;
 
-    public class SimulatePaymentFailedCommandHandler(IPaymentRepository paymentRepository)
+    public class SimulatePaymentFailedCommandHandler(IUnitOfWork unitOfWork)
         : IRequestHandler<SimulatePaymentFailedCommand, PaymentCallbackResponse>
     {
         public async Task<PaymentCallbackResponse> Handle(
             SimulatePaymentFailedCommand request,
             CancellationToken cancellationToken)
         {
-            var duplicate = await paymentRepository.GetByProviderEventIdAsync(
+            var duplicate = await unitOfWork.Payments.GetByProviderEventIdAsync(
                 request.ProviderEventId,
                 cancellationToken);
 
@@ -36,7 +36,7 @@ namespace Eventbox.Payment.Core.Commands
                 };
             }
 
-            var payment = await paymentRepository.GetByIdAsync(request.PaymentIntentId, cancellationToken)
+            var payment = await unitOfWork.Payments.GetByIdAsync(request.PaymentIntentId, cancellationToken)
                 ?? throw new NotFoundException("Payment intent", request.PaymentIntentId);
 
             var processed = payment.MarkFailed(
@@ -47,7 +47,7 @@ namespace Eventbox.Payment.Core.Commands
                 request.FailedAt,
                 request.FailureReason);
 
-            await paymentRepository.SaveChangesAsync(cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             return new PaymentCallbackResponse
             {

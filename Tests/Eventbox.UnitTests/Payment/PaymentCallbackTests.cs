@@ -1,6 +1,7 @@
 using Eventbox.Payment.Core.Abstractions;
 using Eventbox.Payment.Core.Commands;
 using Eventbox.Payment.Core.Enums;
+using Eventbox.Shared.Outbox;
 using PaymentEntity = Eventbox.Payment.Core.Entities.Payment;
 
 namespace Eventbox.UnitTests.Payment;
@@ -11,10 +12,12 @@ public class PaymentCallbackTests
     public async Task SimulatePaymentSucceeded_WhenProviderEventIsDuplicate_DoesNotProcessOrPublishTwice()
     {
         var repository = new InMemoryPaymentRepository();
+        var unitOfWork = new InMemoryPaymentUnitOfWork(repository);
+        var outbox = new InMemoryOutbox();
         var publisher = new RecordingPaymentEventPublisher();
         var payment = PaymentEntity.CreateIntent(Guid.NewGuid(), 25m, "usd", null, null, "checkout-1");
         await repository.AddAsync(payment, CancellationToken.None);
-        var handler = new SimulatePaymentSucceededCommandHandler(repository, publisher);
+        var handler = new SimulatePaymentSucceededCommandHandler(unitOfWork, outbox, publisher);
         var command = new SimulatePaymentSucceededCommand(
             payment.Id,
             ProviderEventId: "evt_123",
@@ -30,7 +33,10 @@ public class PaymentCallbackTests
         Assert.False(duplicate.Processed);
         Assert.Equal(PaymentStatus.Succeeded, duplicate.Status);
         Assert.Equal(PaymentStatus.Succeeded, payment.Status);
-        Assert.Equal(1, repository.SaveChangesCount);
+        Assert.Equal(2, unitOfWork.SaveChangesCount);
+        var outboxMessage = Assert.Single(outbox.OutboxMessages);
+        Assert.Equal(ProcessStatus.Processed, outboxMessage.Status);
+        Assert.NotNull(outboxMessage.ProcessedOnUtc);
         Assert.Single(publisher.PublishedProviderEventIds);
     }
 
@@ -65,8 +71,6 @@ public class PaymentCallbackTests
     {
         private readonly List<PaymentEntity> _payments = new();
 
-        public int SaveChangesCount { get; private set; }
-
         public Task<PaymentEntity?> GetByIdAsync(Guid paymentId, CancellationToken cancellationToken)
             => Task.FromResult(_payments.FirstOrDefault(payment => payment.Id == paymentId));
 
@@ -81,12 +85,35 @@ public class PaymentCallbackTests
             _payments.Add(payment);
             return Task.CompletedTask;
         }
+    }
 
-        public Task SaveChangesAsync(CancellationToken cancellationToken)
+    private sealed class InMemoryPaymentUnitOfWork(IPaymentRepository paymentRepository) : IUnitOfWork
+    {
+        public int SaveChangesCount { get; private set; }
+
+        public IPaymentRepository Payments { get; } = paymentRepository;
+
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             SaveChangesCount++;
+            return Task.FromResult(1);
+        }
+    }
+
+    private sealed class InMemoryOutbox : IOutbox
+    {
+        private readonly List<OutboxMessage> _outboxMessages = new();
+
+        public IReadOnlyCollection<OutboxMessage> OutboxMessages => _outboxMessages.AsReadOnly();
+
+        public Task AddOutboxMessageAsync(OutboxMessage outboxMessage, CancellationToken cancellationToken)
+        {
+            _outboxMessages.Add(outboxMessage);
             return Task.CompletedTask;
         }
+
+        public Task UpdateOutboxMessageAsync(OutboxMessage outboxMessage, CancellationToken cancellationToken)
+            => Task.CompletedTask;
     }
 
     private sealed class RecordingPaymentEventPublisher : IPaymentEventPublisher
@@ -95,14 +122,14 @@ public class PaymentCallbackTests
 
         public IReadOnlyCollection<string> PublishedProviderEventIds => _publishedProviderEventIds.AsReadOnly();
 
-        public Task PublishPaymentConfirmedAsync(
+        public Task<bool> PublishPaymentConfirmedAsync(
             PaymentEntity payment,
             string providerEventId,
             DateTimeOffset paidAt,
             CancellationToken cancellationToken)
         {
             _publishedProviderEventIds.Add(providerEventId);
-            return Task.CompletedTask;
+            return Task.FromResult(true);
         }
     }
 }

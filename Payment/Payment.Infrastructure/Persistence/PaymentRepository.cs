@@ -21,8 +21,5 @@ namespace Eventbox.Payment.Infrastructure.Persistence
 
         public async Task AddAsync(PaymentEntity payment, CancellationToken cancellationToken)
             => await dbContext.Payments.AddAsync(payment, cancellationToken);
-
-        public Task SaveChangesAsync(CancellationToken cancellationToken)
-            => dbContext.SaveChangesAsync(cancellationToken);
     }
 }

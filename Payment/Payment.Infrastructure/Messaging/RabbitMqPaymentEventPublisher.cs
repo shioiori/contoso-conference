@@ -17,21 +17,32 @@ namespace Eventbox.Payment.Infrastructure.Messaging
 
     public class RabbitMqPaymentEventPublisher(IEventBus eventBus) : IPaymentEventPublisher
     {
-        public Task PublishPaymentConfirmedAsync(
+        public async Task<bool> PublishPaymentConfirmedAsync(
             PaymentEntity payment,
             string providerEventId,
             DateTimeOffset paidAt,
             CancellationToken cancellationToken)
-            => eventBus.PublishAsync(
-                new PaymentConfirmedIntegrationEvent()
-                {
-                    PaymentId = payment.Id,
-                    ProviderEventId = providerEventId,
-                    OrderId = payment.OrderId,
-                    Amount = payment.Amount,
-                    Currency = payment.Currency,
-                    PaidAt = paidAt
-                },
-                cancellationToken);
+        {
+            try
+            {
+                await eventBus.PublishAsync(
+                    new PaymentConfirmedIntegrationEvent()
+                    {
+                        PaymentId = payment.Id,
+                        ProviderEventId = providerEventId,
+                        OrderId = payment.OrderId,
+                        Amount = payment.Amount,
+                        Currency = payment.Currency,
+                        PaidAt = paidAt
+                    },
+                    cancellationToken);
+
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }
