@@ -17,12 +17,12 @@ builder.AddEventboxSerilog("Payment.API");
 builder.Services.AddControllers();
 builder.Services.AddEventboxExceptionHandling();
 TypeAdapterConfig.GlobalSettings.Apply(new PaymentMapping());
-var registrationApiOptions = builder.Configuration
-    .GetSection(RegistrationApiOptions.SectionName)
-    .Get<RegistrationApiOptions>() ?? new RegistrationApiOptions();
-if (string.IsNullOrWhiteSpace(registrationApiOptions.BaseUrl))
+var ticketingApiOptions = builder.Configuration
+    .GetSection(TicketingApiOptions.SectionName)
+    .Get<TicketingApiOptions>() ?? new TicketingApiOptions();
+if (string.IsNullOrWhiteSpace(ticketingApiOptions.BaseUrl))
 {
-    throw new InvalidOperationException("RegistrationApi:BaseUrl must be configured.");
+    throw new InvalidOperationException("TicketingApi:BaseUrl must be configured.");
 }
 
 builder.Services.AddDbContext<PaymentDbContext>((serviceProvider, options) =>
@@ -35,9 +35,9 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<Cr
 builder.Services.AddEventboxMediatRAuditLogging();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IPaymentEventPublisher, RabbitMqPaymentEventPublisher>();
-builder.Services.AddHttpClient<IOrderAccessVerifier, RegistrationOrderAccessVerifier>(client =>
+builder.Services.AddHttpClient<IOrderAccessVerifier, TicketingOrderAccessVerifier>(client =>
 {
-    client.BaseAddress = new Uri(registrationApiOptions.BaseUrl);
+    client.BaseAddress = new Uri(ticketingApiOptions.BaseUrl);
 });
 builder.Services.AddRabbitMqEventBus(builder.Configuration);
 

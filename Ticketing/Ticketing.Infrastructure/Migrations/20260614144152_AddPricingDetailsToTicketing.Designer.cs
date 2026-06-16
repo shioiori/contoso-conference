@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Eventbox.Ticketing.Infrastructure.Migrations
 {
     [DbContext(typeof(TicketingDbContext))]
-    [Migration("20260614144152_AddPricingDetailsToRegistration")]
-    partial class AddPricingDetailsToRegistration
+    [Migration("20260614144152_AddPricingDetailsToTicketing")]
+    partial class AddPricingDetailsToTicketing
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

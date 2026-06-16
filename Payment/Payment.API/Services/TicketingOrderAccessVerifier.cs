@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace Eventbox.Payment.Api.Services;
 
-public class RegistrationOrderAccessVerifier(HttpClient httpClient) : IOrderAccessVerifier
+public class TicketingOrderAccessVerifier(HttpClient httpClient) : IOrderAccessVerifier
 {
     public async Task<OrderAccessVerificationResult> VerifyAsync(
         Guid orderId,
@@ -59,10 +59,10 @@ public class RegistrationOrderAccessVerifier(HttpClient httpClient) : IOrderAcce
                 return OrderAccessVerificationResult.RegistrationUnavailable;
             }
 
-            RegistrationOrderDto? order;
+            TicketingOrderDto? order;
             try
             {
-                order = await response.Content.ReadFromJsonAsync<RegistrationOrderDto>(cancellationToken);
+                order = await response.Content.ReadFromJsonAsync<TicketingOrderDto>(cancellationToken);
             }
             catch (JsonException)
             {
@@ -113,7 +113,7 @@ public class RegistrationOrderAccessVerifier(HttpClient httpClient) : IOrderAcce
         }
     }
 
-    private sealed class RegistrationOrderDto
+    private sealed class TicketingOrderDto
     {
         public Guid Id { get; init; }
     }

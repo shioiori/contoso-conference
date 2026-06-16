@@ -23,11 +23,11 @@ namespace Eventbox.Ticketing.Application.Commands
             if (request.Quantity <= 0)
                 throw new ValidationApiException("Quantity must be greater than zero.");
 
-            if (request.Quantity > RegistrationConstants.MaxTicketsPerOrder)
-                throw new ValidationApiException($"Cannot reserve more than {RegistrationConstants.MaxTicketsPerOrder} tickets per order.");
+            if (request.Quantity > TicketingConstants.MaxTicketsPerOrder)
+                throw new ValidationApiException($"Cannot reserve more than {TicketingConstants.MaxTicketsPerOrder} tickets per order.");
 
             var utcNow = DateTimeOffset.UtcNow;
-            var reservationExpiresAt = utcNow.AddMinutes(RegistrationConstants.ReservationExpirationMinutes);
+            var reservationExpiresAt = utcNow.AddMinutes(TicketingConstants.ReservationExpirationMinutes);
 
             var ticketAvailability = await unitOfWork.TicketAvailabilities.GetByEventIdAsync(request.EventId, cancellationToken)
                 ?? throw new NotFoundException($"Ticket availability for event '{request.EventId}' was not found.");

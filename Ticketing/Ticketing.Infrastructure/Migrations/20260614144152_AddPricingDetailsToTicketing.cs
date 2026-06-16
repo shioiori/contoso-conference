@@ -7,7 +7,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Eventbox.Ticketing.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddPricingDetailsToRegistration : Migration
+    public partial class AddPricingDetailsToTicketing : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
