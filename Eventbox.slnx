@@ -1,25 +1,23 @@
 <Solution>
   <Folder Name="/Auth/">
-    <Project Path="D:/Personal/Projects/eventbox-api/Auth/Auth.API/Auth.API.csproj" />
+    <Project Path="Auth/Auth.API/Auth.API.csproj" />
   </Folder>
   <Folder Name="/EventBus/">
-    <Project Path="D:/Personal/Projects/eventbox-api/EventBus/EventBus.Core/EventBus.Core.csproj" />
-    <Project Path="D:/Personal/Projects/eventbox-api/EventBus/EventBus.RabbitMQ/EventBus.RabbitMQ.csproj" />
+    <Project Path="EventBus/EventBus.Core/EventBus.Core.csproj" />
+    <Project Path="EventBus/EventBus.RabbitMQ/EventBus.RabbitMQ.csproj" />
   </Folder>
   <Folder Name="/EventManagement/">
-    <Project Path="D:/Personal/Projects/eventbox-api/EventManagement/Event.API/Event.API.csproj" Id="56263a47-84fc-4cb3-8b74-1ff4697dc18d" />
+    <Project Path="EventManagement/Event.API/Event.API.csproj" />
   </Folder>
   <Folder Name="/Payment/">
-    <Project Path="D:/Personal/Projects/eventbox-api/Payment/Payment.API/Payment.API.csproj" Id="d4779a3a-2cf0-4972-ad9e-654249a01ec0" />
-    <Project Path="D:/Personal/Projects/eventbox-api/Payment/Payment.Core/Payment.Core.csproj" Id="40456d7b-e490-4366-99f1-9b49bfe96efd" />
-    <Project Path="D:/Personal/Projects/eventbox-api/Payment/Payment.Infrastructure/Payment.Infrastructure.csproj" Id="90eedc5d-bd11-48bd-a7c0-f06add9faff1" />
+    <Project Path="Payment/Payment.API/Payment.API.csproj" />
+    <Project Path="Payment/Payment.Core/Payment.Core.csproj" />
+    <Project Path="Payment/Payment.Infrastructure/Payment.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/Shared/">
-    <Project Path="D:/Personal/Projects/eventbox-api/Shared/Eventbox.Shared/Eventbox.Shared.csproj" />
+    <Project Path="Shared/Eventbox.Shared/Eventbox.Shared.csproj" />
   </Folder>
-  <Folder Name="/Tests/">
-    <Project Path="D:/Personal/Projects/eventbox-api/Tests/Eventbox.UnitTests/Eventbox.UnitTests.csproj" />
-  </Folder>
+  <Folder Name="/Tests/" />
   <Folder Name="/Ticketing/">
     <Project Path="Ticketing/Ticketing.API/Ticketing.API.csproj" />
     <Project Path="Ticketing/Ticketing.Application/Ticketing.Application.csproj" />

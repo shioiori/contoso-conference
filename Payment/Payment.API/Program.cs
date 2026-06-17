@@ -4,10 +4,13 @@ using Eventbox.Payment.Api.Services;
 using Eventbox.Payment.Core.Abstractions;
 using Eventbox.Payment.Core.Commands;
 using Eventbox.Payment.Core.Mappings;
+using Eventbox.Payment.Infrastructure.Jobs;
 using Eventbox.Payment.Infrastructure.Messaging;
 using Eventbox.Payment.Infrastructure.Persistence;
 using Eventbox.Shared.Auditing;
 using Eventbox.Shared.Exceptions;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
 
@@ -34,15 +37,24 @@ builder.Services.AddDbContext<PaymentDbContext>((serviceProvider, options) =>
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CreatePaymentIntentCommand>());
 builder.Services.AddEventboxMediatRAuditLogging();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
-builder.Services.AddScoped<UnitOfWork>();
-builder.Services.AddScoped<IUnitOfWork>(serviceProvider => serviceProvider.GetRequiredService<UnitOfWork>());
-builder.Services.AddScoped<IOutbox>(serviceProvider => serviceProvider.GetRequiredService<UnitOfWork>());
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IPaymentEventPublisher, RabbitMqPaymentEventPublisher>();
 builder.Services.AddHttpClient<IOrderAccessVerifier, TicketingOrderAccessVerifier>(client =>
 {
     client.BaseAddress = new Uri(ticketingApiOptions.BaseUrl);
 });
 builder.Services.AddRabbitMqEventBus(builder.Configuration);
+
+builder.Services.AddHangfire(config =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("Database");
+    config.UsePostgreSqlStorage(options =>
+    {
+        options.UseNpgsqlConnection(connectionString);
+    });
+});
+builder.Services.AddHangfireServer();
+builder.Services.AddScoped<IOutboxProcessorJob, OutboxProcessorJob>();
 
 var app = builder.Build();
 
@@ -55,5 +67,10 @@ using (var scope = app.Services.CreateScope())
 app.UseEventboxExceptionHandling();
 app.UseEventboxSerilogRequestLogging();
 app.MapControllers();
+
+RecurringJob.AddOrUpdate<IOutboxProcessorJob>(
+    "Payment-outbox-processor",
+    job => job.RunAsync(CancellationToken.None),
+    "*/30 * * * * *");
 
 app.Run();

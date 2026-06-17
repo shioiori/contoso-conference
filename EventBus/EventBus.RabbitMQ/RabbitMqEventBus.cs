@@ -1,13 +1,18 @@
 using Eventbox.EventBus.Core.Abstractions;
+using Eventbox.Shared.Outbox;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Polly;
+using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System.Text;
+using System.Text.Json;
 
 namespace Eventbox.EventBus.RabbitMQ;
 
-public sealed class RabbitMqEventBus : IEventBus, IAsyncDisposable
+public sealed class RabbitMqEventBus : IEventBus, IDeadLetterPublisher, IAsyncDisposable
 {
     private readonly RabbitMqConnectionFactory _connectionFactory;
     private readonly IMessageSerializer _serializer;
@@ -16,7 +21,17 @@ public sealed class RabbitMqEventBus : IEventBus, IAsyncDisposable
     private readonly RabbitMqOptions _options;
     private readonly ILogger<RabbitMqEventBus> _logger;
 
-    private IChannel? _publishChannel;
+    private static readonly ResiliencePipeline _publishRetryPipeline = new ResiliencePipelineBuilder()
+        .AddRetry(new RetryStrategyOptions
+        {
+            MaxRetryAttempts = 3,
+            Delay = TimeSpan.FromSeconds(2),
+            BackoffType = DelayBackoffType.Exponential,
+            ShouldHandle = new PredicateBuilder().Handle<Exception>()
+        })
+        .Build();
+
+    private IChannel? _publishChannel; // confirm channel — BasicPublishAsync waits for broker ack
     private IChannel? _consumeChannel;
 
     public RabbitMqEventBus(
@@ -38,37 +53,72 @@ public sealed class RabbitMqEventBus : IEventBus, IAsyncDisposable
     public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : IIntegrationEvent
     {
+        await _publishRetryPipeline.ExecuteAsync(async ct =>
+        {
+            _publishChannel ??= await _connectionFactory.CreateConfirmChannelAsync(ct);
+
+            await _publishChannel.ExchangeDeclareAsync(
+                exchange: _options.EventExchange,
+                type: ExchangeType.Topic,
+                durable: true,
+                autoDelete: false,
+                cancellationToken: ct);
+
+            var routingKey = GetEventRoutingKey<TEvent>();
+            var body = _serializer.Serialize(@event);
+
+            var props = new BasicProperties
+            {
+                ContentType = "application/json",
+                DeliveryMode = DeliveryModes.Persistent,
+                MessageId = @event.IntegrationEventId.ToString(),
+                Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
+                Type = @event.EventType,
+            };
+
+            await _publishChannel.BasicPublishAsync(
+                exchange: _options.EventExchange,
+                routingKey: routingKey,
+                mandatory: false,
+                basicProperties: props,
+                body: body,
+                cancellationToken: ct);
+
+            _logger.LogDebug("Published event {EventType} [{IntegrationEventId}] to exchange '{Exchange}' with routing key '{RoutingKey}'",
+                @event.EventType, @event.IntegrationEventId, _options.EventExchange, routingKey);
+        }, cancellationToken);
+    }
+
+    public async Task PublishAsync(OutboxMessage message, CancellationToken cancellationToken = default)
+    {
         _publishChannel ??= await _connectionFactory.CreateChannelAsync(cancellationToken);
 
         await _publishChannel.ExchangeDeclareAsync(
-            exchange: _options.EventExchange,
-            type: ExchangeType.Topic,
+            exchange: _options.DeadLetterExchange,
+            type: ExchangeType.Fanout,
             durable: true,
             autoDelete: false,
             cancellationToken: cancellationToken);
 
-        var routingKey = GetEventRoutingKey<TEvent>();
-        var body = _serializer.Serialize(@event);
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
 
         var props = new BasicProperties
         {
             ContentType = "application/json",
             DeliveryMode = DeliveryModes.Persistent,
-            MessageId = @event.IntegrationEventId.ToString(),
-            Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
-            Type = @event.EventType,
+            MessageId = message.Id.ToString(),
         };
 
         await _publishChannel.BasicPublishAsync(
-            exchange: _options.EventExchange,
-            routingKey: routingKey,
+            exchange: _options.DeadLetterExchange,
+            routingKey: string.Empty,
             mandatory: false,
             basicProperties: props,
             body: body,
             cancellationToken: cancellationToken);
 
-        _logger.LogDebug("Published event {EventType} [{IntegrationEventId}] to exchange '{Exchange}' with routing key '{RoutingKey}'",
-            @event.EventType, @event.IntegrationEventId, _options.EventExchange, routingKey);
+        _logger.LogWarning("Dead-lettered outbox message {MessageId} [{EventType}] after {RetryCount} retries",
+            message.Id, message.IntergrationEventType, message.RetryCount);
     }
 
     public async Task SubscribeAsync<TEvent, THandler>(CancellationToken cancellationToken = default)

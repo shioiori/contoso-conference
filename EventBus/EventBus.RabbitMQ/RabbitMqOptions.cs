@@ -13,6 +13,7 @@ public sealed class RabbitMqOptions
     public string EventExchange { get; set; } = default!;
     public string CommandExchange { get; set; } = default!;
     public string QueuePrefix { get; set; } = default!;
+    public string DeadLetterExchange { get; set; } = default!;
 
     public ushort PrefetchCount { get; set; }
 }

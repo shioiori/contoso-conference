@@ -1,9 +1,10 @@
 using Eventbox.Payment.Core.Abstractions;
 using Eventbox.Shared.Outbox;
+using Microsoft.EntityFrameworkCore;
 
 namespace Eventbox.Payment.Infrastructure.Persistence
 {
-    public class UnitOfWork : IUnitOfWork, IOutbox
+    public class UnitOfWork : IUnitOfWork
     {
         private readonly PaymentDbContext _dbContext;
 
@@ -11,20 +12,13 @@ namespace Eventbox.Payment.Infrastructure.Persistence
         {
             _dbContext = dbContext;
             Payments = new PaymentRepository(dbContext);
+            Outbox = new OutboxRepository(dbContext);
         }
 
         public IPaymentRepository Payments { get; }
-
-        public async Task AddOutboxMessageAsync(OutboxMessage outboxMessage, CancellationToken cancellationToken)
-            => await _dbContext.Outboxes.AddAsync(outboxMessage, cancellationToken);
+        public IOutbox Outbox { get; }
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
             => _dbContext.SaveChangesAsync(cancellationToken);
-
-        public Task UpdateOutboxMessageAsync(OutboxMessage outboxMessage, CancellationToken cancellationToken)
-        {
-            _dbContext.Outboxes.Update(outboxMessage);
-            return Task.CompletedTask;
-        }
     }
 }

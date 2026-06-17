@@ -17,7 +17,9 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<RabbitMqConnectionFactory>();
         services.AddSingleton<SubscriptionRegistry>();
         services.AddSingleton<IMessageSerializer, JsonMessageSerializer>();
-        services.AddSingleton<IEventBus, RabbitMqEventBus>();
+        services.AddSingleton<RabbitMqEventBus>();
+        services.AddSingleton<IEventBus>(sp => sp.GetRequiredService<RabbitMqEventBus>());
+        services.AddSingleton<IDeadLetterPublisher>(sp => sp.GetRequiredService<RabbitMqEventBus>());
         services.AddSingleton<IDelayedEventScheduler, RabbitMqDelayedEventScheduler>();
         services.AddSingleton<ICommandBus, RabbitMqCommandBus>();
 

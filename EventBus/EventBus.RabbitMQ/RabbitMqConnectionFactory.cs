@@ -25,6 +25,16 @@ public sealed class RabbitMqConnectionFactory : IAsyncDisposable
         return await connection.CreateChannelAsync(cancellationToken: cancellationToken);
     }
 
+    public async Task<IChannel> CreateConfirmChannelAsync(CancellationToken cancellationToken = default)
+    {
+        var connection = await GetConnectionAsync(cancellationToken);
+        return await connection.CreateChannelAsync(
+            new CreateChannelOptions(
+                publisherConfirmationsEnabled: true,
+                publisherConfirmationTrackingEnabled: true),
+            cancellationToken);
+    }
+
     private async Task<IConnection> GetConnectionAsync(CancellationToken cancellationToken)
     {
         if (_connection is { IsOpen: true })

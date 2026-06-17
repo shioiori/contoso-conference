@@ -16,9 +16,7 @@ namespace Eventbox.Payment.Core.Commands
         DateTimeOffset PaidAt) : IRequest<PaymentCallbackResponse>;
 
     public class SimulatePaymentSucceededCommandHandler(
-        IUnitOfWork unitOfWork,
-        IOutbox outbox,
-        IPaymentEventPublisher paymentEventPublisher)
+        IUnitOfWork unitOfWork)
         : IRequestHandler<SimulatePaymentSucceededCommand, PaymentCallbackResponse>
     {
         public async Task<PaymentCallbackResponse> Handle(
@@ -51,11 +49,9 @@ namespace Eventbox.Payment.Core.Commands
                 request.Currency,
                 request.PaidAt);
 
-            OutboxMessage? outboxMessage = null;
-
             if (processed)
             {
-                outboxMessage = new OutboxMessage
+                var outboxMessage = new OutboxMessage
                 {
                     Id = Guid.NewGuid(),
                     IntergrationEventType = "PaymentConfirmedIntegrationEvent",
@@ -72,28 +68,10 @@ namespace Eventbox.Payment.Core.Commands
                     Status = ProcessStatus.Pending
                 };
 
-                await outbox.AddOutboxMessageAsync(outboxMessage, cancellationToken);
+                await unitOfWork.Outbox.AddAsync(outboxMessage, cancellationToken);
             }
 
-            var result = await unitOfWork.SaveChangesAsync(cancellationToken);
-
-            if (result > 0 && processed)
-            {
-                var isSuccessful = await paymentEventPublisher.PublishPaymentConfirmedAsync(
-                    payment,
-                    request.ProviderEventId,
-                    request.PaidAt,
-                    cancellationToken);
-
-                if (outboxMessage != null)
-                {
-                    outboxMessage.Status = isSuccessful ? ProcessStatus.Processed : ProcessStatus.Failed;
-                    outboxMessage.ProcessedOnUtc = isSuccessful ? DateTime.UtcNow : null;
-
-                    await outbox.UpdateOutboxMessageAsync(outboxMessage, cancellationToken);
-                    await unitOfWork.SaveChangesAsync(cancellationToken);
-                }
-            }
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             return new PaymentCallbackResponse
             {
