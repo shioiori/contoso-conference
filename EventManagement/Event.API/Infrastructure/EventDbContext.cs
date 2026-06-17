@@ -1,4 +1,5 @@
 using Eventbox.EventManagement.EventApi.Domains;
+using Eventbox.Shared.Outbox;
 using Microsoft.EntityFrameworkCore;
 using Event = Eventbox.EventManagement.EventApi.Domains.Event;
 namespace Eventbox.EventManagement.EventApi.Infrastructure
@@ -12,6 +13,7 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure
         public DbSet<Event> Events => Set<Event>();
         public DbSet<Organization> Organizations => Set<Organization>();
         public DbSet<TicketType> TicketTypes => Set<TicketType>();
+        public DbSet<OutboxMessage> Outboxes => Set<OutboxMessage>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

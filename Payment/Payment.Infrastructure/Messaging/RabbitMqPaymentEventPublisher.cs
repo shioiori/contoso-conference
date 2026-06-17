@@ -1,20 +1,10 @@
+using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.EventBus.Core.Abstractions;
-using Eventbox.EventBus.Events;
 using Eventbox.Payment.Core.Abstractions;
 using PaymentEntity = Eventbox.Payment.Core.Entities.Payment;
 
 namespace Eventbox.Payment.Infrastructure.Messaging
 {
-    public sealed class PaymentConfirmedIntegrationEvent : IntegrationEvent
-    {
-        public Guid PaymentId { get; set; }
-        public string ProviderEventId { get; set; } = string.Empty;
-        public Guid OrderId { get; set; }
-        public decimal Amount { get; set; }
-        public string Currency { get; set; } = string.Empty;
-        public DateTimeOffset PaidAt { get; set; }
-    }
-
     public class RabbitMqPaymentEventPublisher(IEventBus eventBus) : IPaymentEventPublisher
     {
         public async Task<bool> PublishPaymentConfirmedAsync(

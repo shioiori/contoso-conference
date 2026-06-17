@@ -1,4 +1,8 @@
-namespace Eventbox.Payment.Core.Abstractions
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace Eventbox.Shared.Outbox
 {
     public interface IOutboxProcessorJob
     {

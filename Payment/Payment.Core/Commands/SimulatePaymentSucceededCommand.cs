@@ -1,3 +1,4 @@
+using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.Payment.Core.Abstractions;
 using Eventbox.Payment.Core.Dtos;
 using Eventbox.Shared.Exceptions;
@@ -54,7 +55,7 @@ namespace Eventbox.Payment.Core.Commands
                 var outboxMessage = new OutboxMessage
                 {
                     Id = Guid.NewGuid(),
-                    IntergrationEventType = "PaymentConfirmedIntegrationEvent",
+                    IntergrationEventType = nameof(PaymentConfirmedIntegrationEvent),
                     Content = JsonSerializer.Serialize(new
                     {
                         PaymentId = payment.Id,

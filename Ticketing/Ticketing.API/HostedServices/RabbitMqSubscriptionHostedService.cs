@@ -1,6 +1,6 @@
+using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.Ticketing.Application.IntegrationEventHandlers;
-using Eventbox.Ticketing.Application.IntegrationEvents;
 using Eventbox.Ticketing.Application.MessageHandlers;
 using Eventbox.Ticketing.Application.Messages;
 
@@ -24,7 +24,7 @@ public sealed class RabbitMqSubscriptionHostedService : BackgroundService
         _logger.LogInformation("Subscribing Registration integration event handlers.");
 
         await _eventBus.SubscribeAsync<
-            OrderExpirationDueMessage,
+            OrderExpirationDueMessageIntergrationEvent,
             OrderExpirationDueMessageHandler>(stoppingToken);
 
         await _eventBus.SubscribeAsync<

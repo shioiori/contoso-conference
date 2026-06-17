@@ -15,6 +15,7 @@
     <Project Path="Payment/Payment.Infrastructure/Payment.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/Shared/">
+    <Project Path="Shared/Eventbox.Contracts/Eventbox.Contracts.csproj" Id="e719e98a-e986-48fd-bb0b-01682facfb92" />
     <Project Path="Shared/Eventbox.Shared/Eventbox.Shared.csproj" />
   </Folder>
   <Folder Name="/Tests/" />

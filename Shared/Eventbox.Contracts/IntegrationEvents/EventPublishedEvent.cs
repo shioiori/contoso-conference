@@ -1,8 +1,8 @@
 using Eventbox.EventBus.Events;
 
-namespace Eventbox.EventManagement.EventApi.IntegrationEvents;
+namespace Eventbox.Contracts.IntegrationEvents;
 
-public class EventUnpublishedEvent : IntegrationEvent
+public class EventPublishedEvent : IntegrationEvent
 {
     public Guid EventId { get; set; }
     public string Name { get; set; } = "";

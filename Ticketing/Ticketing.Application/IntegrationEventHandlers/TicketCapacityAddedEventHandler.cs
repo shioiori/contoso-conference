@@ -1,7 +1,7 @@
 using Eventbox.EventBus.Core.Abstractions;
+using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
-using Eventbox.Ticketing.Application.IntegrationEvents;
 using Eventbox.Shared.Exceptions;
 
 namespace Eventbox.Ticketing.Application.IntegrationEventHandlers;

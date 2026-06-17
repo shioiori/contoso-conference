@@ -6,7 +6,7 @@ using MediatR;
 namespace Eventbox.Ticketing.Application.MessageHandlers;
 
 public sealed class OrderExpirationDueMessageHandler
-    : IIntegrationEventHandler<OrderExpirationDueMessage>
+    : IIntegrationEventHandler<OrderExpirationDueMessageIntergrationEvent>
 {
     private readonly IMediator _mediator;
 
@@ -16,7 +16,7 @@ public sealed class OrderExpirationDueMessageHandler
     }
 
     public Task HandleAsync(
-        OrderExpirationDueMessage @event,
+        OrderExpirationDueMessageIntergrationEvent @event,
         CancellationToken cancellationToken = default)
     {
         return _mediator.Send(

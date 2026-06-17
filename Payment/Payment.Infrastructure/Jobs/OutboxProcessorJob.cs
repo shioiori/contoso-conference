@@ -1,6 +1,6 @@
+using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.Payment.Core.Abstractions;
-using Eventbox.Payment.Infrastructure.Messaging;
 using Eventbox.Shared.Outbox;
 using System.Text.Json;
 

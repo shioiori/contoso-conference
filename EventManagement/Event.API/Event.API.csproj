@@ -12,6 +12,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Hangfire.AspNetCore" Version="1.8.20" />
+    <PackageReference Include="Hangfire.PostgreSql" Version="1.20.12" />
     <PackageReference Include="Mapster" Version="7.4.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.5" />
@@ -31,6 +33,7 @@
   <ItemGroup>
 	  <ProjectReference Include="..\..\EventBus\EventBus.Core\EventBus.Core.csproj" />
 	  <ProjectReference Include="..\..\EventBus\EventBus.RabbitMQ\EventBus.RabbitMQ.csproj" />
+	  <ProjectReference Include="..\..\Shared\Eventbox.Contracts\Eventbox.Contracts.csproj" />
 	  <ProjectReference Include="..\..\Shared\Eventbox.Shared\Eventbox.Shared.csproj" />
   </ItemGroup>
 

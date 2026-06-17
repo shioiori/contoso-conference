@@ -1,18 +1,20 @@
 using Eventbox.Shared.Exceptions;
+using Eventbox.Shared.Outbox;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Jobs;
 using Eventbox.Ticketing.Application.Constants;
 using Eventbox.Ticketing.Application.Dtos;
+using Eventbox.Ticketing.Application.Messages;
 using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
 using Mapster;
 using MediatR;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 
 namespace Eventbox.Ticketing.Application.Commands
 {
     public class RegisterToEventCommandHandler(
-        IOrderExpirationScheduler orderExpirationScheduler,
         IUnitOfWork unitOfWork) : IRequestHandler<RegisterToEventCommand, OrderDto>
     {
         public async Task<OrderDto> Handle(RegisterToEventCommand request, CancellationToken cancellationToken)
@@ -77,13 +79,21 @@ namespace Eventbox.Ticketing.Application.Commands
                     throw new ConflictException("Not enough tickets remaining.");
 
                 await unitOfWork.Orders.AddAsync(order, cancellationToken);
+                var orderExpiration = new OrderExpirationDueMessageIntergrationEvent
+                {
+                    OrderId = order.Id,
+                    ExpiresAt = order.ReservationExpiresAt ?? DateTime.UtcNow.AddMinutes(TicketingConstants.ReservationExpirationMinutes),
+                };
+                await unitOfWork.Outbox.AddAsync(new OutboxMessage
+                {
+                    Id = Guid.NewGuid(),
+                    IntergrationEventType = nameof(OrderExpirationDueMessageIntergrationEvent),
+                    Content = JsonSerializer.Serialize(orderExpiration),
+                    OccurredOnUtc = DateTime.UtcNow,
+                    Status = ProcessStatus.Pending
+                }, cancellationToken);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }, cancellationToken);
-
-            await orderExpirationScheduler.ScheduleExpirationAsync(
-                order.Id,
-                order.ReservationExpiresAt!.Value,
-                cancellationToken);
 
             return order.Adapt<OrderDto>();
         }

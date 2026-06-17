@@ -1,6 +1,6 @@
 using Eventbox.EventBus.Events;
 
-namespace Eventbox.EventManagement.EventApi.IntegrationEvents;
+namespace Eventbox.Contracts.IntegrationEvents;
 
 public class TicketTypeCreatedEvent : IntegrationEvent
 {

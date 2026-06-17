@@ -168,6 +168,40 @@ namespace Eventbox.EventManagement.EventApi.Migrations
                     b.ToTable("TicketType");
                 });
 
+            modelBuilder.Entity("Eventbox.Shared.Outbox.OutboxMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("text");
+
+                    b.Property<string>("IntergrationEventType")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("OccurredOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ProcessedOnUtc")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Outboxes");
+                });
+
             modelBuilder.Entity("Eventbox.EventManagement.EventApi.Domains.TicketType", b =>
                 {
                     b.HasOne("Eventbox.EventManagement.EventApi.Domains.Event", "Event")

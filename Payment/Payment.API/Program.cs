@@ -9,6 +9,7 @@ using Eventbox.Payment.Infrastructure.Messaging;
 using Eventbox.Payment.Infrastructure.Persistence;
 using Eventbox.Shared.Auditing;
 using Eventbox.Shared.Exceptions;
+using Eventbox.Shared.Outbox;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Mapster;
@@ -39,6 +40,7 @@ builder.Services.AddEventboxMediatRAuditLogging();
 builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IPaymentEventPublisher, RabbitMqPaymentEventPublisher>();
+builder.Services.AddScoped<IOutboxProcessorJob, OutboxProcessorJob>();
 builder.Services.AddHttpClient<IOrderAccessVerifier, TicketingOrderAccessVerifier>(client =>
 {
     client.BaseAddress = new Uri(ticketingApiOptions.BaseUrl);
@@ -54,7 +56,6 @@ builder.Services.AddHangfire(config =>
     });
 });
 builder.Services.AddHangfireServer();
-builder.Services.AddScoped<IOutboxProcessorJob, OutboxProcessorJob>();
 
 var app = builder.Build();
 
