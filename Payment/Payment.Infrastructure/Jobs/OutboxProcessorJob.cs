@@ -8,8 +8,7 @@ namespace Eventbox.Payment.Infrastructure.Jobs
 {
     public class OutboxProcessorJob(
         IUnitOfWork unitOfWork,
-        IEventBus eventBus,
-        IDeadLetterPublisher deadLetterPublisher) : IOutboxProcessorJob
+        IEventBus eventBus) : IOutboxProcessorJob
     {
         private const int BatchSize = 20;
 
@@ -35,16 +34,7 @@ namespace Eventbox.Payment.Infrastructure.Jobs
                 {
                     message.RetryCount++;
                     message.Error = ex.Message;
-
-                    if (message.RetryCount >= OutboxMessage.MaxRetries)
-                    {
-                        message.Status = ProcessStatus.DeadLettered;
-                        await deadLetterPublisher.PublishAsync(message, cancellationToken);
-                    }
-                    else
-                    {
-                        message.Status = ProcessStatus.Failed;
-                    }
+                    message.Status = ProcessStatus.Failed;
                 }
 
                 unitOfWork.Outbox.Update(message);

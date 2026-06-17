@@ -1,5 +1,4 @@
 using Eventbox.EventBus.Core.Abstractions;
-using Eventbox.Shared.Outbox;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -7,12 +6,10 @@ using Polly;
 using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using System.Text;
-using System.Text.Json;
 
 namespace Eventbox.EventBus.RabbitMQ;
 
-public sealed class RabbitMqEventBus : IEventBus, IDeadLetterPublisher, IAsyncDisposable
+public sealed class RabbitMqEventBus : IEventBus, IAsyncDisposable
 {
     private readonly RabbitMqConnectionFactory _connectionFactory;
     private readonly IMessageSerializer _serializer;
@@ -74,6 +71,7 @@ public sealed class RabbitMqEventBus : IEventBus, IDeadLetterPublisher, IAsyncDi
                 MessageId = @event.IntegrationEventId.ToString(),
                 Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
                 Type = @event.EventType,
+                Expiration = _options.EventMessageExpirationMilliseconds.ToString(),
             };
 
             await _publishChannel.BasicPublishAsync(
@@ -87,38 +85,6 @@ public sealed class RabbitMqEventBus : IEventBus, IDeadLetterPublisher, IAsyncDi
             _logger.LogDebug("Published event {EventType} [{IntegrationEventId}] to exchange '{Exchange}' with routing key '{RoutingKey}'",
                 @event.EventType, @event.IntegrationEventId, _options.EventExchange, routingKey);
         }, cancellationToken);
-    }
-
-    public async Task PublishAsync(OutboxMessage message, CancellationToken cancellationToken = default)
-    {
-        _publishChannel ??= await _connectionFactory.CreateChannelAsync(cancellationToken);
-
-        await _publishChannel.ExchangeDeclareAsync(
-            exchange: _options.DeadLetterExchange,
-            type: ExchangeType.Fanout,
-            durable: true,
-            autoDelete: false,
-            cancellationToken: cancellationToken);
-
-        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(message));
-
-        var props = new BasicProperties
-        {
-            ContentType = "application/json",
-            DeliveryMode = DeliveryModes.Persistent,
-            MessageId = message.Id.ToString(),
-        };
-
-        await _publishChannel.BasicPublishAsync(
-            exchange: _options.DeadLetterExchange,
-            routingKey: string.Empty,
-            mandatory: false,
-            basicProperties: props,
-            body: body,
-            cancellationToken: cancellationToken);
-
-        _logger.LogWarning("Dead-lettered outbox message {MessageId} [{EventType}] after {RetryCount} retries",
-            message.Id, message.IntergrationEventType, message.RetryCount);
     }
 
     public async Task SubscribeAsync<TEvent, THandler>(CancellationToken cancellationToken = default)
@@ -139,11 +105,40 @@ public sealed class RabbitMqEventBus : IEventBus, IDeadLetterPublisher, IAsyncDi
 
         var queueName = $"{_options.QueuePrefix}.events.{routingKey}";
 
+        await _consumeChannel.ExchangeDeclareAsync(
+            exchange: _options.DeadLetterExchange,
+            type: ExchangeType.Topic,
+            durable: true,
+            autoDelete: false,
+            cancellationToken: cancellationToken);
+
+        var deadLetterQueueName = $"{queueName}.deadletter";
+        var deadLetterRoutingKey = $"{routingKey}.deadletter";
+        var queueArguments = new Dictionary<string, object?>
+        {
+            ["x-dead-letter-exchange"] = _options.DeadLetterExchange,
+            ["x-dead-letter-routing-key"] = deadLetterRoutingKey
+        };
+
         await _consumeChannel.QueueDeclareAsync(
             queue: queueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
+            arguments: queueArguments,
+            cancellationToken: cancellationToken);
+
+        await _consumeChannel.QueueDeclareAsync(
+            queue: deadLetterQueueName,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            cancellationToken: cancellationToken);
+
+        await _consumeChannel.QueueBindAsync(
+            queue: deadLetterQueueName,
+            exchange: _options.DeadLetterExchange,
+            routingKey: deadLetterRoutingKey,
             cancellationToken: cancellationToken);
 
         await _consumeChannel.QueueBindAsync(
@@ -163,8 +158,8 @@ public sealed class RabbitMqEventBus : IEventBus, IDeadLetterPublisher, IAsyncDi
             consumer: consumer,
             cancellationToken: cancellationToken);
 
-        _logger.LogInformation("Subscribed {Handler} to event '{RoutingKey}' on queue '{Queue}'",
-            typeof(THandler).Name, routingKey, queueName);
+        _logger.LogInformation("Subscribed {Handler} to event '{RoutingKey}' on queue '{Queue}' with dead-letter queue '{DeadLetterQueue}'",
+            typeof(THandler).Name, routingKey, queueName, deadLetterQueueName);
     }
 
     private async Task OnMessageReceivedAsync(object sender, BasicDeliverEventArgs args)
@@ -201,9 +196,9 @@ public sealed class RabbitMqEventBus : IEventBus, IDeadLetterPublisher, IAsyncDi
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error handling event '{RoutingKey}' [{MessageId}]. Nacking with requeue.",
+            _logger.LogError(ex, "Error handling event '{RoutingKey}' [{MessageId}]. Nacking without requeue.",
                 routingKey, args.BasicProperties.MessageId);
-            await _consumeChannel!.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: true);
+            await _consumeChannel!.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false);
         }
     }
 

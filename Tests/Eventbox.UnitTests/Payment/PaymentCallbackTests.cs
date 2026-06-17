@@ -12,12 +12,11 @@ public class PaymentCallbackTests
     public async Task SimulatePaymentSucceeded_WhenProviderEventIsDuplicate_DoesNotProcessOrPublishTwice()
     {
         var repository = new InMemoryPaymentRepository();
-        var unitOfWork = new InMemoryPaymentUnitOfWork(repository);
         var outbox = new InMemoryOutbox();
-        var publisher = new RecordingPaymentEventPublisher();
+        var unitOfWork = new InMemoryPaymentUnitOfWork(repository, outbox);
         var payment = PaymentEntity.CreateIntent(Guid.NewGuid(), 25m, "usd", null, null, "checkout-1");
         await repository.AddAsync(payment, CancellationToken.None);
-        var handler = new SimulatePaymentSucceededCommandHandler(unitOfWork, outbox, publisher);
+        var handler = new SimulatePaymentSucceededCommandHandler(unitOfWork);
         var command = new SimulatePaymentSucceededCommand(
             payment.Id,
             ProviderEventId: "evt_123",
@@ -33,11 +32,11 @@ public class PaymentCallbackTests
         Assert.False(duplicate.Processed);
         Assert.Equal(PaymentStatus.Succeeded, duplicate.Status);
         Assert.Equal(PaymentStatus.Succeeded, payment.Status);
-        Assert.Equal(2, unitOfWork.SaveChangesCount);
+        Assert.Equal(1, unitOfWork.SaveChangesCount);
         var outboxMessage = Assert.Single(outbox.OutboxMessages);
-        Assert.Equal(ProcessStatus.Processed, outboxMessage.Status);
-        Assert.NotNull(outboxMessage.ProcessedOnUtc);
-        Assert.Single(publisher.PublishedProviderEventIds);
+        Assert.Equal(ProcessStatus.Pending, outboxMessage.Status);
+        Assert.Null(outboxMessage.ProcessedOnUtc);
+        Assert.Contains("PaymentConfirmedIntegrationEvent", outboxMessage.IntergrationEventType);
     }
 
     [Fact]
@@ -87,11 +86,12 @@ public class PaymentCallbackTests
         }
     }
 
-    private sealed class InMemoryPaymentUnitOfWork(IPaymentRepository paymentRepository) : IUnitOfWork
+    private sealed class InMemoryPaymentUnitOfWork(IPaymentRepository paymentRepository, IOutbox outbox) : IUnitOfWork
     {
         public int SaveChangesCount { get; private set; }
 
         public IPaymentRepository Payments { get; } = paymentRepository;
+        public IOutbox Outbox { get; } = outbox;
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
@@ -106,30 +106,21 @@ public class PaymentCallbackTests
 
         public IReadOnlyCollection<OutboxMessage> OutboxMessages => _outboxMessages.AsReadOnly();
 
-        public Task AddOutboxMessageAsync(OutboxMessage outboxMessage, CancellationToken cancellationToken)
+        public Task AddAsync(OutboxMessage outboxMessage, CancellationToken cancellationToken)
         {
             _outboxMessages.Add(outboxMessage);
             return Task.CompletedTask;
         }
 
-        public Task UpdateOutboxMessageAsync(OutboxMessage outboxMessage, CancellationToken cancellationToken)
-            => Task.CompletedTask;
-    }
-
-    private sealed class RecordingPaymentEventPublisher : IPaymentEventPublisher
-    {
-        private readonly List<string> _publishedProviderEventIds = new();
-
-        public IReadOnlyCollection<string> PublishedProviderEventIds => _publishedProviderEventIds.AsReadOnly();
-
-        public Task<bool> PublishPaymentConfirmedAsync(
-            PaymentEntity payment,
-            string providerEventId,
-            DateTimeOffset paidAt,
-            CancellationToken cancellationToken)
+        public void Update(OutboxMessage outboxMessage)
         {
-            _publishedProviderEventIds.Add(providerEventId);
-            return Task.FromResult(true);
         }
+
+        public Task<List<OutboxMessage>> GetPendingAsync(int batchSize, CancellationToken cancellationToken)
+            => Task.FromResult(_outboxMessages
+                .Where(message => message.Status == ProcessStatus.Pending
+                    || (message.Status == ProcessStatus.Failed && message.RetryCount < OutboxMessage.MaxRetries))
+                .Take(batchSize)
+                .ToList());
     }
 }

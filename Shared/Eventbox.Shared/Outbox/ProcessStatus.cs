@@ -9,7 +9,6 @@ namespace Eventbox.Shared.Outbox
         Pending,
         Processing,
         Processed,
-        Failed,
-        DeadLettered
+        Failed
     }
 }
