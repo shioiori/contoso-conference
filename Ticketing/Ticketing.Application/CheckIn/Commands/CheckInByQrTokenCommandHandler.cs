@@ -1,3 +1,5 @@
+using Eventbox.EventBus.Core.Abstractions;
+using Eventbox.Ticketing.Application.CheckIn.IntegrationEvents;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Application.Dtos;
@@ -10,7 +12,8 @@ namespace Eventbox.Ticketing.Application.Commands;
 public class CheckInByQrTokenCommandHandler(
     IOrderRepository orderRepository,
     IEventScheduleRepository eventScheduleRepository,
-    IQrTokenHasher qrTokenHasher) : IRequestHandler<CheckInByQrTokenCommand, CheckInResultDto>
+    IQrTokenHasher qrTokenHasher,
+    IEventBus eventBus) : IRequestHandler<CheckInByQrTokenCommand, CheckInResultDto>
 {
     public async Task<CheckInResultDto> Handle(CheckInByQrTokenCommand request, CancellationToken cancellationToken)
     {
@@ -42,6 +45,16 @@ public class CheckInByQrTokenCommandHandler(
 
         if (updated == 0)
             return new CheckInResultDto(CheckInAttemptResult.AlreadyCheckedIn, "Ticket was already checked in.", ticket.Adapt<TicketDto>());
+
+        await eventBus.PublishAsync(new CheckInCompletedIntegrationEvent
+        {
+            TicketId = ticket.Id,
+            EventId = ticket.EventId,
+            TicketTypeId = ticket.TicketTypeId,
+            OperatorUserId = request.StaffUserId,
+            CheckedInAt = now,
+            WasOverride = false
+        }, cancellationToken);
 
         return new CheckInResultDto(CheckInAttemptResult.Success, "Check-in completed.", ticket.Adapt<TicketDto>());
     }

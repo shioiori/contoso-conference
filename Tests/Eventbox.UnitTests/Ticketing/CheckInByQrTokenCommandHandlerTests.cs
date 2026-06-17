@@ -1,4 +1,6 @@
 using System.Linq.Expressions;
+using Eventbox.EventBus.Core.Abstractions;
+using Eventbox.Ticketing.Application.CheckIn.IntegrationEvents;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Application.Commands;
@@ -21,7 +23,8 @@ public class CheckInByQrTokenCommandHandlerTests
         var orderRepository = new InMemoryOrderRepository(ticket);
         var scheduleRepository = new InMemoryEventScheduleRepository(
             new EventSchedule(eventId, DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddMinutes(5)));
-        var handler = new CheckInByQrTokenCommandHandler(orderRepository, scheduleRepository, new PassthroughQrTokenHasher());
+        var eventBus = new RecordingEventBus();
+        var handler = new CheckInByQrTokenCommandHandler(orderRepository, scheduleRepository, new PassthroughQrTokenHasher(), eventBus);
 
         var command = new CheckInByQrTokenCommand
         {
@@ -37,11 +40,33 @@ public class CheckInByQrTokenCommandHandlerTests
         Assert.Single(results, result => result.Result == CheckInAttemptResult.Success);
         Assert.Single(results, result => result.Result == CheckInAttemptResult.AlreadyCheckedIn);
         Assert.NotNull(ticket.CheckedInAt);
+        Assert.Equal(1, eventBus.CheckInCompletedCount);
     }
 
     private sealed class PassthroughQrTokenHasher : IQrTokenHasher
     {
         public string Hash(string qrToken) => qrToken;
+    }
+
+    private sealed class RecordingEventBus : IEventBus
+    {
+        private int _checkInCompletedCount;
+
+        public int CheckInCompletedCount => _checkInCompletedCount;
+
+        public Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
+            where TEvent : IIntegrationEvent
+        {
+            if (@event is CheckInCompletedIntegrationEvent)
+                Interlocked.Increment(ref _checkInCompletedCount);
+
+            return Task.CompletedTask;
+        }
+
+        public Task SubscribeAsync<TEvent, THandler>(CancellationToken cancellationToken = default)
+            where TEvent : IIntegrationEvent
+            where THandler : IIntegrationEventHandler<TEvent>
+            => Task.CompletedTask;
     }
 
     private sealed class InMemoryEventScheduleRepository(EventSchedule schedule) : IEventScheduleRepository
