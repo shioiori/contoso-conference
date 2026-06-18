@@ -1,7 +1,10 @@
+using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.Payment.Core.Abstractions;
 using Eventbox.Payment.Core.Dtos;
 using Eventbox.Shared.Exceptions;
+using Eventbox.Shared.Outbox;
 using MediatR;
+using System.Text.Json;
 
 namespace Eventbox.Payment.Core.Commands
 {
@@ -46,6 +49,23 @@ namespace Eventbox.Payment.Core.Commands
                 request.Currency,
                 request.FailedAt,
                 request.FailureReason);
+
+            if (processed)
+            {
+                await unitOfWork.Outbox.AddAsync(new OutboxMessage
+                {
+                    Id = Guid.NewGuid(),
+                    IntegrationEventType = nameof(PaymentFailedIntegrationEvent),
+                    Content = JsonSerializer.Serialize(new PaymentFailedIntegrationEvent
+                    {
+                        PaymentId = payment.Id,
+                        OrderId = payment.OrderId,
+                        FailureReason = request.FailureReason,
+                    }),
+                    OccurredOnUtc = DateTime.UtcNow,
+                    Status = ProcessStatus.Pending
+                }, cancellationToken);
+            }
 
             await unitOfWork.SaveChangesAsync(cancellationToken);
 

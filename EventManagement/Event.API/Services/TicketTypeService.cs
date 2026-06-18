@@ -54,7 +54,7 @@ namespace Eventbox.EventManagement.EventApi.Services
             await unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                IntergrationEventType = nameof(TicketTypeCreatedEvent),
+                IntegrationEventType = nameof(TicketTypeCreatedEvent),
                 Content = JsonSerializer.Serialize(ticketTypeCreatedEvent),
                 OccurredOnUtc = DateTime.UtcNow,
                 Status = ProcessStatus.Pending
@@ -86,7 +86,7 @@ namespace Eventbox.EventManagement.EventApi.Services
             await unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                IntergrationEventType = nameof(TicketCapacityAddedEvent),
+                IntegrationEventType = nameof(TicketCapacityAddedEvent),
                 Content = JsonSerializer.Serialize(ticketCapacityAddedEvent),
                 OccurredOnUtc = DateTime.UtcNow,
                 Status = ProcessStatus.Pending
@@ -111,6 +111,19 @@ namespace Eventbox.EventManagement.EventApi.Services
             var ticketType = await unitOfWork.TicketTypes.GetByIdAsync(id, cancellationToken)
                 ?? throw new NotFoundException("TicketType", id);
             unitOfWork.TicketTypes.Delete(ticketType);
+            var ticketTypeDeletedEvent = new TicketTypeDeletedEvent
+            {
+                Id = ticketType.Id,
+                EventId = ticketType.EventId,
+            };
+            await unitOfWork.Outbox.AddAsync(new OutboxMessage
+            {
+                Id = Guid.NewGuid(),
+                IntegrationEventType = nameof(TicketTypeDeletedEvent),
+                Content = JsonSerializer.Serialize(ticketTypeDeletedEvent),
+                OccurredOnUtc = DateTime.UtcNow,
+                Status = ProcessStatus.Pending
+            }, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
     }

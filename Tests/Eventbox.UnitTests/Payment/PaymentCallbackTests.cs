@@ -36,7 +36,7 @@ public class PaymentCallbackTests
         var outboxMessage = Assert.Single(outbox.OutboxMessages);
         Assert.Equal(ProcessStatus.Pending, outboxMessage.Status);
         Assert.Null(outboxMessage.ProcessedOnUtc);
-        Assert.Contains("PaymentConfirmedIntegrationEvent", outboxMessage.IntergrationEventType);
+        Assert.Contains("PaymentConfirmedIntegrationEvent", outboxMessage.IntegrationEventType);
     }
 
     [Fact]

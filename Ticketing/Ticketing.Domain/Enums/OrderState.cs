@@ -9,6 +9,7 @@ namespace Eventbox.Ticketing.Domain.Enums
         Pending,
         Confirmed,
         Cancelled,
-        Expired
+        Expired,
+        PaymentFailed
     }
 }

@@ -47,5 +47,12 @@ namespace Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate
         {
             GetTicketType(ticketTypeId).IncreaseQuantity(quantity);
         }
+
+        public void RemoveTicketType(int ticketTypeId)
+        {
+            var ticketType = _ticketTypes.FirstOrDefault(s => s.Id == ticketTypeId);
+            if (ticketType is not null)
+                _ticketTypes.Remove(ticketType);
+        }
     }
 }

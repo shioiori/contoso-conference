@@ -32,6 +32,10 @@ public sealed class RabbitMqSubscriptionHostedService : BackgroundService
             PaymentConfirmedIntegrationEventHandler>(stoppingToken);
 
         await _eventBus.SubscribeAsync<
+            PaymentFailedIntegrationEvent,
+            PaymentFailedIntegrationEventHandler>(stoppingToken);
+
+        await _eventBus.SubscribeAsync<
             EventCreatedEvent,
             EventCreatedEventHandler>(stoppingToken);
 
@@ -46,6 +50,10 @@ public sealed class RabbitMqSubscriptionHostedService : BackgroundService
         await _eventBus.SubscribeAsync<
             TicketCapacityAddedEvent,
             TicketCapacityAddedEventHandler>(stoppingToken);
+
+        await _eventBus.SubscribeAsync<
+            TicketTypeDeletedEvent,
+            TicketTypeDeletedEventHandler>(stoppingToken);
 
         await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
     }

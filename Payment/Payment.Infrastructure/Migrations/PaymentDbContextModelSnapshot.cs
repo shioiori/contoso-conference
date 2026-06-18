@@ -105,7 +105,7 @@ namespace Eventbox.Payment.Infrastructure.Migrations
                     b.Property<string>("Error")
                         .HasColumnType("text");
 
-                    b.Property<string>("IntergrationEventType")
+                    b.Property<string>("IntegrationEventType")
                         .IsRequired()
                         .HasColumnType("text");
 

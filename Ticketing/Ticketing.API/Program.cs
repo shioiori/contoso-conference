@@ -58,6 +58,9 @@ builder.Services.AddIntegrationEventHandler<
     PaymentConfirmedIntegrationEvent,
     PaymentConfirmedIntegrationEventHandler>();
 builder.Services.AddIntegrationEventHandler<
+    PaymentFailedIntegrationEvent,
+    PaymentFailedIntegrationEventHandler>();
+builder.Services.AddIntegrationEventHandler<
     EventCreatedEvent,
     EventCreatedEventHandler>();
 builder.Services.AddIntegrationEventHandler<
@@ -69,6 +72,9 @@ builder.Services.AddIntegrationEventHandler<
 builder.Services.AddIntegrationEventHandler<
     TicketCapacityAddedEvent,
     TicketCapacityAddedEventHandler>();
+builder.Services.AddIntegrationEventHandler<
+    TicketTypeDeletedEvent,
+    TicketTypeDeletedEventHandler>();
 builder.Services.AddHostedService<RabbitMqSubscriptionHostedService>();
 
 builder.Services.AddHangfire(config =>

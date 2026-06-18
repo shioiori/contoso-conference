@@ -1,4 +1,5 @@
 using Eventbox.Payment.Core.Abstractions;
+using Eventbox.Payment.Infrastructure.Repositories;
 using Eventbox.Shared.Outbox;
 using Microsoft.EntityFrameworkCore;
 

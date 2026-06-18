@@ -87,7 +87,7 @@ namespace Eventbox.Ticketing.Application.Commands
                 await unitOfWork.Outbox.AddAsync(new OutboxMessage
                 {
                     Id = Guid.NewGuid(),
-                    IntergrationEventType = nameof(OrderExpirationDueMessageIntergrationEvent),
+                    IntegrationEventType = nameof(OrderExpirationDueMessageIntergrationEvent),
                     Content = JsonSerializer.Serialize(orderExpiration),
                     OccurredOnUtc = DateTime.UtcNow,
                     Status = ProcessStatus.Pending

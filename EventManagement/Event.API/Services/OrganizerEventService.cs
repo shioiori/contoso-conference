@@ -65,7 +65,7 @@ namespace Eventbox.EventManagement.EventApi.Services
             await _unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                IntergrationEventType = nameof(EventCreatedEvent),
+                IntegrationEventType = nameof(EventCreatedEvent),
                 Content = JsonSerializer.Serialize(eventCreatedEvent),
                 OccurredOnUtc = DateTime.UtcNow,
                 Status = ProcessStatus.Pending
@@ -92,7 +92,7 @@ namespace Eventbox.EventManagement.EventApi.Services
             await _unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                IntergrationEventType = nameof(EventUpdatedEvent),
+                IntegrationEventType = nameof(EventUpdatedEvent),
                 Content = JsonSerializer.Serialize(eventUpdatedEvent),
                 OccurredOnUtc = DateTime.UtcNow,
                 Status = ProcessStatus.Pending
@@ -162,7 +162,7 @@ namespace Eventbox.EventManagement.EventApi.Services
             await _unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                IntergrationEventType = nameof(EventPublishedEvent),
+                IntegrationEventType = nameof(EventPublishedEvent),
                 Content = JsonSerializer.Serialize(eventPublishedEvent),
                 OccurredOnUtc = DateTime.UtcNow,
                 Status = ProcessStatus.Pending
@@ -186,7 +186,7 @@ namespace Eventbox.EventManagement.EventApi.Services
             await _unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                IntergrationEventType = nameof(EventUnpublishedEvent),
+                IntegrationEventType = nameof(EventUnpublishedEvent),
                 Content = JsonSerializer.Serialize(eventUnpublishedEvent),
                 OccurredOnUtc = DateTime.UtcNow,
                 Status = ProcessStatus.Pending

@@ -41,12 +41,12 @@ namespace Eventbox.Ticketing.Infrastructure.Jobs
         }
 
         private static IIntegrationEvent Deserialize(OutboxMessage message) =>
-            message.IntergrationEventType switch
+            message.IntegrationEventType switch
             {
                 nameof(OrderExpirationDueMessageIntergrationEvent) =>
                     JsonSerializer.Deserialize<OrderExpirationDueMessageIntergrationEvent>(message.Content)
-                    ?? throw new InvalidOperationException($"Failed to deserialize {message.IntergrationEventType}"),
-                _ => throw new InvalidOperationException($"Unknown integration event type: {message.IntergrationEventType}")
+                    ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}"),
+                _ => throw new InvalidOperationException($"Unknown integration event type: {message.IntegrationEventType}")
             };
     }
 }

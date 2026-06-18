@@ -43,12 +43,15 @@ namespace Eventbox.Payment.Infrastructure.Jobs
         }
 
         private static IIntegrationEvent Deserialize(OutboxMessage message) =>
-            message.IntergrationEventType switch
+            message.IntegrationEventType switch
             {
                 nameof(PaymentConfirmedIntegrationEvent) =>
                     JsonSerializer.Deserialize<PaymentConfirmedIntegrationEvent>(message.Content)
-                    ?? throw new InvalidOperationException($"Failed to deserialize {message.IntergrationEventType}"),
-                _ => throw new InvalidOperationException($"Unknown integration event type: {message.IntergrationEventType}")
+                    ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}"),
+                nameof(PaymentFailedIntegrationEvent) =>
+                    JsonSerializer.Deserialize<PaymentFailedIntegrationEvent>(message.Content)
+                    ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}"),
+                _ => throw new InvalidOperationException($"Unknown integration event type: {message.IntegrationEventType}")
             };
     }
 }

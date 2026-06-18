@@ -10,7 +10,7 @@ namespace Eventbox.Shared.Outbox
 
         public Guid Id { get; set; }
 
-        public string IntergrationEventType { get; set; } = default!;
+        public string IntegrationEventType { get; set; } = default!;
         public string Content { get; set; } = default!;
 
         public DateTime OccurredOnUtc { get; set; }
