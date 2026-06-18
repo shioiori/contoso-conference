@@ -1,4 +1,5 @@
-using Eventbox.EventBus.RabbitMQ.Extensions;
+using Eventbox.Contracts.IntegrationEvents;
+using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.EventManagement.EventApi.Application.Abstractions;
 using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
 using Eventbox.EventManagement.EventApi.Infrastructure;
@@ -10,6 +11,7 @@ using Eventbox.EventManagement.Infrastructure.Jobs;
 using Eventbox.Shared.Auditing;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
+using EventBus.RabbitMQ;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Mapster;
@@ -35,7 +37,15 @@ builder.Services.AddDbContext<EventDbContext>((serviceProvider, options) =>
             serviceProvider.GetRequiredService<AuditableEntitySaveChangesInterceptor>(),
             serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
-builder.Services.AddRabbitMqEventBus(builder.Configuration);
+builder.Services.Configure<RabbitMQOptions>(options =>
+{
+    options.Map<EventCreatedEvent>("eventbox.events", "eventbox.events.created", "event.create");
+    options.Map<EventUpdatedEvent>("eventbox.events", "eventbox.events.updated", "event.update");
+    options.Map<EventPublishedEvent>("eventbox.events", "eventbox.events.published", "event.publish");
+    options.Map<EventUnpublishedEvent>("eventbox.events", "eventbox.events.unpublished", "event.unpublish");
+});
+
+builder.Services.AddSingleton<IEventBus, RabbitMQEventBus>();
 
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<ITicketTypeRepository, TicketTypeRepository>();
