@@ -1,18 +1,22 @@
-using Eventbox.EventManagement.EventApi.Infrastructure;
+using Eventbox.EventBus.RabbitMQ.Extensions;
 using Eventbox.EventManagement.EventApi.Application.Abstractions;
+using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
+using Eventbox.EventManagement.EventApi.Infrastructure;
+using Eventbox.EventManagement.EventApi.Infrastructure.Repositories;
 using Eventbox.EventManagement.EventApi.Mappings;
 using Eventbox.EventManagement.EventApi.Services;
 using Eventbox.EventManagement.EventApi.Services.Abstractions;
-using Eventbox.EventBus.RabbitMQ.Extensions;
+using Eventbox.EventManagement.Infrastructure.Jobs;
 using Eventbox.Shared.Auditing;
 using Eventbox.Shared.Exceptions;
+using Eventbox.Shared.Outbox;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
-using Eventbox.EventManagement.EventApi.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +45,17 @@ builder.Services.AddScoped<IOrganizerEventService, OrganizerEventService>();
 builder.Services.AddScoped<IOrganizationService, OrganizationService>();
 builder.Services.AddScoped<IPublicEventService, PublicEventService>();
 builder.Services.AddScoped<ITicketTypeService, TicketTypeService>();
+builder.Services.AddScoped<IOutboxProcessorJob, OutboxProcessorJob>();
+
+builder.Services.AddHangfire(config =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("Database");
+    config.UsePostgreSqlStorage(options =>
+    {
+        options.UseNpgsqlConnection(connectionString);
+    });
+});
+builder.Services.AddHangfireServer();
 
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "Eventbox.Auth";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "Eventbox.Api";
@@ -87,5 +102,10 @@ app.UseAuthentication();
 app.UseEventboxSerilogRequestLogging();
 app.UseAuthorization();
 app.MapControllers();
+
+RecurringJob.AddOrUpdate<IOutboxProcessorJob>(
+    "Payment-outbox-processor",
+    job => job.RunAsync(CancellationToken.None),
+    "*/30 * * * * *");
 
 app.Run();

@@ -47,7 +47,7 @@ namespace Eventbox.Ticketing.Domain.Entities.OrderAggregate
 
         public OrderState GetCurrentState(DateTimeOffset utcNow)
         {
-            if (OrderState == OrderState.Pending && ReservationExpiresAt <= utcNow)
+            if ((OrderState is OrderState.Pending or OrderState.PaymentFailed) && ReservationExpiresAt <= utcNow)
                 return OrderState.Expired;
 
             return OrderState;
@@ -88,9 +88,18 @@ namespace Eventbox.Ticketing.Domain.Entities.OrderAggregate
             return true;
         }
 
+        public bool MarkPaymentFailed()
+        {
+            if (OrderState is not (OrderState.Pending or OrderState.PaymentFailed))
+                return false;
+
+            OrderState = OrderState.PaymentFailed;
+            return true;
+        }
+
         public bool Expire(DateTimeOffset utcNow)
         {
-            if (OrderState != OrderState.Pending)
+            if (OrderState is not (OrderState.Pending or OrderState.PaymentFailed))
                 return false;
 
             if (ReservationExpiresAt > utcNow)

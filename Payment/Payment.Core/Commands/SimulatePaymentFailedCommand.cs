@@ -1,7 +1,10 @@
+using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.Payment.Core.Abstractions;
 using Eventbox.Payment.Core.Dtos;
 using Eventbox.Shared.Exceptions;
+using Eventbox.Shared.Outbox;
 using MediatR;
+using System.Text.Json;
 
 namespace Eventbox.Payment.Core.Commands
 {
@@ -14,14 +17,14 @@ namespace Eventbox.Payment.Core.Commands
         DateTimeOffset FailedAt,
         string? FailureReason) : IRequest<PaymentCallbackResponse>;
 
-    public class SimulatePaymentFailedCommandHandler(IPaymentRepository paymentRepository)
+    public class SimulatePaymentFailedCommandHandler(IUnitOfWork unitOfWork)
         : IRequestHandler<SimulatePaymentFailedCommand, PaymentCallbackResponse>
     {
         public async Task<PaymentCallbackResponse> Handle(
             SimulatePaymentFailedCommand request,
             CancellationToken cancellationToken)
         {
-            var duplicate = await paymentRepository.GetByProviderEventIdAsync(
+            var duplicate = await unitOfWork.Payments.GetByProviderEventIdAsync(
                 request.ProviderEventId,
                 cancellationToken);
 
@@ -36,7 +39,7 @@ namespace Eventbox.Payment.Core.Commands
                 };
             }
 
-            var payment = await paymentRepository.GetByIdAsync(request.PaymentIntentId, cancellationToken)
+            var payment = await unitOfWork.Payments.GetByIdAsync(request.PaymentIntentId, cancellationToken)
                 ?? throw new NotFoundException("Payment intent", request.PaymentIntentId);
 
             var processed = payment.MarkFailed(
@@ -47,7 +50,24 @@ namespace Eventbox.Payment.Core.Commands
                 request.FailedAt,
                 request.FailureReason);
 
-            await paymentRepository.SaveChangesAsync(cancellationToken);
+            if (processed)
+            {
+                await unitOfWork.Outbox.AddAsync(new OutboxMessage
+                {
+                    Id = Guid.NewGuid(),
+                    IntegrationEventType = nameof(PaymentFailedIntegrationEvent),
+                    Content = JsonSerializer.Serialize(new PaymentFailedIntegrationEvent
+                    {
+                        PaymentId = payment.Id,
+                        OrderId = payment.OrderId,
+                        FailureReason = request.FailureReason,
+                    }),
+                    OccurredOnUtc = DateTime.UtcNow,
+                    Status = ProcessStatus.Pending
+                }, cancellationToken);
+            }
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
 
             return new PaymentCallbackResponse
             {

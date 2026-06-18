@@ -1,6 +1,7 @@
 using Eventbox.Payment.Core.Abstractions;
 using Eventbox.Payment.Core.Commands;
 using Eventbox.Payment.Core.Enums;
+using Eventbox.Shared.Outbox;
 using PaymentEntity = Eventbox.Payment.Core.Entities.Payment;
 
 namespace Eventbox.UnitTests.Payment;
@@ -11,10 +12,11 @@ public class PaymentCallbackTests
     public async Task SimulatePaymentSucceeded_WhenProviderEventIsDuplicate_DoesNotProcessOrPublishTwice()
     {
         var repository = new InMemoryPaymentRepository();
-        var publisher = new RecordingPaymentEventPublisher();
+        var outbox = new InMemoryOutbox();
+        var unitOfWork = new InMemoryPaymentUnitOfWork(repository, outbox);
         var payment = PaymentEntity.CreateIntent(Guid.NewGuid(), 25m, "usd", null, null, "checkout-1");
         await repository.AddAsync(payment, CancellationToken.None);
-        var handler = new SimulatePaymentSucceededCommandHandler(repository, publisher);
+        var handler = new SimulatePaymentSucceededCommandHandler(unitOfWork);
         var command = new SimulatePaymentSucceededCommand(
             payment.Id,
             ProviderEventId: "evt_123",
@@ -30,8 +32,11 @@ public class PaymentCallbackTests
         Assert.False(duplicate.Processed);
         Assert.Equal(PaymentStatus.Succeeded, duplicate.Status);
         Assert.Equal(PaymentStatus.Succeeded, payment.Status);
-        Assert.Equal(1, repository.SaveChangesCount);
-        Assert.Single(publisher.PublishedProviderEventIds);
+        Assert.Equal(1, unitOfWork.SaveChangesCount);
+        var outboxMessage = Assert.Single(outbox.OutboxMessages);
+        Assert.Equal(ProcessStatus.Pending, outboxMessage.Status);
+        Assert.Null(outboxMessage.ProcessedOnUtc);
+        Assert.Contains("PaymentConfirmedIntegrationEvent", outboxMessage.IntegrationEventType);
     }
 
     [Fact]
@@ -65,8 +70,6 @@ public class PaymentCallbackTests
     {
         private readonly List<PaymentEntity> _payments = new();
 
-        public int SaveChangesCount { get; private set; }
-
         public Task<PaymentEntity?> GetByIdAsync(Guid paymentId, CancellationToken cancellationToken)
             => Task.FromResult(_payments.FirstOrDefault(payment => payment.Id == paymentId));
 
@@ -81,28 +84,43 @@ public class PaymentCallbackTests
             _payments.Add(payment);
             return Task.CompletedTask;
         }
+    }
 
-        public Task SaveChangesAsync(CancellationToken cancellationToken)
+    private sealed class InMemoryPaymentUnitOfWork(IPaymentRepository paymentRepository, IOutbox outbox) : IUnitOfWork
+    {
+        public int SaveChangesCount { get; private set; }
+
+        public IPaymentRepository Payments { get; } = paymentRepository;
+        public IOutbox Outbox { get; } = outbox;
+
+        public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             SaveChangesCount++;
-            return Task.CompletedTask;
+            return Task.FromResult(1);
         }
     }
 
-    private sealed class RecordingPaymentEventPublisher : IPaymentEventPublisher
+    private sealed class InMemoryOutbox : IOutbox
     {
-        private readonly List<string> _publishedProviderEventIds = new();
+        private readonly List<OutboxMessage> _outboxMessages = new();
 
-        public IReadOnlyCollection<string> PublishedProviderEventIds => _publishedProviderEventIds.AsReadOnly();
+        public IReadOnlyCollection<OutboxMessage> OutboxMessages => _outboxMessages.AsReadOnly();
 
-        public Task PublishPaymentConfirmedAsync(
-            PaymentEntity payment,
-            string providerEventId,
-            DateTimeOffset paidAt,
-            CancellationToken cancellationToken)
+        public Task AddAsync(OutboxMessage outboxMessage, CancellationToken cancellationToken)
         {
-            _publishedProviderEventIds.Add(providerEventId);
+            _outboxMessages.Add(outboxMessage);
             return Task.CompletedTask;
         }
+
+        public void Update(OutboxMessage outboxMessage)
+        {
+        }
+
+        public Task<List<OutboxMessage>> GetPendingAsync(int batchSize, CancellationToken cancellationToken)
+            => Task.FromResult(_outboxMessages
+                .Where(message => message.Status == ProcessStatus.Pending
+                    || (message.Status == ProcessStatus.Failed && message.RetryCount < OutboxMessage.MaxRetries))
+                .Take(batchSize)
+                .ToList());
     }
 }

@@ -13,6 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Eventbox.Contracts\Eventbox.Contracts.csproj" />
     <ProjectReference Include="..\..\Shared\Eventbox.Shared\Eventbox.Shared.csproj" />
   </ItemGroup>
 

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Eventbox.Ticketing.Domain.Entities;
 using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
 using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Shared.Outbox;
 
 namespace Eventbox.Ticketing.Infrastructure
 {
@@ -16,6 +17,7 @@ namespace Eventbox.Ticketing.Infrastructure
         public DbSet<Ticket> Tickets => Set<Ticket>();
         public DbSet<EventSchedule> EventSchedules => Set<EventSchedule>();
         public DbSet<TicketAvailability> TicketAvailabilities => Set<TicketAvailability>();
+        public DbSet<OutboxMessage> Outboxes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

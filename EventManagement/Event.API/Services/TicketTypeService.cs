@@ -1,14 +1,16 @@
 using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
 using Eventbox.EventManagement.EventApi.Domains;
-using Eventbox.EventManagement.EventApi.IntegrationEvents;
+using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.EventManagement.EventApi.Services.Abstractions;
 using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.Shared.Exceptions;
 using Eventbox.EventManagement.EventApi.Application.Abstractions;
+using Eventbox.Shared.Outbox;
+using System.Text.Json;
 
 namespace Eventbox.EventManagement.EventApi.Services
 {
-    public class TicketTypeService(IUnitOfWork unitOfWork, IEventBus eventBus) : ITicketTypeService
+    public class TicketTypeService(IUnitOfWork unitOfWork) : ITicketTypeService
     {
         public async Task<TicketType?> GetByIdAsync(Guid organizationId, Guid eventId, int id, CancellationToken cancellationToken = default)
         {
@@ -28,9 +30,7 @@ namespace Eventbox.EventManagement.EventApi.Services
             await EnsureEventBelongsToOrganizationAsync(organizationId, ticketType.EventId, cancellationToken);
 
             await unitOfWork.TicketTypes.AddAsync(ticketType, cancellationToken);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-
-            await eventBus.PublishAsync(new TicketTypeCreatedEvent
+            var ticketTypeCreatedEvent = new TicketTypeCreatedEvent
             {
                 Id = ticketType.Id,
                 EventId = ticketType.EventId,
@@ -50,8 +50,16 @@ namespace Eventbox.EventManagement.EventApi.Services
                     StartTime = phase.StartTime,
                     EndTime = phase.EndTime,
                 }).ToList(),
+            };
+            await unitOfWork.Outbox.AddAsync(new OutboxMessage
+            {
+                Id = Guid.NewGuid(),
+                IntegrationEventType = nameof(TicketTypeCreatedEvent),
+                Content = JsonSerializer.Serialize(ticketTypeCreatedEvent),
+                OccurredOnUtc = DateTime.UtcNow,
+                Status = ProcessStatus.Pending
             }, cancellationToken);
-
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return ticketType;
         }
 
@@ -67,17 +75,23 @@ namespace Eventbox.EventManagement.EventApi.Services
 
             var previousQuota = ticketType.Quota;
             ticketType.IncreaseQuota(quantity);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-
-            await eventBus.PublishAsync(new TicketCapacityAddedEvent
+            var ticketCapacityAddedEvent = new TicketCapacityAddedEvent
             {
                 Id = ticketType.Id,
                 EventId = ticketType.EventId,
                 PreviousQuantity = previousQuota,
                 NewQuantity = ticketType.Quota,
                 AddedQuantity = quantity,
+            };
+            await unitOfWork.Outbox.AddAsync(new OutboxMessage
+            {
+                Id = Guid.NewGuid(),
+                IntegrationEventType = nameof(TicketCapacityAddedEvent),
+                Content = JsonSerializer.Serialize(ticketCapacityAddedEvent),
+                OccurredOnUtc = DateTime.UtcNow,
+                Status = ProcessStatus.Pending
             }, cancellationToken);
-
+            await unitOfWork.SaveChangesAsync(cancellationToken);
             return ticketType;
         }
 
@@ -97,6 +111,19 @@ namespace Eventbox.EventManagement.EventApi.Services
             var ticketType = await unitOfWork.TicketTypes.GetByIdAsync(id, cancellationToken)
                 ?? throw new NotFoundException("TicketType", id);
             unitOfWork.TicketTypes.Delete(ticketType);
+            var ticketTypeDeletedEvent = new TicketTypeDeletedEvent
+            {
+                Id = ticketType.Id,
+                EventId = ticketType.EventId,
+            };
+            await unitOfWork.Outbox.AddAsync(new OutboxMessage
+            {
+                Id = Guid.NewGuid(),
+                IntegrationEventType = nameof(TicketTypeDeletedEvent),
+                Content = JsonSerializer.Serialize(ticketTypeDeletedEvent),
+                OccurredOnUtc = DateTime.UtcNow,
+                Status = ProcessStatus.Pending
+            }, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
         }
     }

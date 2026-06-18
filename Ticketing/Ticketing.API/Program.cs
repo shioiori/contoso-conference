@@ -1,29 +1,29 @@
+using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.EventBus.RabbitMQ.Extensions;
+using Eventbox.Ticketing.Infrastructure.Jobs;
+using Eventbox.Shared.Auditing;
+using Eventbox.Shared.Exceptions;
+using Eventbox.Shared.Outbox;
 using Eventbox.Ticketing.Api.Endpoints;
+using Eventbox.Ticketing.Api.HostedServices;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Jobs;
-using Eventbox.Ticketing.Api.HostedServices;
+using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Application.Commands;
 using Eventbox.Ticketing.Application.IntegrationEventHandlers;
-using Eventbox.Ticketing.Application.IntegrationEvents;
+using Eventbox.Ticketing.Application.Mappings;
 using Eventbox.Ticketing.Application.MessageHandlers;
 using Eventbox.Ticketing.Application.Messages;
 using Eventbox.Ticketing.Infrastructure;
-using Eventbox.Ticketing.Infrastructure.Jobs;
-using Eventbox.Ticketing.Infrastructure.Messaging;
 using Eventbox.Ticketing.Infrastructure.Repositories;
+using Eventbox.Ticketing.Infrastructure.Security;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Mapster;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using System.Text;
-using Eventbox.Shared.Auditing;
-using Eventbox.Ticketing.Infrastructure.Security;
-using Eventbox.Shared.Exceptions;
-using Eventbox.Ticketing.Application.Mappings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,7 +44,7 @@ builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<ITicketAvailabilityRepository, TicketAvailabilityRepository>();
 builder.Services.AddScoped<IEventScheduleRepository, EventScheduleRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<IOrderExpirationScheduler, OrderExpirationScheduler>();
+builder.Services.AddScoped<IOutboxProcessorJob, OutboxProcessorJob>();
 builder.Services.AddSingleton<IQrTokenGenerator, QrTokenGenerator>();
 builder.Services.AddSingleton<IQrTokenHasher, Sha256QrTokenHasher>();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<RegisterToEventCommand>());
@@ -52,11 +52,14 @@ builder.Services.AddEventboxMediatRAuditLogging();
 
 builder.Services.AddRabbitMqEventBus(builder.Configuration);
 builder.Services.AddIntegrationEventHandler<
-    OrderExpirationDueMessage,
+    OrderExpirationDueMessageIntergrationEvent,
     OrderExpirationDueMessageHandler>();
 builder.Services.AddIntegrationEventHandler<
     PaymentConfirmedIntegrationEvent,
     PaymentConfirmedIntegrationEventHandler>();
+builder.Services.AddIntegrationEventHandler<
+    PaymentFailedIntegrationEvent,
+    PaymentFailedIntegrationEventHandler>();
 builder.Services.AddIntegrationEventHandler<
     EventCreatedEvent,
     EventCreatedEventHandler>();
@@ -69,6 +72,9 @@ builder.Services.AddIntegrationEventHandler<
 builder.Services.AddIntegrationEventHandler<
     TicketCapacityAddedEvent,
     TicketCapacityAddedEventHandler>();
+builder.Services.AddIntegrationEventHandler<
+    TicketTypeDeletedEvent,
+    TicketTypeDeletedEventHandler>();
 builder.Services.AddHostedService<RabbitMqSubscriptionHostedService>();
 
 builder.Services.AddHangfire(config =>
@@ -135,5 +141,10 @@ RecurringJob.AddOrUpdate<IOrderExpirationReconciliationJob>(
     "Ticketing-expire-orders-reconciliation",
     job => job.RunAsync(CancellationToken.None),
     "*/5 * * * *");
+
+RecurringJob.AddOrUpdate<IOutboxProcessorJob>(
+    "Ticketing-outbox-processor",
+    job => job.RunAsync(CancellationToken.None),
+    "*/30 * * * *");
 
 app.Run();

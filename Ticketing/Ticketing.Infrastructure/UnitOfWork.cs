@@ -1,3 +1,4 @@
+using Eventbox.Shared.Outbox;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Infrastructure.Repositories;
@@ -13,10 +14,12 @@ public class UnitOfWork : IUnitOfWork
         _dbContext = dbContext;
         Orders = new OrderRepository(dbContext);
         TicketAvailabilities = new TicketAvailabilityRepository(dbContext);
+        Outbox = new OutboxRepository(dbContext);
     }
 
     public IOrderRepository Orders { get; }
     public ITicketAvailabilityRepository TicketAvailabilities { get; }
+    public IOutbox Outbox { get; }
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         => _dbContext.SaveChangesAsync(cancellationToken);

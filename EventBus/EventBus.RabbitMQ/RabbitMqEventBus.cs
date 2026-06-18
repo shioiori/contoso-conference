@@ -2,6 +2,8 @@ using Eventbox.EventBus.Core.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Polly;
+using Polly.Retry;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -16,7 +18,17 @@ public sealed class RabbitMqEventBus : IEventBus, IAsyncDisposable
     private readonly RabbitMqOptions _options;
     private readonly ILogger<RabbitMqEventBus> _logger;
 
-    private IChannel? _publishChannel;
+    private static readonly ResiliencePipeline _publishRetryPipeline = new ResiliencePipelineBuilder()
+        .AddRetry(new RetryStrategyOptions
+        {
+            MaxRetryAttempts = 3,
+            Delay = TimeSpan.FromSeconds(2),
+            BackoffType = DelayBackoffType.Exponential,
+            ShouldHandle = new PredicateBuilder().Handle<Exception>()
+        })
+        .Build();
+
+    private IChannel? _publishChannel; // confirm channel — BasicPublishAsync waits for broker ack
     private IChannel? _consumeChannel;
 
     public RabbitMqEventBus(
@@ -38,37 +50,41 @@ public sealed class RabbitMqEventBus : IEventBus, IAsyncDisposable
     public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
         where TEvent : IIntegrationEvent
     {
-        _publishChannel ??= await _connectionFactory.CreateChannelAsync(cancellationToken);
-
-        await _publishChannel.ExchangeDeclareAsync(
-            exchange: _options.EventExchange,
-            type: ExchangeType.Topic,
-            durable: true,
-            autoDelete: false,
-            cancellationToken: cancellationToken);
-
-        var routingKey = GetEventRoutingKey<TEvent>();
-        var body = _serializer.Serialize(@event);
-
-        var props = new BasicProperties
+        await _publishRetryPipeline.ExecuteAsync(async ct =>
         {
-            ContentType = "application/json",
-            DeliveryMode = DeliveryModes.Persistent,
-            MessageId = @event.IntegrationEventId.ToString(),
-            Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
-            Type = @event.EventType,
-        };
+            _publishChannel ??= await _connectionFactory.CreateConfirmChannelAsync(ct);
 
-        await _publishChannel.BasicPublishAsync(
-            exchange: _options.EventExchange,
-            routingKey: routingKey,
-            mandatory: false,
-            basicProperties: props,
-            body: body,
-            cancellationToken: cancellationToken);
+            await _publishChannel.ExchangeDeclareAsync(
+                exchange: _options.EventExchange,
+                type: ExchangeType.Topic,
+                durable: true,
+                autoDelete: false,
+                cancellationToken: ct);
 
-        _logger.LogDebug("Published event {EventType} [{IntegrationEventId}] to exchange '{Exchange}' with routing key '{RoutingKey}'",
-            @event.EventType, @event.IntegrationEventId, _options.EventExchange, routingKey);
+            var routingKey = GetEventRoutingKey<TEvent>();
+            var body = _serializer.Serialize(@event);
+
+            var props = new BasicProperties
+            {
+                ContentType = "application/json",
+                DeliveryMode = DeliveryModes.Persistent,
+                MessageId = @event.IntegrationEventId.ToString(),
+                Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
+                Type = @event.EventType,
+                Expiration = _options.EventMessageExpirationMilliseconds.ToString(),
+            };
+
+            await _publishChannel.BasicPublishAsync(
+                exchange: _options.EventExchange,
+                routingKey: routingKey,
+                mandatory: false,
+                basicProperties: props,
+                body: body,
+                cancellationToken: ct);
+
+            _logger.LogDebug("Published event {EventType} [{IntegrationEventId}] to exchange '{Exchange}' with routing key '{RoutingKey}'",
+                @event.EventType, @event.IntegrationEventId, _options.EventExchange, routingKey);
+        }, cancellationToken);
     }
 
     public async Task SubscribeAsync<TEvent, THandler>(CancellationToken cancellationToken = default)
@@ -89,11 +105,40 @@ public sealed class RabbitMqEventBus : IEventBus, IAsyncDisposable
 
         var queueName = $"{_options.QueuePrefix}.events.{routingKey}";
 
+        await _consumeChannel.ExchangeDeclareAsync(
+            exchange: _options.DeadLetterExchange,
+            type: ExchangeType.Topic,
+            durable: true,
+            autoDelete: false,
+            cancellationToken: cancellationToken);
+
+        var deadLetterQueueName = $"{queueName}.deadletter";
+        var deadLetterRoutingKey = $"{routingKey}.deadletter";
+        var queueArguments = new Dictionary<string, object?>
+        {
+            ["x-dead-letter-exchange"] = _options.DeadLetterExchange,
+            ["x-dead-letter-routing-key"] = deadLetterRoutingKey
+        };
+
         await _consumeChannel.QueueDeclareAsync(
             queue: queueName,
             durable: true,
             exclusive: false,
             autoDelete: false,
+            arguments: queueArguments,
+            cancellationToken: cancellationToken);
+
+        await _consumeChannel.QueueDeclareAsync(
+            queue: deadLetterQueueName,
+            durable: true,
+            exclusive: false,
+            autoDelete: false,
+            cancellationToken: cancellationToken);
+
+        await _consumeChannel.QueueBindAsync(
+            queue: deadLetterQueueName,
+            exchange: _options.DeadLetterExchange,
+            routingKey: deadLetterRoutingKey,
             cancellationToken: cancellationToken);
 
         await _consumeChannel.QueueBindAsync(
@@ -113,8 +158,8 @@ public sealed class RabbitMqEventBus : IEventBus, IAsyncDisposable
             consumer: consumer,
             cancellationToken: cancellationToken);
 
-        _logger.LogInformation("Subscribed {Handler} to event '{RoutingKey}' on queue '{Queue}'",
-            typeof(THandler).Name, routingKey, queueName);
+        _logger.LogInformation("Subscribed {Handler} to event '{RoutingKey}' on queue '{Queue}' with dead-letter queue '{DeadLetterQueue}'",
+            typeof(THandler).Name, routingKey, queueName, deadLetterQueueName);
     }
 
     private async Task OnMessageReceivedAsync(object sender, BasicDeliverEventArgs args)
@@ -151,9 +196,9 @@ public sealed class RabbitMqEventBus : IEventBus, IAsyncDisposable
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error handling event '{RoutingKey}' [{MessageId}]. Nacking with requeue.",
+            _logger.LogError(ex, "Error handling event '{RoutingKey}' [{MessageId}]. Nacking without requeue.",
                 routingKey, args.BasicProperties.MessageId);
-            await _consumeChannel!.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: true);
+            await _consumeChannel!.BasicNackAsync(args.DeliveryTag, multiple: false, requeue: false);
         }
     }
 

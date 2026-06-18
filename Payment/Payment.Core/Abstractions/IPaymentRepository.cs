@@ -11,7 +11,5 @@ namespace Eventbox.Payment.Core.Abstractions
         Task<PaymentEntity?> GetByProviderEventIdAsync(string providerEventId, CancellationToken cancellationToken);
 
         Task AddAsync(PaymentEntity payment, CancellationToken cancellationToken);
-
-        Task SaveChangesAsync(CancellationToken cancellationToken);
     }
 }

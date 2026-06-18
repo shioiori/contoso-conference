@@ -8,6 +8,7 @@ using Eventbox.Ticketing.Domain.Enums;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Application.Abstractions.Jobs;
 using Eventbox.Shared.Exceptions;
+using Eventbox.Shared.Outbox;
 
 namespace Eventbox.UnitTests.Registration;
 
@@ -203,6 +204,7 @@ public class RegisterToEventCommandHandlerConcurrencyTests
     {
         public IOrderRepository Orders { get; } = orderRepository;
         public ITicketAvailabilityRepository TicketAvailabilities { get; } = ticketAvailabilityRepository;
+        public IOutbox Outbox { get; } = new InMemoryOutbox();
 
         public int SaveCount { get; private set; }
 
@@ -214,6 +216,24 @@ public class RegisterToEventCommandHandlerConcurrencyTests
 
         public async Task ExecuteInTransactionAsync(Func<Task> operation, CancellationToken cancellationToken = default)
             => await operation();
+    }
+
+    private sealed class InMemoryOutbox : IOutbox
+    {
+        private readonly List<OutboxMessage> _messages = new();
+
+        public Task AddAsync(OutboxMessage outboxMessage, CancellationToken cancellationToken)
+        {
+            _messages.Add(outboxMessage);
+            return Task.CompletedTask;
+        }
+
+        public void Update(OutboxMessage outboxMessage)
+        {
+        }
+
+        public Task<List<OutboxMessage>> GetPendingAsync(int batchSize, CancellationToken cancellationToken)
+            => Task.FromResult(_messages.Take(batchSize).ToList());
     }
 
     private sealed class RecordingOrderExpirationScheduler : IOrderExpirationScheduler

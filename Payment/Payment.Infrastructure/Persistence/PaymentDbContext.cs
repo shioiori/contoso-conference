@@ -1,3 +1,4 @@
+using Eventbox.Shared.Outbox;
 using Microsoft.EntityFrameworkCore;
 using PaymentEntity = Eventbox.Payment.Core.Entities.Payment;
 
@@ -6,6 +7,7 @@ namespace Eventbox.Payment.Infrastructure.Persistence
     public class PaymentDbContext(DbContextOptions<PaymentDbContext> options) : DbContext(options)
     {
         public DbSet<PaymentEntity> Payments => Set<PaymentEntity>();
+        public DbSet<OutboxMessage> Outboxes => Set<OutboxMessage>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

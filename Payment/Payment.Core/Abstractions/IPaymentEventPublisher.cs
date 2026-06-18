@@ -4,7 +4,7 @@ namespace Eventbox.Payment.Core.Abstractions
 {
     public interface IPaymentEventPublisher
     {
-        Task PublishPaymentConfirmedAsync(
+        Task<bool> PublishPaymentConfirmedAsync(
             PaymentEntity payment,
             string providerEventId,
             DateTimeOffset paidAt,
