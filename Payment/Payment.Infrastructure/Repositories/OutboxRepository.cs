@@ -1,7 +1,8 @@
+using Eventbox.Payment.Infrastructure.Persistence;
 using Eventbox.Shared.Outbox;
 using Microsoft.EntityFrameworkCore;
 
-namespace Eventbox.Payment.Infrastructure.Persistence
+namespace Eventbox.Payment.Infrastructure.Repositories
 {
     public class OutboxRepository(PaymentDbContext dbContext) : IOutbox
     {
