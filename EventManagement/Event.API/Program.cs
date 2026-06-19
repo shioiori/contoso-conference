@@ -39,13 +39,18 @@ builder.Services.AddDbContext<EventDbContext>((serviceProvider, options) =>
 
 builder.Services.Configure<RabbitMQOptions>(options =>
 {
-    options.Map<EventCreatedEvent>("eventbox.events", "eventbox.events.created", "event.create");
-    options.Map<EventUpdatedEvent>("eventbox.events", "eventbox.events.updated", "event.update");
-    options.Map<EventPublishedEvent>("eventbox.events", "eventbox.events.published", "event.publish");
-    options.Map<EventUnpublishedEvent>("eventbox.events", "eventbox.events.unpublished", "event.unpublish");
+    options.Publish<EventCreatedEvent>("eventbox.events");
+    options.Publish<EventUpdatedEvent>("eventbox.events");
+    options.Publish<EventPublishedEvent>("eventbox.events");
+    options.Publish<EventUnpublishedEvent>("eventbox.events");
+    options.Publish<TicketTypeCreatedEvent>("eventbox.ticketing");
+    options.Publish<TicketCapacityAddedEvent>("eventbox.ticketing");
+    options.Publish<TicketTypeDeletedEvent>("eventbox.ticketing");
 });
 
-builder.Services.AddSingleton<IEventBus, RabbitMQEventBus>();
+builder.Services.AddSingleton<RabbitMQEventBus>();
+builder.Services.AddSingleton<IEventBus>(sp => sp.GetRequiredService<RabbitMQEventBus>());
+builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQEventBus>());
 
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<ITicketTypeRepository, TicketTypeRepository>();

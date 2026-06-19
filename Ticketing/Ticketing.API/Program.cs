@@ -1,5 +1,4 @@
 using Eventbox.Contracts.IntegrationEvents;
-using Eventbox.EventBus.RabbitMQ.Extensions;
 using Eventbox.Ticketing.Infrastructure.Jobs;
 using Eventbox.Shared.Auditing;
 using Eventbox.Shared.Exceptions;
@@ -13,7 +12,6 @@ using Eventbox.Ticketing.Application.Commands;
 using Eventbox.Ticketing.Application.IntegrationEventHandlers;
 using Eventbox.Ticketing.Application.Mappings;
 using Eventbox.Ticketing.Application.MessageHandlers;
-using Eventbox.Ticketing.Application.Messages;
 using Eventbox.Ticketing.Infrastructure;
 using Eventbox.Ticketing.Infrastructure.Repositories;
 using Eventbox.Ticketing.Infrastructure.Security;
@@ -24,6 +22,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using EventBus.RabbitMQ;
+using Eventbox.EventBus.Core.Abstractions;
+using RabbitMQ.Client; // ExchangeType used in DeclareQueue
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,31 +51,41 @@ builder.Services.AddSingleton<IQrTokenHasher, Sha256QrTokenHasher>();
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<RegisterToEventCommand>());
 builder.Services.AddEventboxMediatRAuditLogging();
 
-builder.Services.AddRabbitMqEventBus(builder.Configuration);
-builder.Services.AddIntegrationEventHandler<
-    OrderExpirationDueMessageIntergrationEvent,
-    OrderExpirationDueMessageHandler>();
-builder.Services.AddIntegrationEventHandler<
-    PaymentConfirmedIntegrationEvent,
-    PaymentConfirmedIntegrationEventHandler>();
-builder.Services.AddIntegrationEventHandler<
-    PaymentFailedIntegrationEvent,
-    PaymentFailedIntegrationEventHandler>();
-builder.Services.AddIntegrationEventHandler<
-    EventCreatedEvent,
-    EventCreatedEventHandler>();
-builder.Services.AddIntegrationEventHandler<
-    EventUpdatedEvent,
-    EventUpdatedEventHandler>();
-builder.Services.AddIntegrationEventHandler<
-    TicketTypeCreatedEvent,
-    TicketTypeCreatedEventHandler>();
-builder.Services.AddIntegrationEventHandler<
-    TicketCapacityAddedEvent,
-    TicketCapacityAddedEventHandler>();
-builder.Services.AddIntegrationEventHandler<
-    TicketTypeDeletedEvent,
-    TicketTypeDeletedEventHandler>();
+builder.Services.Configure<RabbitMQOptions>(options =>
+{
+    options.Subscribe<PaymentConfirmedIntegrationEvent>("eventbox.payment");
+    options.Subscribe<PaymentFailedIntegrationEvent>("eventbox.payment");
+    options.Subscribe<EventCreatedEvent>("eventbox.events");
+    options.Subscribe<EventUpdatedEvent>("eventbox.events");
+    options.Subscribe<TicketTypeCreatedEvent>("eventbox.ticketing");
+    options.Subscribe<TicketCapacityAddedEvent>("eventbox.ticketing");
+    options.Subscribe<TicketTypeDeletedEvent>("eventbox.ticketing");
+    options.Subscribe<OrderExpirationDueMessageIntergrationEvent>(
+        "eventbox.ticketing",
+        routingKey: "ticketing.expire",
+        queue: "eventbox.ticketing.expire");
+
+    options.DeclareQueue("eventbox.ticketing.expire.dlx", ExchangeType.Direct, "ticketing.expire.dlx");
+    options.DeclareQueue("eventbox.ticketing.expire", ExchangeType.Direct, "ticketing.expire",
+        new Dictionary<string, object?>
+        {
+            ["x-dead-letter-exchange"] = ExchangeType.Direct,
+            ["x-dead-letter-routing-key"] = "ticketing.expire.dlx"
+        });
+});
+
+builder.Services.AddSingleton<RabbitMQEventBus>();
+builder.Services.AddSingleton<IEventBus>(sp => sp.GetRequiredService<RabbitMQEventBus>());
+builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQEventBus>());
+builder.Services.AddScoped<OrderExpirationDueMessageHandler>();
+builder.Services.AddScoped<PaymentConfirmedIntegrationEventHandler>();
+builder.Services.AddScoped<PaymentFailedIntegrationEventHandler>();
+builder.Services.AddScoped<EventCreatedEventHandler>();
+builder.Services.AddScoped<EventUpdatedEventHandler>();
+builder.Services.AddScoped<TicketTypeCreatedEventHandler>();
+builder.Services.AddScoped<TicketCapacityAddedEventHandler>();
+builder.Services.AddScoped<TicketTypeDeletedEventHandler>();
+
 builder.Services.AddHostedService<RabbitMqSubscriptionHostedService>();
 
 builder.Services.AddHangfire(config =>
@@ -140,11 +151,11 @@ app.UseHangfireDashboard("/hangfire");
 RecurringJob.AddOrUpdate<IOrderExpirationReconciliationJob>(
     "Ticketing-expire-orders-reconciliation",
     job => job.RunAsync(CancellationToken.None),
-    "*/5 * * * *");
+    Cron.Minutely());
 
 RecurringJob.AddOrUpdate<IOutboxProcessorJob>(
     "Ticketing-outbox-processor",
     job => job.RunAsync(CancellationToken.None),
-    "*/30 * * * *");
+    Cron.Minutely());
 
 app.Run();
