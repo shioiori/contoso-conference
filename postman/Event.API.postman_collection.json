@@ -1,8 +1,8 @@
 {
   "info": {
     "_postman_id": "b99a92f4-cc6e-4ccd-97b0-1c6783fd5474",
-    "name": "Eventbox Event API - Spec Contract",
-    "description": "Spec-first Postman collection based on specs/event-ticketing-system. These routes are the intended API contract and may be ahead of the current codebase.",
+    "name": "Eventbox API - Current Code Contract",
+    "description": "Synchronized with implemented routes in the current codebase. Planned routes without controllers/endpoints are intentionally excluded.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -10,7 +10,7 @@
     "bearer": [
       {
         "key": "token",
-        "value": "{{authToken}}",
+        "value": "{{organizerToken}}",
         "type": "string"
       }
     ]
@@ -28,7 +28,196 @@
   ],
   "item": [
     {
-      "name": "00 Organizations",
+      "name": "00 Auth",
+      "auth": {
+        "type": "noauth"
+      },
+      "item": [
+        {
+          "name": "Register Organizer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect([200]).to.include(pm.response.code); });",
+                  "try { const json = pm.response.json(); if (json.accessToken) pm.collectionVariables.set('organizerToken', json.accessToken); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"organizer+{{$timestamp}}@eventbox.test\",\n  \"password\": \"Password123\",\n  \"name\": \"Eventbox Organizer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{authApiUrl}}/api/auth/organizers/register"
+          },
+          "response": []
+        },
+        {
+          "name": "Register Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect([200]).to.include(pm.response.code); });",
+                  "try { const json = pm.response.json(); if (json.accessToken) pm.collectionVariables.set('customerToken', json.accessToken); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"customer+{{$timestamp}}@eventbox.test\",\n  \"password\": \"Password123\",\n  \"name\": \"Eventbox Customer\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{authApiUrl}}/api/auth/customers/register"
+          },
+          "response": []
+        },
+        {
+          "name": "Login Organizer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect([200]).to.include(pm.response.code); });",
+                  "try { const json = pm.response.json(); if (json.accessToken) pm.collectionVariables.set('organizerToken', json.accessToken); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{organizerEmail}}\",\n  \"password\": \"{{password}}\",\n  \"keepLoggedIn\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{authApiUrl}}/api/auth/login"
+          },
+          "response": []
+        },
+        {
+          "name": "Login Customer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect([200]).to.include(pm.response.code); });",
+                  "try { const json = pm.response.json(); if (json.accessToken) pm.collectionVariables.set('customerToken', json.accessToken); } catch (e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"password\": \"{{password}}\",\n  \"keepLoggedIn\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{authApiUrl}}/api/auth/login"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current User",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{organizerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{authApiUrl}}/api/auth/me"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "01 Organizations",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{organizerToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "Create Organization",
@@ -38,9 +227,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Created or accepted', function () { pm.expect([200, 201, 202]).to.include(pm.response.code); });",
-                  "const json = pm.response.json();",
-                  "if (json.id) pm.collectionVariables.set('organizationId', json.id);"
+                  "pm.test('status is expected', function () { pm.expect([201]).to.include(pm.response.code); });",
+                  "try { const json = pm.response.json(); if (json.id) pm.collectionVariables.set('organizationId', json.id); } catch (e) {}"
                 ]
               }
             }
@@ -51,26 +239,18 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Idempotency-Key",
-                "value": "{{idempotencyKey}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Eventbox Events {{$timestamp}}\"\n}"
+              "raw": "{\n  \"name\": \"Eventbox Events {{$timestamp}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations"
           },
           "response": []
         },
@@ -79,17 +259,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}"
           },
           "response": []
         },
@@ -105,19 +275,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Eventbox Events Updated\"\n}"
+              "raw": "{\n  \"id\": \"{{organizationId}}\",\n  \"name\": \"Eventbox Events Updated\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}"
           },
           "response": []
         },
@@ -126,75 +291,45 @@
           "request": {
             "method": "DELETE",
             "header": [],
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "01 Events",
+      "name": "02 Organizer Events",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{organizerToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
-          "name": "List Events",
+          "name": "List Organizer Events",
           "request": {
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events?status=&q=&page=1&pageSize=20",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events"
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": ""
-                },
-                {
-                  "key": "q",
-                  "value": ""
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "20"
-                }
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events?q=&dateFrom=&dateTo=&page=1&pageSize=20"
           },
           "response": []
         },
         {
-          "name": "FR-CM-001 Create Event",
+          "name": "Create Draft Event",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Created or accepted', function () { pm.expect([200, 201, 202]).to.include(pm.response.code); });",
-                  "const json = pm.response.json();",
-                  "if (json.id) pm.collectionVariables.set('eventId', json.id);",
-                  "if (json.slug) pm.collectionVariables.set('eventSlug', json.slug);"
+                  "pm.test('status is expected', function () { pm.expect([201]).to.include(pm.response.code); });",
+                  "try { const json = pm.response.json(); if (json.id) pm.collectionVariables.set('eventId', json.id); } catch (e) {}",
+                  "try { const json = pm.response.json(); if (json.slug) pm.collectionVariables.set('eventSlug', json.slug); } catch (e) {}"
                 ]
               }
             }
@@ -205,54 +340,32 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Idempotency-Key",
-                "value": "{{idempotencyKey}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Eventbox Tech Summit {{$timestamp}}\",\n  \"slug\": \"eventbox-tech-summit-{{$timestamp}}\",\n  \"summary\": \"Annual technology event for builders and leaders.\",\n  \"description\": \"A spec-first event used for API contract testing.\",\n  \"startDate\": \"2026-09-15T09:00:00Z\",\n  \"endDate\": \"2026-09-17T17:00:00Z\",\n  \"timezone\": \"Asia/Ho_Chi_Minh\",\n  \"format\": \"Hybrid\",\n  \"venue\": {\n    \"name\": \"Eventbox Convention Center\",\n    \"addressLine1\": \"1 Nguyen Hue\",\n    \"city\": \"Ho Chi Minh City\",\n    \"country\": \"VN\"\n  },\n  \"onlineUrl\": \"https://events.eventbox.example/live\",\n  \"defaultCurrency\": \"USD\",\n  \"privateAccessEnabled\": false\n}"
+              "raw": "{\n  \"name\": \"Eventbox Tech Summit {{$timestamp}}\",\n  \"slug\": \"eventbox-tech-summit-{{$timestamp}}\",\n  \"from\": \"2026-09-15T09:00:00Z\",\n  \"to\": \"2026-09-17T17:00:00Z\",\n  \"summary\": \"Annual technology event for builders.\",\n  \"description\": \"A current-code API contract test event.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events"
           },
           "response": []
         },
         {
-          "name": "Get Event Detail",
+          "name": "Get Organizer Event Detail",
           "request": {
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}"
           },
           "response": []
         },
         {
-          "name": "FR-CM-002 Update Event",
+          "name": "Update Event",
           "request": {
             "method": "PUT",
             "header": [
@@ -263,21 +376,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Eventbox Tech Summit Updated\",\n  \"summary\": \"Updated event summary.\",\n  \"description\": \"Updated details should be reflected on the public page when published.\",\n  \"startDate\": \"2026-09-15T09:00:00Z\",\n  \"endDate\": \"2026-09-18T17:00:00Z\",\n  \"timezone\": \"Asia/Ho_Chi_Minh\",\n  \"format\": \"Hybrid\",\n  \"venue\": {\n    \"name\": \"Eventbox Convention Center\",\n    \"addressLine1\": \"1 Nguyen Hue\",\n    \"city\": \"Ho Chi Minh City\",\n    \"country\": \"VN\"\n  },\n  \"onlineUrl\": \"https://events.eventbox.example/live\"\n}"
+              "raw": "{\n  \"name\": \"Eventbox Tech Summit Updated\",\n  \"from\": \"2026-09-15T09:00:00Z\",\n  \"to\": \"2026-09-18T17:00:00Z\",\n  \"summary\": \"Updated summary.\",\n  \"description\": \"Updated details for current implementation.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}"
           },
           "response": []
         },
@@ -286,25 +392,12 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/publish-readiness",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "publish-readiness"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/publish-readiness"
           },
           "response": []
         },
         {
-          "name": "FR-CM-003 Publish Event",
+          "name": "Publish Event",
           "request": {
             "method": "POST",
             "header": [
@@ -315,27 +408,19 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"requestedBy\": \"{{userId}}\",\n  \"reason\": \"Ready for public registration\"\n}"
+              "raw": "{\n  \"isPublished\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/publish",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "publish"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/publish"
           },
           "response": []
         },
         {
-          "name": "FR-CM-003 Unpublish Event",
+          "name": "Unpublish Event",
           "request": {
             "method": "POST",
             "header": [
@@ -346,63 +431,51 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"requestedBy\": \"{{userId}}\",\n  \"reason\": \"Temporarily hide registration\"\n}"
+              "raw": "{\n  \"isPublished\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/unpublish",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "unpublish"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/unpublish"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "02 Ticket Inventory",
+      "name": "03 Ticket Types",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{organizerToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "List Ticket Types",
           "request": {
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "ticket-types"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types"
           },
           "response": []
         },
         {
-          "name": "FR-CM-004 Create Paid Ticket Type",
+          "name": "Create Paid Ticket Type",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Created or accepted', function () { pm.expect([200, 201, 202]).to.include(pm.response.code); });",
-                  "const json = pm.response.json();",
-                  "if (json.id) pm.collectionVariables.set('ticketTypeId', json.id);"
+                  "pm.test('status is expected', function () { pm.expect([201]).to.include(pm.response.code); });",
+                  "try { const json = pm.response.json(); if (json.id) pm.collectionVariables.set('ticketTypeId', json.id); } catch (e) {}"
                 ]
               }
             }
@@ -413,102 +486,67 @@
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Idempotency-Key",
-                "value": "{{idempotencyKey}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"General Admission\",\n  \"description\": \"Standard Event access.\",\n  \"quota\": 100,\n  \"price\": {\n    \"amount\": 199.00,\n    \"currency\": \"USD\"\n  },\n  \"salesWindow\": {\n    \"opensAt\": \"2026-06-01T00:00:00Z\",\n    \"closesAt\": \"2026-09-14T23:59:59Z\"\n  },\n  \"minPerOrder\": 1,\n  \"maxPerOrder\": 4,\n  \"visibility\": \"Public\",\n  \"requiresAccessCode\": false\n}"
+              "raw": "{\n  \"name\": \"General Admission\",\n  \"description\": \"Standard event access.\",\n  \"quota\": 100,\n  \"currency\": \"USD\",\n  \"minPerOrder\": 1,\n  \"maxPerOrder\": 4,\n  \"visibility\": 0,\n  \"accessCodeHash\": null,\n  \"pricingPhases\": [\n    {\n      \"name\": \"Regular\",\n      \"price\": 199,\n      \"startTime\": \"2026-06-01T00:00:00Z\",\n      \"endTime\": \"2026-09-14T23:59:59Z\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "ticket-types"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types"
           },
           "response": []
         },
         {
-          "name": "FR-CM-004 Create Free Ticket Type",
+          "name": "Create Free Ticket Type",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect([201]).to.include(pm.response.code); });",
+                  "try { const json = pm.response.json(); if (json.id) pm.collectionVariables.set('freeTicketTypeId', json.id); } catch (e) {}"
+                ]
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
               {
                 "key": "Content-Type",
                 "value": "application/json"
-              },
-              {
-                "key": "Idempotency-Key",
-                "value": "free-ticket-{{$guid}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Community Pass\",\n  \"description\": \"Free ticket for community attendees.\",\n  \"quota\": 25,\n  \"price\": {\n    \"amount\": 0,\n    \"currency\": \"USD\"\n  },\n  \"salesWindow\": {\n    \"opensAt\": \"2026-06-01T00:00:00Z\",\n    \"closesAt\": \"2026-09-14T23:59:59Z\"\n  },\n  \"minPerOrder\": 1,\n  \"maxPerOrder\": 2,\n  \"visibility\": \"Public\",\n  \"requiresAccessCode\": false\n}"
+              "raw": "{\n  \"name\": \"Community Pass\",\n  \"description\": \"Free ticket for community attendees.\",\n  \"quota\": 25,\n  \"currency\": \"USD\",\n  \"minPerOrder\": 1,\n  \"maxPerOrder\": 2,\n  \"visibility\": 0,\n  \"accessCodeHash\": null,\n  \"pricingPhases\": [\n    {\n      \"name\": \"Free\",\n      \"price\": 0,\n      \"startTime\": \"2026-06-01T00:00:00Z\",\n      \"endTime\": \"2026-09-14T23:59:59Z\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "ticket-types"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types"
           },
           "response": []
         },
         {
-          "name": "Update Ticket Type",
+          "name": "Get Ticket Type Placeholder Patch",
           "request": {
             "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"General Admission\",\n  \"description\": \"Standard Event access with updated sales rules.\",\n  \"price\": {\n    \"amount\": 219.00,\n    \"currency\": \"USD\"\n  },\n  \"salesWindow\": {\n    \"opensAt\": \"2026-06-01T00:00:00Z\",\n    \"closesAt\": \"2026-09-14T23:59:59Z\"\n  },\n  \"minPerOrder\": 1,\n  \"maxPerOrder\": 4,\n  \"visibility\": \"Public\"\n}"
-            },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types/{{ticketTypeId}}",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "ticket-types",
-                "{{ticketTypeId}}"
-              ]
-            }
+            "header": [],
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types/{{ticketTypeId}}"
           },
           "response": []
         },
         {
-          "name": "FR-CM-005 Add Seats",
+          "name": "Add Capacity",
           "request": {
             "method": "POST",
             "header": [
@@ -519,206 +557,95 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"quantity\": 25,\n  \"reason\": \"Open additional capacity after venue confirmation\"\n}"
+              "raw": "{\n  \"quantity\": 25\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types/{{ticketTypeId}}/capacity",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "ticket-types",
-                "{{ticketTypeId}}",
-                "seats"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types/{{ticketTypeId}}/capacity"
           },
           "response": []
         },
         {
-          "name": "Get Ticket Availability",
+          "name": "Get Organizer Ticket Availability",
           "request": {
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types/{{ticketTypeId}}/availability",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "ticket-types",
-                "{{ticketTypeId}}",
-                "availability"
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types/{{ticketTypeId}}/availability"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "03 Public Catalog",
+      "name": "04 Public Events",
       "auth": {
         "type": "noauth"
       },
       "item": [
         {
-          "name": "FR-PC-001 View Published Events",
+          "name": "List Public Events",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{eventApiUrl}}/api/public/events?q=tech&dateFrom=2026-01-01&dateTo=2026-12-31&format=Hybrid&page=1&pageSize=20",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "public",
-                "events"
-              ],
-              "query": [
-                {
-                  "key": "q",
-                  "value": "tech"
-                },
-                {
-                  "key": "dateFrom",
-                  "value": "2026-01-01"
-                },
-                {
-                  "key": "dateTo",
-                  "value": "2026-12-31"
-                },
-                {
-                  "key": "format",
-                  "value": "Hybrid"
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "20"
-                }
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/public/events?q=tech&dateFrom=2026-01-01&dateTo=2026-12-31&page=1&pageSize=20"
           },
           "response": []
         },
         {
-          "name": "FR-PC-002 View Event Detail",
+          "name": "Get Public Event Detail",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{eventApiUrl}}/api/public/events/{{eventSlug}}?accessCode={{accessCode}}",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "public",
-                "events",
-                "{{eventSlug}}"
-              ],
-              "query": [
-                {
-                  "key": "accessCode",
-                  "value": "{{accessCode}}"
-                }
-              ]
-            }
+            "url": "{{eventApiUrl}}/api/public/events/{{eventSlug}}?accessCode={{accessCode}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Public Ticket Availability",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{ticketingApiUrl}}/api/public/events/{{eventId}}/ticket-availability"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "04 Registration",
+      "name": "05 Orders",
       "item": [
         {
-          "name": "FR-RG-001 Start Registration",
+          "name": "Create Guest Order",
           "event": [
             {
               "listen": "test",
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test('Order created or accepted', function () { pm.expect([200, 201, 202]).to.include(pm.response.code); });",
-                  "const json = pm.response.json();",
-                  "if (json.orderId || json.id) pm.collectionVariables.set('orderId', json.orderId || json.id);",
-                  "if (json.paymentIntentId) pm.collectionVariables.set('paymentIntentId', json.paymentIntentId);"
+                  "pm.test('status is expected', function () { pm.expect([201]).to.include(pm.response.code); });",
+                  "try { const json = pm.response.json(); if (json.id) pm.collectionVariables.set('orderId', json.id); } catch (e) {}",
+                  "try { const json = pm.response.json(); if (json.accessCode) pm.collectionVariables.set('orderAccessCode', json.accessCode); } catch (e) {}",
+                  "try { const json = pm.response.json(); if (json.tickets && json.tickets[0] && json.tickets[0].qrToken) pm.collectionVariables.set('qrToken', json.tickets[0].qrToken); } catch (e) {}"
                 ]
               }
             }
           ],
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Idempotency-Key",
-                "value": "order-{{$guid}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"accessCode\": \"{{accessCode}}\",\n  \"buyer\": {\n    \"fullName\": \"Linh Tran\",\n    \"email\": \"linh.tran@example.com\",\n    \"phone\": \"+84901234567\"\n  },\n  \"items\": [\n    {\n      \"ticketTypeId\": \"{{ticketTypeId}}\",\n      \"quantity\": 2,\n      \"attendees\": [\n        {\n          \"fullName\": \"Linh Tran\",\n          \"email\": \"linh.tran@example.com\"\n        },\n        {\n          \"fullName\": \"Minh Nguyen\",\n          \"email\": \"minh.nguyen@example.com\"\n        }\n      ]\n    }\n  ]\n}"
+            "auth": {
+              "type": "noauth"
             },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/public/events/{{eventId}}/orders",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "public",
-                "events",
-                "{{eventId}}",
-                "orders"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Checkout Order",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/public/orders/{{orderId}}",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "public",
-                "orders",
-                "{{orderId}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "FR-RG-002 Complete Free Order",
-          "request": {
             "method": "POST",
             "header": [
               {
@@ -728,115 +655,233 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"acceptedTerms\": true\n}"
-            },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/public/orders/{{orderId}}/confirm-free",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "public",
-                "orders",
-                "{{orderId}}",
-                "confirm-free"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "FR-RG-005 Cancel Order - Self Service",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+              "raw": "{\n  \"name\": \"Linh Nguyen\",\n  \"email\": \"linh@example.com\",\n  \"ticketTypeId\": {{ticketTypeId}},\n  \"quantity\": 1,\n  \"accessCode\": \"{{accessCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
               }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reason\": \"Cannot attend\",\n  \"requestedByEmail\": \"linh.tran@example.com\"\n}"
             },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/public/orders/{{orderId}}/cancel",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "public",
-                "orders",
-                "{{orderId}}",
-                "cancel"
-              ]
-            }
+            "url": "{{ticketingApiUrl}}/api/public/events/{{eventId}}/orders"
           },
           "response": []
         },
         {
-          "name": "Request Secure Order Lookup Link",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
+          "name": "Create Customer Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status is expected', function () { pm.expect([201]).to.include(pm.response.code); });",
+                  "try { const json = pm.response.json(); if (json.id) pm.collectionVariables.set('customerOrderId', json.id); } catch (e) {}"
+                ]
               }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"eventId\": \"{{eventId}}\",\n  \"email\": \"linh.tran@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/public/order-lookup-requests",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "public",
-                "order-lookup-requests"
-              ]
             }
-          },
-          "response": []
-        },
-        {
-          "name": "List My Orders By Secure Token",
-          "auth": {
-            "type": "noauth"
-          },
+          ],
           "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/public/self-service/orders?token={{selfServiceToken}}",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "public",
-                "self-service",
-                "orders"
-              ],
-              "query": [
+            "auth": {
+              "type": "bearer",
+              "bearer": [
                 {
                   "key": "token",
-                  "value": "{{selfServiceToken}}"
+                  "value": "{{customerToken}}",
+                  "type": "string"
                 }
               ]
-            }
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Customer User\",\n  \"ticketTypeId\": {{ticketTypeId}},\n  \"quantity\": 1,\n  \"accessCode\": \"{{accessCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{ticketingApiUrl}}/api/public/events/{{eventId}}/orders"
+          },
+          "response": []
+        },
+        {
+          "name": "Request Order Lookup",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{ticketingApiUrl}}/api/public/order-lookup-requests"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Orders By Self-Service Token",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{ticketingApiUrl}}/api/public/self-service/orders?token={{selfServiceToken}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Current Customer Orders",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{ticketingApiUrl}}/api/customer/orders"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer Orders By Email",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{ticketingApiUrl}}/api/customer/orders/by-email?email={{customerEmail}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Customer Order Detail",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{ticketingApiUrl}}/api/customer/orders/{{orderId}}"
+          },
+          "response": []
+        },
+        {
+          "name": "Confirm Free Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{ticketingApiUrl}}/api/customer/orders/{{orderId}}/confirm-free"
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Order",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{ticketingApiUrl}}/api/customer/orders/{{orderId}}/cancel"
           },
           "response": []
         }
       ]
     },
     {
-      "name": "05 Payment",
+      "name": "06 Check-In",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{organizerToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Check In By QR",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{organizerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qrToken\": \"{{qrToken}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{ticketingApiUrl}}/api/events/{{eventId}}/check-ins/"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07 Payments",
       "item": [
         {
           "name": "Create Payment Intent",
@@ -846,13 +891,23 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const json = pm.response.json();",
-                  "if (json.paymentIntentId || json.id) pm.collectionVariables.set('paymentIntentId', json.paymentIntentId || json.id);"
+                  "pm.test('status is expected', function () { pm.expect([200]).to.include(pm.response.code); });",
+                  "try { const json = pm.response.json(); if (json.paymentIntentId) pm.collectionVariables.set('paymentIntentId', json.paymentIntentId); } catch (e) {}"
                 ]
               }
             }
           ],
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{customerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [
               {
@@ -861,30 +916,28 @@
               },
               {
                 "key": "Idempotency-Key",
-                "value": "payment-intent-{{$guid}}"
+                "value": "{{idempotencyKey}}"
               }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"returnUrl\": \"https://events.eventbox.example/checkout/{{orderId}}/complete\",\n  \"cancelUrl\": \"https://events.eventbox.example/checkout/{{orderId}}/cancel\"\n}"
+              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"returnUrl\": \"https://eventbox.test/checkout/return\",\n  \"cancelUrl\": \"https://eventbox.test/checkout/cancel\",\n  \"amount\": 199,\n  \"currency\": \"USD\",\n  \"orderAccessCode\": \"{{orderAccessCode}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": {
-              "raw": "{{paymentApiUrl}}/api/payments/intents",
-              "host": [
-                "{{paymentApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "payments",
-                "intents"
-              ]
-            }
+            "url": "{{paymentApiUrl}}/api/payments/intents"
           },
           "response": []
         },
         {
-          "name": "FR-RG-003 Confirm Paid Order - Payment Succeeded Callback",
+          "name": "Simulate Payment Succeeded Callback",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -898,25 +951,23 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"providerEventId\": \"evt_{{$guid}}\",\n  \"paymentIntentId\": \"{{paymentIntentId}}\",\n  \"orderId\": \"{{orderId}}\",\n  \"status\": \"Succeeded\",\n  \"amount\": 398.00,\n  \"currency\": \"USD\",\n  \"paidAt\": \"{{$isoTimestamp}}\"\n}"
+              "raw": "{\n  \"providerEventId\": \"evt_{{$guid}}\",\n  \"paymentIntentId\": \"{{paymentIntentId}}\",\n  \"orderId\": \"{{orderId}}\",\n  \"status\": \"Succeeded\",\n  \"amount\": 199,\n  \"currency\": \"USD\",\n  \"paidAt\": \"2026-09-15T09:05:00Z\",\n  \"failedAt\": null,\n  \"failureReason\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
             },
-            "url": {
-              "raw": "{{paymentApiUrl}}/api/payments/simulated-callbacks",
-              "host": [
-                "{{paymentApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "payments",
-                "simulated-callbacks"
-              ]
-            }
+            "url": "{{paymentApiUrl}}/api/payments/simulated-callbacks"
           },
           "response": []
         },
         {
-          "name": "Payment Failed Callback",
+          "name": "Simulate Payment Failed Callback",
           "request": {
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
             "header": [
               {
@@ -930,947 +981,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"providerEventId\": \"evt_{{$guid}}\",\n  \"paymentIntentId\": \"{{paymentIntentId}}\",\n  \"orderId\": \"{{orderId}}\",\n  \"status\": \"Failed\",\n  \"failureReason\": \"Card declined\",\n  \"amount\": 398.00,\n  \"currency\": \"USD\",\n  \"failedAt\": \"{{$isoTimestamp}}\"\n}"
-            },
-            "url": {
-              "raw": "{{paymentApiUrl}}/api/payments/simulated-callbacks",
-              "host": [
-                "{{paymentApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "payments",
-                "simulated-callbacks"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "06 Orders And Attendee Management",
-      "item": [
-        {
-          "name": "List Orders",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/orders?status=&email=&page=1&pageSize=20",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "orders"
-              ],
-              "query": [
-                {
-                  "key": "status",
-                  "value": ""
-                },
-                {
-                  "key": "email",
-                  "value": ""
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "20"
+              "raw": "{\n  \"providerEventId\": \"evt_{{$guid}}\",\n  \"paymentIntentId\": \"{{paymentIntentId}}\",\n  \"orderId\": \"{{orderId}}\",\n  \"status\": \"Failed\",\n  \"amount\": 199,\n  \"currency\": \"USD\",\n  \"paidAt\": null,\n  \"failedAt\": \"2026-09-15T09:05:00Z\",\n  \"failureReason\": \"Simulated provider failure\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
                 }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Order Detail",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/orders/{{orderId}}",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "orders",
-                "{{orderId}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "FR-RG-005 Cancel Order - Organizer",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
               }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reason\": \"Organizer approved cancellation\",\n  \"restoreAvailabilityIfAllowed\": true,\n  \"sendCancellationEmail\": true\n}"
             },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/orders/{{orderId}}/cancel",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "orders",
-                "{{orderId}}",
-                "cancel"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Refund Order",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"amount\": 398.00,\n  \"currency\": \"USD\",\n  \"reason\": \"Customer requested refund\",\n  \"invalidateTickets\": true\n}"
-            },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/orders/{{orderId}}/refunds",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "orders",
-                "{{orderId}}",
-                "refunds"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "FR-AM-001 View Attendees",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/attendees?ticketTypeId={{ticketTypeId}}&status=Active&checkedIn=&q=&page=1&pageSize=50",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "attendees"
-              ],
-              "query": [
-                {
-                  "key": "ticketTypeId",
-                  "value": "{{ticketTypeId}}"
-                },
-                {
-                  "key": "status",
-                  "value": "Active"
-                },
-                {
-                  "key": "checkedIn",
-                  "value": ""
-                },
-                {
-                  "key": "q",
-                  "value": ""
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "50"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "FR-AM-002 Update Attendee Info",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"fullName\": \"Linh Tran Updated\",\n  \"email\": \"linh.updated@example.com\",\n  \"resendConfirmation\": true,\n  \"changeReason\": \"Attendee requested correction\"\n}"
-            },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/attendees/{{attendeeId}}",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "attendees",
-                "{{attendeeId}}"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "FR-AM-003 Resend Confirmation",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"recipientEmail\": \"linh.tran@example.com\",\n  \"reason\": \"Attendee asked for a new ticket email\"\n}"
-            },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/orders/{{orderId}}/resend-confirmation",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "orders",
-                "{{orderId}}",
-                "resend-confirmation"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Add Complimentary Attendee",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Idempotency-Key",
-                "value": "comp-attendee-{{$guid}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"ticketTypeId\": \"{{ticketTypeId}}\",\n  \"attendee\": {\n    \"fullName\": \"Guest Speaker\",\n    \"email\": \"speaker@example.com\"\n  },\n  \"reason\": \"Speaker complimentary pass\",\n  \"sendTicketEmail\": true\n}"
-            },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/complimentary-attendees",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "complimentary-attendees"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Export Attendee CSV",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"format\": \"Csv\",\n  \"filters\": {\n    \"ticketTypeId\": \"{{ticketTypeId}}\",\n    \"status\": \"Active\",\n    \"checkedIn\": null\n  }\n}"
-            },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/attendees/exports",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "attendees",
-                "exports"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "07 Check-in",
-      "item": [
-        {
-          "name": "FR-CI-002 Manual Lookup",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/check-in/events/{{eventId}}/tickets/search?q=linh",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "check-in",
-                "events",
-                "{{eventId}}",
-                "tickets",
-                "search"
-              ],
-              "query": [
-                {
-                  "key": "q",
-                  "value": "linh"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Validate Ticket QR",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"ticketCode\": \"{{ticketCode}}\",\n  \"qrPayload\": \"{{qrPayload}}\"\n}"
-            },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/check-in/events/{{eventId}}/tickets/validate",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "check-in",
-                "events",
-                "{{eventId}}",
-                "tickets",
-                "validate"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "FR-CI-001 Check In By QR",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Idempotency-Key",
-                "value": "checkin-{{$guid}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"ticketCode\": \"{{ticketCode}}\",\n  \"operatorId\": \"{{userId}}\",\n  \"gate\": \"Main Gate\",\n  \"overrideDuplicate\": false,\n  \"overrideReason\": null\n}"
-            },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/check-in/events/{{eventId}}/check-ins",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "check-in",
-                "events",
-                "{{eventId}}",
-                "check-ins"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Override Duplicate Check-in",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Idempotency-Key",
-                "value": "checkin-override-{{$guid}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"ticketCode\": \"{{ticketCode}}\",\n  \"operatorId\": \"{{userId}}\",\n  \"gate\": \"Main Gate\",\n  \"overrideDuplicate\": true,\n  \"overrideReason\": \"Original scan was accidental\"\n}"
-            },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/check-in/events/{{eventId}}/check-ins",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "check-in",
-                "events",
-                "{{eventId}}",
-                "check-ins"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "08 Reporting",
-      "item": [
-        {
-          "name": "FR-RP-001 Sales Report",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/reports/events/{{eventId}}/sales?from=2026-06-01&to=2026-09-30&ticketTypeId={{ticketTypeId}}",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "reports",
-                "events",
-                "{{eventId}}",
-                "sales"
-              ],
-              "query": [
-                {
-                  "key": "from",
-                  "value": "2026-06-01"
-                },
-                {
-                  "key": "to",
-                  "value": "2026-09-30"
-                },
-                {
-                  "key": "ticketTypeId",
-                  "value": "{{ticketTypeId}}"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "FR-RP-002 Attendance Report",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/reports/events/{{eventId}}/attendance?ticketTypeId={{ticketTypeId}}&gate=",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "reports",
-                "events",
-                "{{eventId}}",
-                "attendance"
-              ],
-              "query": [
-                {
-                  "key": "ticketTypeId",
-                  "value": "{{ticketTypeId}}"
-                },
-                {
-                  "key": "gate",
-                  "value": ""
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Create Report Export",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const json = pm.response.json();",
-                  "if (json.exportJobId || json.id) pm.collectionVariables.set('exportJobId', json.exportJobId || json.id);"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reportType\": \"Sales\",\n  \"format\": \"Csv\",\n  \"filters\": {\n    \"from\": \"2026-06-01\",\n    \"to\": \"2026-09-30\",\n    \"ticketTypeId\": \"{{ticketTypeId}}\"\n  }\n}"
-            },
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/reports/events/{{eventId}}/exports",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "reports",
-                "events",
-                "{{eventId}}",
-                "exports"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Export Job",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{registrationApiUrl}}/api/reports/exports/{{exportJobId}}",
-              "host": [
-                "{{registrationApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "reports",
-                "exports",
-                "{{exportJobId}}"
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "09 Organization Settings And Team Roles",
-      "item": [
-        {
-          "name": "Get Organization Settings",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/settings",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "settings"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Organization Settings",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"displayName\": \"Eventbox Events\",\n  \"contactEmail\": \"events@eventbox.example\",\n  \"defaultCurrency\": \"USD\",\n  \"defaultTimezone\": \"Asia/Ho_Chi_Minh\"\n}"
-            },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/settings",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "settings"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Invite Team Member",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const json = pm.response.json();",
-                  "if (json.memberId || json.id) pm.collectionVariables.set('memberId', json.memberId || json.id);"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"operator@example.com\",\n  \"organizationRole\": \"Viewer\",\n  \"eventAccess\": [\n    {\n      \"eventId\": \"{{eventId}}\",\n      \"role\": \"CheckInOperator\"\n    }\n  ]\n}"
-            },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/team-invitations",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "team-invitations"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Member Roles",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"organizationRole\": \"RegistrationManager\",\n  \"eventAccess\": [\n    {\n      \"eventId\": \"{{eventId}}\",\n      \"role\": \"RegistrationManager\"\n    }\n  ],\n  \"reason\": \"Role update for event operations\"\n}"
-            },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/members/{{memberId}}/roles",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "members",
-                "{{memberId}}",
-                "roles"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Payment Settings",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/payment-settings",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "payment-settings"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Payment Settings",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"paymentMode\": \"Simulated\",\n  \"currency\": \"USD\",\n  \"attendeeCancellationEnabled\": true,\n  \"cancellationCutoff\": \"2026-09-10T00:00:00Z\",\n  \"refundProcessingNote\": \"Refunds are processed within 5 business days.\"\n}"
-            },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/payment-settings",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "payment-settings"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Update Notification Settings",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"senderName\": \"Eventbox Events\",\n  \"replyToEmail\": \"events@eventbox.example\",\n  \"confirmationEmailEnabled\": true,\n  \"cancellationEmailEnabled\": true,\n  \"eventReminderEnabled\": true,\n  \"reminderHoursBeforeEvent\": 24\n}"
-            },
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/notification-settings",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "notification-settings"
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Get Audit Log",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/audit-log?action=&from=&to=&page=1&pageSize=50",
-              "host": [
-                "{{eventApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "organizations",
-                "{{organizationId}}",
-                "events",
-                "{{eventId}}",
-                "audit-log"
-              ],
-              "query": [
-                {
-                  "key": "action",
-                  "value": ""
-                },
-                {
-                  "key": "from",
-                  "value": ""
-                },
-                {
-                  "key": "to",
-                  "value": ""
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "50"
-                }
-              ]
-            }
-          },
-          "response": []
-        }
-      ]
-    },
-    {
-      "name": "10 Support Operations",
-      "item": [
-        {
-          "name": "Global Support Search",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{platformApiUrl}}/api/platform/support/search?q=linh",
-              "host": [
-                "{{platformApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "platform",
-                "support",
-                "search"
-              ],
-              "query": [
-                {
-                  "key": "q",
-                  "value": "linh"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "List Failed Integration Messages",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{platformApiUrl}}/api/platform/integration-messages/failed?messageType=&page=1&pageSize=50",
-              "host": [
-                "{{platformApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "platform",
-                "integration-messages",
-                "failed"
-              ],
-              "query": [
-                {
-                  "key": "messageType",
-                  "value": ""
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "pageSize",
-                  "value": "50"
-                }
-              ]
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Retry Failed Integration Message",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"reason\": \"Manual retry after fixing downstream issue\"\n}"
-            },
-            "url": {
-              "raw": "{{platformApiUrl}}/api/platform/integration-messages/{{failedMessageId}}/retry",
-              "host": [
-                "{{platformApiUrl}}"
-              ],
-              "path": [
-                "api",
-                "platform",
-                "integration-messages",
-                "{{failedMessageId}}",
-                "retry"
-              ]
-            }
+            "url": "{{paymentApiUrl}}/api/payments/simulated-callbacks"
           },
           "response": []
         }
@@ -1879,32 +997,44 @@
   ],
   "variable": [
     {
-      "key": "eventApiUrl",
-      "value": "http://localhost:8080"
-    },
-    {
-      "key": "registrationApiUrl",
+      "key": "authApiUrl",
       "value": "http://localhost:8082"
     },
     {
+      "key": "eventApiUrl",
+      "value": "http://localhost:5145"
+    },
+    {
+      "key": "ticketingApiUrl",
+      "value": "http://localhost:5151"
+    },
+    {
       "key": "paymentApiUrl",
-      "value": "http://localhost:8083"
+      "value": "http://localhost:5193"
     },
     {
-      "key": "platformApiUrl",
-      "value": "http://localhost:8084"
+      "key": "organizerToken",
+      "value": "replace-with-organizer-jwt"
     },
     {
-      "key": "authToken",
-      "value": "replace-with-jwt"
+      "key": "customerToken",
+      "value": "replace-with-customer-jwt"
+    },
+    {
+      "key": "organizerEmail",
+      "value": "organizer@example.com"
+    },
+    {
+      "key": "customerEmail",
+      "value": "customer@example.com"
+    },
+    {
+      "key": "password",
+      "value": "Password123"
     },
     {
       "key": "organizationId",
       "value": "11111111-1111-1111-1111-111111111111"
-    },
-    {
-      "key": "userId",
-      "value": "22222222-2222-2222-2222-222222222222"
     },
     {
       "key": "eventId",
@@ -1916,43 +1046,31 @@
     },
     {
       "key": "ticketTypeId",
-      "value": "44444444-4444-4444-4444-444444444444"
+      "value": "1"
+    },
+    {
+      "key": "freeTicketTypeId",
+      "value": "2"
     },
     {
       "key": "orderId",
       "value": "55555555-5555-5555-5555-555555555555"
     },
     {
+      "key": "customerOrderId",
+      "value": "55555555-5555-5555-5555-555555555556"
+    },
+    {
+      "key": "orderAccessCode",
+      "value": "replace-with-order-access-code"
+    },
+    {
       "key": "paymentIntentId",
       "value": "66666666-6666-6666-6666-666666666666"
     },
     {
-      "key": "attendeeId",
-      "value": "77777777-7777-7777-7777-777777777777"
-    },
-    {
-      "key": "ticketId",
-      "value": "88888888-8888-8888-8888-888888888888"
-    },
-    {
-      "key": "ticketCode",
-      "value": "TCK-9F3A"
-    },
-    {
-      "key": "qrPayload",
-      "value": "eventbox-ticket:TCK-9F3A"
-    },
-    {
-      "key": "memberId",
-      "value": "99999999-9999-9999-9999-999999999999"
-    },
-    {
-      "key": "exportJobId",
-      "value": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
-    },
-    {
-      "key": "failedMessageId",
-      "value": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+      "key": "qrToken",
+      "value": "replace-with-ticket-qr-token"
     },
     {
       "key": "idempotencyKey",
