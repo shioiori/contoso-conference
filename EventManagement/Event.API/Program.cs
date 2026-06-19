@@ -39,6 +39,7 @@ builder.Services.AddDbContext<EventDbContext>((serviceProvider, options) =>
 
 builder.Services.Configure<RabbitMQOptions>(options =>
 {
+    builder.Configuration.GetSection("RabbitMQ").Bind(options);
     options.Publish<EventCreatedEvent>("eventbox.events");
     options.Publish<EventUpdatedEvent>("eventbox.events");
     options.Publish<EventPublishedEvent>("eventbox.events");
@@ -119,7 +120,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 RecurringJob.AddOrUpdate<IOutboxProcessorJob>(
-    "Payment-outbox-processor",
+    "event-outbox-processor",
     job => job.RunAsync(CancellationToken.None),
     "*/30 * * * * *");
 

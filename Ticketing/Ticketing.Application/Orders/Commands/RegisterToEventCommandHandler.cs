@@ -1,10 +1,10 @@
+using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Jobs;
 using Eventbox.Ticketing.Application.Constants;
 using Eventbox.Ticketing.Application.Dtos;
-using Eventbox.Ticketing.Application.Messages;
 using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
 using Mapster;
 using MediatR;

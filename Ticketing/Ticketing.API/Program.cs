@@ -24,7 +24,6 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using EventBus.RabbitMQ;
 using Eventbox.EventBus.Core.Abstractions;
-using RabbitMQ.Client; // ExchangeType used in DeclareQueue
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -53,6 +52,7 @@ builder.Services.AddEventboxMediatRAuditLogging();
 
 builder.Services.Configure<RabbitMQOptions>(options =>
 {
+    builder.Configuration.GetSection("RabbitMQ").Bind(options);
     options.Subscribe<PaymentConfirmedIntegrationEvent>("eventbox.payment");
     options.Subscribe<PaymentFailedIntegrationEvent>("eventbox.payment");
     options.Subscribe<EventCreatedEvent>("eventbox.events");
@@ -64,18 +64,11 @@ builder.Services.Configure<RabbitMQOptions>(options =>
         "eventbox.ticketing",
         routingKey: "ticketing.expire",
         queue: "eventbox.ticketing.expire");
-
-    options.DeclareQueue("eventbox.ticketing.expire.dlx", ExchangeType.Direct, "ticketing.expire.dlx");
-    options.DeclareQueue("eventbox.ticketing.expire", ExchangeType.Direct, "ticketing.expire",
-        new Dictionary<string, object?>
-        {
-            ["x-dead-letter-exchange"] = ExchangeType.Direct,
-            ["x-dead-letter-routing-key"] = "ticketing.expire.dlx"
-        });
 });
 
 builder.Services.AddSingleton<RabbitMQEventBus>();
 builder.Services.AddSingleton<IEventBus>(sp => sp.GetRequiredService<RabbitMQEventBus>());
+builder.Services.AddSingleton<IDelayedEventScheduler>(sp => sp.GetRequiredService<RabbitMQEventBus>());
 builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQEventBus>());
 builder.Services.AddScoped<OrderExpirationDueMessageHandler>();
 builder.Services.AddScoped<PaymentConfirmedIntegrationEventHandler>();
@@ -149,12 +142,12 @@ app.MapCheckInEndpoints();
 app.UseHangfireDashboard("/hangfire");
 
 RecurringJob.AddOrUpdate<IOrderExpirationReconciliationJob>(
-    "Ticketing-expire-orders-reconciliation",
+    "ticketing-expire-orders-reconciliation",
     job => job.RunAsync(CancellationToken.None),
     Cron.Minutely());
 
 RecurringJob.AddOrUpdate<IOutboxProcessorJob>(
-    "Ticketing-outbox-processor",
+    "ticketing-outbox-processor",
     job => job.RunAsync(CancellationToken.None),
     Cron.Minutely());
 

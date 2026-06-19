@@ -1,6 +1,6 @@
+using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.Ticketing.Application.Commands;
-using Eventbox.Ticketing.Application.Messages;
 using MediatR;
 
 namespace Eventbox.Ticketing.Application.MessageHandlers;

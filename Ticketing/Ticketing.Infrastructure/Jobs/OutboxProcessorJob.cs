@@ -1,7 +1,7 @@
 using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.Shared.Outbox;
 using Eventbox.Ticketing.Application.Abstractions;
-using Eventbox.Ticketing.Application.Messages;
+using Eventbox.Contracts.IntegrationEvents;
 using System.Text.Json;
 
 namespace Eventbox.Ticketing.Infrastructure.Jobs
@@ -23,7 +23,7 @@ namespace Eventbox.Ticketing.Infrastructure.Jobs
                 await unitOfWork.SaveChangesAsync(cancellationToken);
                 try
                 {
-                    var @event = Deserialize(message) as OrderExpirationDueMessageIntergrationEvent;
+                    var @event = (OrderExpirationDueMessageIntergrationEvent)Deserialize(message);
                     await delayedEventScheduler.ScheduleAsync(@event, @event.ExpiresAt, cancellationToken);
                     message.Status = ProcessStatus.Processed;
                     message.ProcessedOnUtc = DateTime.UtcNow;

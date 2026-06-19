@@ -6,18 +6,17 @@ using Polly;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 
 namespace EventBus.RabbitMQ
 {
     public class RabbitMQ
     {
         private readonly RabbitMQOptions _options;
-        private IConnection _connection;
+        private IConnection _connection = default!;
         public IConnection Connection => _connection;
-        private IChannel _publishChannel;
+        private IChannel _publishChannel = default!;
         public IChannel PublishChannel => _publishChannel;
-        private IChannel _consumeChannel;
+        private IChannel _consumeChannel = default!;
         public IChannel ConsumeChannel => _consumeChannel;
 
         public RabbitMQ(RabbitMQOptions options)
@@ -35,10 +34,11 @@ namespace EventBus.RabbitMQ
         {
             var factory = new ConnectionFactory
             {
-                UserName = _options.UserName,
+                UserName = _options.Username,
                 Password = _options.Password,
                 VirtualHost = _options.VirtualHost,
-                HostName = _options.HostName
+                HostName = _options.Host,
+                Port = _options.Port
             };
 
             var retryPolicy = Policy
@@ -68,6 +68,19 @@ namespace EventBus.RabbitMQ
                     await _consumeChannel.QueueDeclareAsync(mapping.Queue, false, false, false, null);
 
                 await _consumeChannel.QueueBindAsync(mapping.Queue, mapping.Exchange, mapping.RoutingKey, null);
+
+                await _consumeChannel.QueueDeclareAsync(
+                    mapping.DelayQueue,
+                    durable: false,
+                    exclusive: false,
+                    autoDelete: false,
+                    arguments: new Dictionary<string, object?>
+                    {
+                        ["x-dead-letter-exchange"] = mapping.Exchange,
+                        ["x-dead-letter-routing-key"] = mapping.RoutingKey
+                    });
+
+                await _consumeChannel.QueueDeclareAsync(mapping.DeadLetterQueue, false, false, false, null);
             }
 
             foreach (var extra in _options.ExtraQueues)
@@ -80,8 +93,10 @@ namespace EventBus.RabbitMQ
         }
     }
 
-    public class RabbitMQEventBus : IEventBus, IHostedService
+    public class RabbitMQEventBus : IEventBus, IDelayedEventScheduler, IHostedService
     {
+        private const string RetryCountHeader = "x-retry-count";
+
         private readonly IServiceProvider _serviceProvider;
         private readonly RabbitMQOptions _options;
         public RabbitMQ _rabbitMQ { get; set; }
@@ -96,11 +111,41 @@ namespace EventBus.RabbitMQ
         public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
             where TEvent : IIntegrationEvent
         {
-            var mapping = _options.PublishMappings.FirstOrDefault(m => m.EventType == typeof(TEvent))
-                ?? throw new InvalidOperationException($"No publish mapping registered for {typeof(TEvent).Name}");
+            var eventType = @event.GetType();
+            var mapping = _options.PublishMappings.FirstOrDefault(m => m.EventType == eventType)
+                ?? throw new InvalidOperationException($"No publish mapping registered for {eventType.Name}");
+
             await _rabbitMQ.PublishChannel.BasicPublishAsync(
-                mapping.Exchange, mapping.RoutingKey, true,
-                body: JsonSerializer.SerializeToUtf8Bytes(@event));
+                exchange: mapping.Exchange,
+                routingKey: mapping.RoutingKey,
+                mandatory: true,
+                basicProperties: CreateBasicProperties(@event),
+                body: JsonSerializer.SerializeToUtf8Bytes(@event),
+                cancellationToken: cancellationToken);
+        }
+
+        public async Task ScheduleAsync<TEvent>(
+            TEvent @event,
+            DateTimeOffset deliverAt,
+            CancellationToken cancellationToken = default)
+            where TEvent : IIntegrationEvent
+        {
+            var eventType = @event.GetType();
+            var mapping = _options.SubscribeMappings.FirstOrDefault(m => m.EventType == eventType)
+                ?? throw new InvalidOperationException($"No subscribe mapping registered for scheduled event {eventType.Name}");
+
+            var delay = deliverAt - DateTimeOffset.UtcNow;
+            var ttlMilliseconds = Math.Max(0, (long)delay.TotalMilliseconds);
+            var props = CreateBasicProperties(@event);
+            props.Expiration = ttlMilliseconds.ToString();
+
+            await _rabbitMQ.PublishChannel.BasicPublishAsync(
+                exchange: string.Empty,
+                routingKey: mapping.DelayQueue,
+                mandatory: true,
+                basicProperties: props,
+                body: JsonSerializer.SerializeToUtf8Bytes(@event),
+                cancellationToken: cancellationToken);
         }
 
         public async Task SubscribeAsync<TEvent, THandler>(CancellationToken cancellationToken = default)
@@ -111,12 +156,13 @@ namespace EventBus.RabbitMQ
                 ?? throw new InvalidOperationException($"No subscribe mapping registered for {typeof(TEvent).Name}");
 
             var consumer = new AsyncEventingBasicConsumer(_rabbitMQ.ConsumeChannel);
-            consumer.ReceivedAsync += async (model, ea) =>
+            consumer.ReceivedAsync += async (_, ea) =>
             {
                 try
                 {
-                    var body = ea.Body.ToArray();
-                    var @event = JsonSerializer.Deserialize<TEvent>(body);
+                    var @event = JsonSerializer.Deserialize<TEvent>(ea.Body.Span)
+                        ?? throw new InvalidOperationException($"Failed to deserialize {typeof(TEvent).Name}");
+
                     using var scope = _serviceProvider.CreateScope();
                     var handler = scope.ServiceProvider.GetRequiredService<THandler>();
                     await handler.HandleAsync(@event, CancellationToken.None);
@@ -124,16 +170,26 @@ namespace EventBus.RabbitMQ
                 }
                 catch
                 {
-                    var retryCount = ea.BasicProperties.Headers
-                        ?.TryGetValue("x-death", out var xDeath) == true
-                        && xDeath is List<object> deaths
-                        ? deaths.Count : 0;
-                    await _rabbitMQ.ConsumeChannel.BasicNackAsync(
-                        ea.DeliveryTag, multiple: false, requeue: retryCount < 3);
+                    var retryCount = GetRetryCount(ea.BasicProperties);
+                    var shouldRetry = retryCount < mapping.MaxRetries;
+
+                    await PublishRawToQueueAsync(
+                        shouldRetry ? mapping.DelayQueue : mapping.DeadLetterQueue,
+                        ea.Body,
+                        ea.BasicProperties,
+                        retryCount + 1,
+                        shouldRetry ? mapping.RetryDelayMilliseconds : null,
+                        cancellationToken);
+
+                    await _rabbitMQ.ConsumeChannel.BasicAckAsync(ea.DeliveryTag, multiple: false);
                 }
             };
 
-            await _rabbitMQ.ConsumeChannel.BasicConsumeAsync(mapping.Queue, autoAck: false, consumer: consumer);
+            await _rabbitMQ.ConsumeChannel.BasicConsumeAsync(
+                mapping.Queue,
+                autoAck: false,
+                consumer: consumer,
+                cancellationToken: cancellationToken);
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
@@ -149,6 +205,63 @@ namespace EventBus.RabbitMQ
                 await _rabbitMQ.ConsumeChannel.CloseAsync(cancellationToken);
             if (_rabbitMQ.Connection is { IsOpen: true })
                 await _rabbitMQ.Connection.CloseAsync(cancellationToken);
+        }
+
+        private static BasicProperties CreateBasicProperties(IIntegrationEvent @event) => new()
+        {
+            ContentType = "application/json",
+            DeliveryMode = DeliveryModes.Persistent,
+            MessageId = @event.IntegrationEventId.ToString(),
+            Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
+            Type = @event.EventType,
+            Headers = new Dictionary<string, object?>()
+        };
+
+        private async Task PublishRawToQueueAsync(
+            string queue,
+            ReadOnlyMemory<byte> body,
+            IReadOnlyBasicProperties sourceProperties,
+            int retryCount,
+            int? expirationMilliseconds,
+            CancellationToken cancellationToken)
+        {
+            var headers = sourceProperties.Headers is null
+                ? new Dictionary<string, object?>()
+                : new Dictionary<string, object?>(sourceProperties.Headers);
+            headers[RetryCountHeader] = retryCount;
+
+            var props = new BasicProperties
+            {
+                ContentType = sourceProperties.ContentType,
+                DeliveryMode = DeliveryModes.Persistent,
+                MessageId = sourceProperties.MessageId,
+                Timestamp = sourceProperties.Timestamp,
+                Type = sourceProperties.Type,
+                Headers = headers,
+                Expiration = expirationMilliseconds?.ToString()
+            };
+
+            await _rabbitMQ.PublishChannel.BasicPublishAsync(
+                exchange: string.Empty,
+                routingKey: queue,
+                mandatory: true,
+                basicProperties: props,
+                body: body,
+                cancellationToken: cancellationToken);
+        }
+
+        private static int GetRetryCount(IReadOnlyBasicProperties properties)
+        {
+            if (properties.Headers?.TryGetValue(RetryCountHeader, out var value) != true || value is null)
+                return 0;
+
+            return value switch
+            {
+                int intValue => intValue,
+                long longValue => (int)longValue,
+                byte[] bytes when int.TryParse(System.Text.Encoding.UTF8.GetString(bytes), out var parsed) => parsed,
+                _ => 0
+            };
         }
     }
 }
