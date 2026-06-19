@@ -6,11 +6,10 @@ using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
 using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
 using Eventbox.Ticketing.Domain.Enums;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
-using Eventbox.Ticketing.Application.Abstractions.Jobs;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
 
-namespace Eventbox.UnitTests.Registration;
+namespace Eventbox.UnitTests.Ticketing;
 
 public class RegisterToEventCommandHandlerConcurrencyTests
 {
@@ -22,11 +21,8 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         var availability = new TicketAvailability(eventId, [ticketType]);
         var orderRepository = new InMemoryOrderRepository();
         var ticketAvailabilityRepository = new InMemoryTicketAvailabilityRepository(availability);
-        var scheduler = new RecordingOrderExpirationScheduler();
         var unitOfWork = new InMemoryRegistrationUnitOfWork(orderRepository, ticketAvailabilityRepository);
-        var handler = new RegisterToEventCommandHandler(
-            scheduler,
-            unitOfWork);
+        var handler = new RegisterToEventCommandHandler(unitOfWork);
 
         var firstRequest = CreateRequest(eventId, "first@example.com");
         var secondRequest = CreateRequest(eventId, "second@example.com");
@@ -39,7 +35,7 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         Assert.Single(attempts, attempt => attempt.Exception is ConflictException);
         Assert.Equal(0, ticketType.Remaining);
         Assert.Single(orderRepository.Orders);
-        Assert.Single(scheduler.ScheduledOrderIds);
+        Assert.Single(unitOfWork.OutboxMessages);
         Assert.Equal(1, unitOfWork.SaveCount);
     }
 
@@ -202,9 +198,12 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         IOrderRepository orderRepository,
         ITicketAvailabilityRepository ticketAvailabilityRepository) : IUnitOfWork
     {
+        private readonly InMemoryOutbox _outbox = new();
+
         public IOrderRepository Orders { get; } = orderRepository;
         public ITicketAvailabilityRepository TicketAvailabilities { get; } = ticketAvailabilityRepository;
-        public IOutbox Outbox { get; } = new InMemoryOutbox();
+        public IOutbox Outbox => _outbox;
+        public IReadOnlyCollection<OutboxMessage> OutboxMessages => _outbox.Messages;
 
         public int SaveCount { get; private set; }
 
@@ -222,6 +221,8 @@ public class RegisterToEventCommandHandlerConcurrencyTests
     {
         private readonly List<OutboxMessage> _messages = new();
 
+        public IReadOnlyCollection<OutboxMessage> Messages => _messages.AsReadOnly();
+
         public Task AddAsync(OutboxMessage outboxMessage, CancellationToken cancellationToken)
         {
             _messages.Add(outboxMessage);
@@ -236,16 +237,4 @@ public class RegisterToEventCommandHandlerConcurrencyTests
             => Task.FromResult(_messages.Take(batchSize).ToList());
     }
 
-    private sealed class RecordingOrderExpirationScheduler : IOrderExpirationScheduler
-    {
-        private readonly List<Guid> _scheduledOrderIds = new();
-
-        public IReadOnlyCollection<Guid> ScheduledOrderIds => _scheduledOrderIds.AsReadOnly();
-
-        public Task ScheduleExpirationAsync(Guid orderId, DateTimeOffset expiresAt, CancellationToken cancellationToken = default)
-        {
-            _scheduledOrderIds.Add(orderId);
-            return Task.CompletedTask;
-        }
-    }
 }
