@@ -1,6 +1,6 @@
 using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
 
-namespace Eventbox.UnitTests.Registration;
+namespace Eventbox.UnitTests.Ticketing;
 
 public class TicketAvailabilityTests
 {

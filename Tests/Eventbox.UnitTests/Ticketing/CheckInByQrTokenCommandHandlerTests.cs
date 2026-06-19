@@ -8,7 +8,7 @@ using Eventbox.Ticketing.Domain.Entities;
 using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
 using Eventbox.Ticketing.Domain.Enums;
 
-namespace Eventbox.UnitTests.Registration;
+namespace Eventbox.UnitTests.Ticketing;
 
 public class CheckInByQrTokenCommandHandlerTests
 {

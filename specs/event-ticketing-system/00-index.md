@@ -19,7 +19,8 @@ Bộ tài liệu này mô tả một nền tảng event ticketing bám sát nhu 
 11. [AWS Deployment And Operations](./13-aws-deployment-and-operations.md)
 12. [Quality And Testing Strategy](./14-quality-and-testing-strategy.md)
 13. [Job Application Execution Plan](./15-job-application-execution-plan.md)
-14. [Screen-Level Product Specs](./screen-specs/00-screen-spec-index.md)
+14. [Implemented API Contract](./16-api-contract.md)
+15. [Screen-Level Product Specs](./screen-specs/00-screen-spec-index.md)
 
 ## Nguyên Tắc Sản Phẩm
 

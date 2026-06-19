@@ -19,6 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\EventManagement\Event.API\Event.API.csproj" />
     <ProjectReference Include="..\..\Payment\Payment.Core\Payment.Core.csproj" />
     <ProjectReference Include="..\..\Ticketing\Ticketing.Application\Ticketing.Application.csproj" />
     <ProjectReference Include="..\..\Ticketing\Ticketing.Domain\Ticketing.Domain.csproj" />
