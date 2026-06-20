@@ -4,6 +4,6 @@ namespace Eventbox.Ticketing.Application.Abstractions.Repositories;
 
 public interface IEventScheduleRepository
 {
-    Task<EventSchedule?> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default);
-    Task UpsertAsync(Guid eventId, DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken = default);
+    Task<EventSnapshot?> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default);
+    Task UpsertAsync(Guid eventId, DateTimeOffset? from, DateTimeOffset? to, bool? isPublished, CancellationToken cancellationToken = default);
 }

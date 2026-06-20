@@ -1,10 +1,9 @@
+using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
 using Eventbox.Ticketing.Application.Abstractions;
-using Eventbox.Ticketing.Application.Abstractions.Jobs;
 using Eventbox.Ticketing.Application.Constants;
 using Eventbox.Ticketing.Application.Dtos;
-using Eventbox.Ticketing.Application.Messages;
 using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
 using Mapster;
 using MediatR;
@@ -27,6 +26,11 @@ namespace Eventbox.Ticketing.Application.Commands
 
             if (request.Quantity > TicketingConstants.MaxTicketsPerOrder)
                 throw new ValidationApiException($"Cannot reserve more than {TicketingConstants.MaxTicketsPerOrder} tickets per order.");
+
+            var eventSnapshot = await unitOfWork.EventSnapshots.GetByEventIdAsync(request.EventId, cancellationToken)
+                ?? throw new NotFoundException($"Event '{request.EventId}' was not found.");
+            if (!eventSnapshot.IsPublished)
+                throw new NotFoundException($"Event '{request.EventId}' is not published.");
 
             var utcNow = DateTimeOffset.UtcNow;
             var reservationExpiresAt = utcNow.AddMinutes(TicketingConstants.ReservationExpirationMinutes);

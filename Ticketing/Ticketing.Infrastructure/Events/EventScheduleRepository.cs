@@ -6,19 +6,28 @@ namespace Eventbox.Ticketing.Infrastructure.Repositories;
 
 public class EventScheduleRepository(TicketingDbContext dbContext) : IEventScheduleRepository
 {
-    public Task<EventSchedule?> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default)
+    public Task<EventSnapshot?> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default)
         => dbContext.EventSchedules.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
 
-    public async Task UpsertAsync(Guid eventId, DateTimeOffset from, DateTimeOffset to, CancellationToken cancellationToken = default)
+    public async Task UpsertAsync(Guid eventId, DateTimeOffset? from, DateTimeOffset? to, bool? isPublished, CancellationToken cancellationToken = default)
     {
         var schedule = await GetByEventIdAsync(eventId, cancellationToken);
-        if (schedule is null)
+        if (from.HasValue && to.HasValue)
         {
-            await dbContext.EventSchedules.AddAsync(new EventSchedule(eventId, from, to), cancellationToken);
-            return;
+            if (schedule == null)
+            {
+                await dbContext.EventSchedules.AddAsync(new EventSnapshot(eventId, from.Value, to.Value, isPublished ?? false), cancellationToken);
+                return;
+            }
+            else schedule.Update(from.Value, to.Value, isPublished);
+        }
+        else if (isPublished.HasValue && schedule != null)
+        {
+            if (isPublished.Value) schedule.Publish();
+            else schedule.Unpublish();
         }
 
-        schedule.Update(from, to);
-        dbContext.EventSchedules.Update(schedule);
+        if (schedule != null)
+            dbContext.EventSchedules.Update(schedule);
     }
 }

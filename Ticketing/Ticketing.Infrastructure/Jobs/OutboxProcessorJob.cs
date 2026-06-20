@@ -1,7 +1,7 @@
+using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.Shared.Outbox;
 using Eventbox.Ticketing.Application.Abstractions;
-using Eventbox.Ticketing.Application.Messages;
 using System.Text.Json;
 
 namespace Eventbox.Ticketing.Infrastructure.Jobs

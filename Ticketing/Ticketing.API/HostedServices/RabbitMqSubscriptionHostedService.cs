@@ -1,8 +1,6 @@
 using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.Ticketing.Application.IntegrationEventHandlers;
-using Eventbox.Ticketing.Application.MessageHandlers;
-using Eventbox.Ticketing.Application.Messages;
 
 namespace Eventbox.Ticketing.Api.HostedServices;
 

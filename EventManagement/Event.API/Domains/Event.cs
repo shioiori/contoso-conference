@@ -1,4 +1,5 @@
 using Eventbox.EventManagement.EventApi.Domains.Common;
+using Eventbox.Shared.Exceptions;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Eventbox.EventManagement.EventApi.Domains
@@ -59,6 +60,15 @@ namespace Eventbox.EventManagement.EventApi.Domains
             if (to <= from)
                 throw new ArgumentException("To must be after From.", nameof(to));
 
+            if (from <= DateTimeOffset.UtcNow && From != from && IsPublished)
+            {
+                throw new ArgumentException("From cannot be edited once the event has started.", nameof(from));
+            }
+            if (to < DateTimeOffset.UtcNow && IsPublished)
+            {
+                throw new ArgumentException("To cannot be changed to a past date.", nameof(to));
+            }
+
             Name = name;
             From = from;
             To = to;
@@ -66,7 +76,15 @@ namespace Eventbox.EventManagement.EventApi.Domains
         }
 
         public void Publish() => IsPublished = true;
-        public void Unpublish() => IsPublished = false;
+
+        public void Unpublish()
+        {
+            var utcNow = DateTimeOffset.UtcNow;
+            if (IsPublished && From <= utcNow && utcNow <= To)
+                throw new ValidationApiException("Cannot unpublish an event while it is in progress.");
+
+            IsPublished = false;
+        }
     }
 
     public enum EventStatus

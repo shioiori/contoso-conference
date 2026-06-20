@@ -12,8 +12,6 @@ using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Application.Commands;
 using Eventbox.Ticketing.Application.IntegrationEventHandlers;
 using Eventbox.Ticketing.Application.Mappings;
-using Eventbox.Ticketing.Application.MessageHandlers;
-using Eventbox.Ticketing.Application.Messages;
 using Eventbox.Ticketing.Infrastructure;
 using Eventbox.Ticketing.Infrastructure.Repositories;
 using Eventbox.Ticketing.Infrastructure.Security;

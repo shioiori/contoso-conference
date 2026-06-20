@@ -108,7 +108,7 @@ public class EventScheduleHandlerTests
 
         await handler.HandleAsync(new EventCreatedEvent { EventId = EventId, From = From, To = To });
 
-        Assert.Single(repo.UpsertCalls, c => c.EventId == EventId && c.From == From && c.To == To);
+        Assert.Single(repo.UpsertCalls, c => c.EventId == EventId && c.From == From && c.To == To && c.IsPublished == false);
         Assert.Equal(1, uow.SaveCount);
     }
 
@@ -123,7 +123,33 @@ public class EventScheduleHandlerTests
 
         await handler.HandleAsync(new EventUpdatedEvent { EventId = EventId, From = newFrom, To = newTo });
 
-        Assert.Single(repo.UpsertCalls, c => c.EventId == EventId && c.From == newFrom && c.To == newTo);
+        Assert.Single(repo.UpsertCalls, c => c.EventId == EventId && c.From == newFrom && c.To == newTo && c.IsPublished == false);
+        Assert.Equal(1, uow.SaveCount);
+    }
+
+    [Fact]
+    public async Task EventPublished_UpdatesPublishedStateAndSaves()
+    {
+        var repo = new SpyEventScheduleRepository();
+        var uow = new CountingUnitOfWork();
+        var handler = new EventPublishedEventHandler(repo, uow);
+
+        await handler.HandleAsync(new EventPublishedEvent { EventId = EventId });
+
+        Assert.Single(repo.UpsertCalls, c => c.EventId == EventId && c.From is null && c.To is null && c.IsPublished == true);
+        Assert.Equal(1, uow.SaveCount);
+    }
+
+    [Fact]
+    public async Task EventUnpublished_UpdatesPublishedStateAndSaves()
+    {
+        var repo = new SpyEventScheduleRepository();
+        var uow = new CountingUnitOfWork();
+        var handler = new EventUnpublishedEventHandler(repo, uow);
+
+        await handler.HandleAsync(new EventUnpublishedEvent { EventId = EventId });
+
+        Assert.Single(repo.UpsertCalls, c => c.EventId == EventId && c.From is null && c.To is null && c.IsPublished == false);
         Assert.Equal(1, uow.SaveCount);
     }
 
@@ -327,6 +353,7 @@ file sealed class CountingUnitOfWork : IUnitOfWork
 
     public IOrderRepository Orders => throw new NotSupportedException();
     public ITicketAvailabilityRepository TicketAvailabilities => throw new NotSupportedException();
+    public IEventScheduleRepository EventSnapshots => throw new NotSupportedException();
     public IOutbox Outbox => throw new NotSupportedException();
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default)
@@ -364,15 +391,15 @@ file sealed class StubOrderRepository(Order? order) : IOrderRepository
 
 file sealed class SpyEventScheduleRepository : IEventScheduleRepository
 {
-    public record UpsertCall(Guid EventId, DateTimeOffset From, DateTimeOffset To);
+    public record UpsertCall(Guid EventId, DateTimeOffset? From, DateTimeOffset? To, bool? IsPublished);
     public List<UpsertCall> UpsertCalls { get; } = [];
 
-    public Task<EventSchedule?> GetByEventIdAsync(Guid eventId, CancellationToken ct = default)
-        => Task.FromResult<EventSchedule?>(null);
+    public Task<EventSnapshot?> GetByEventIdAsync(Guid eventId, CancellationToken ct = default)
+        => Task.FromResult<EventSnapshot?>(null);
 
-    public Task UpsertAsync(Guid eventId, DateTimeOffset from, DateTimeOffset to, CancellationToken ct = default)
+    public Task UpsertAsync(Guid eventId, DateTimeOffset? from, DateTimeOffset? to, bool? isPublished, CancellationToken ct = default)
     {
-        UpsertCalls.Add(new(eventId, from, to));
+        UpsertCalls.Add(new(eventId, from, to, isPublished));
         return Task.CompletedTask;
     }
 }

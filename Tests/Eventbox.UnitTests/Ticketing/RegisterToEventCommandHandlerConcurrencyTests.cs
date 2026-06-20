@@ -6,6 +6,7 @@ using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
 using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
 using Eventbox.Ticketing.Domain.Enums;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
+using Eventbox.Ticketing.Domain.Entities;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
 
@@ -21,7 +22,9 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         var availability = new TicketAvailability(eventId, [ticketType]);
         var orderRepository = new InMemoryOrderRepository();
         var ticketAvailabilityRepository = new InMemoryTicketAvailabilityRepository(availability);
-        var unitOfWork = new InMemoryRegistrationUnitOfWork(orderRepository, ticketAvailabilityRepository);
+        var eventSnapshotRepository = new InMemoryEventScheduleRepository(
+            new EventSnapshot(eventId, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1), isPublished: true));
+        var unitOfWork = new InMemoryRegistrationUnitOfWork(orderRepository, ticketAvailabilityRepository, eventSnapshotRepository);
         var handler = new RegisterToEventCommandHandler(unitOfWork);
 
         var firstRequest = CreateRequest(eventId, "first@example.com");
@@ -194,14 +197,25 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         }
     }
 
+    private sealed class InMemoryEventScheduleRepository(EventSnapshot eventSnapshot) : IEventScheduleRepository
+    {
+        public Task<EventSnapshot?> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default)
+            => Task.FromResult(eventId == eventSnapshot.Id ? eventSnapshot : null);
+
+        public Task UpsertAsync(Guid eventId, DateTimeOffset? from, DateTimeOffset? to, bool? isPublished, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+    }
+
     private sealed class InMemoryRegistrationUnitOfWork(
         IOrderRepository orderRepository,
-        ITicketAvailabilityRepository ticketAvailabilityRepository) : IUnitOfWork
+        ITicketAvailabilityRepository ticketAvailabilityRepository,
+        IEventScheduleRepository eventScheduleRepository) : IUnitOfWork
     {
         private readonly InMemoryOutbox _outbox = new();
 
         public IOrderRepository Orders { get; } = orderRepository;
         public ITicketAvailabilityRepository TicketAvailabilities { get; } = ticketAvailabilityRepository;
+        public IEventScheduleRepository EventSnapshots { get; } = eventScheduleRepository;
         public IOutbox Outbox => _outbox;
         public IReadOnlyCollection<OutboxMessage> OutboxMessages => _outbox.Messages;
 

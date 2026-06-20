@@ -56,12 +56,140 @@ public class EventAggregateTests
     }
 
     [Fact]
+    public void Event_Unpublish_WhenPublishedAndInProgress_ThrowsValidationException()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Live", "live",
+            now.AddHours(-1), now.AddHours(1), null, "");
+        ev.Publish();
+
+        Assert.Throws<ValidationApiException>(() => ev.Unpublish());
+    }
+
+    [Fact]
     public void Event_Update_WhenToEqualsFrom_Throws()
     {
         var ev = CreateFutureEvent();
         var at = DateTimeOffset.UtcNow.AddDays(5);
 
         Assert.Throws<ArgumentException>(() => ev.Update("Name", at, at, null));
+    }
+
+    // --- Update From restrictions ---
+
+    [Fact]
+    public void Event_Update_WhenPublishedAndEventStarted_ChangingFrom_Throws()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Live", "live",
+            now.AddHours(-1), now.AddHours(3), null, "");
+        ev.Publish();
+
+        Assert.Throws<ArgumentException>(() =>
+            ev.Update("Live", now.AddHours(-2), now.AddHours(3), null));
+    }
+
+    [Fact]
+    public void Event_Update_WhenPublishedAndEventStarted_KeepingSameFrom_Succeeds()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var from = now.AddHours(-1);
+        var to = now.AddHours(3);
+        var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Live", "live", from, to, null, "");
+        ev.Publish();
+
+        ev.Update("Live Updated", from, to, null);
+
+        Assert.Equal("Live Updated", ev.Name);
+    }
+
+    [Fact]
+    public void Event_Update_WhenNotPublished_CanChangePastFrom()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Fest", "fest",
+            now.AddHours(-1), now.AddHours(3), null, "");
+
+        var newFrom = now.AddHours(-2);
+        ev.Update("Fest", newFrom, now.AddHours(3), null);
+
+        Assert.Equal(newFrom.ToUniversalTime(), ev.From);
+    }
+
+    // --- Update To restrictions ---
+
+    [Fact]
+    public void Event_Update_WhenPublishedAndNewToIsInPast_Throws()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Fest", "fest",
+            now.AddDays(-3), now.AddDays(1), null, "");
+        ev.Publish();
+
+        Assert.Throws<ArgumentException>(() =>
+            ev.Update("Fest", now.AddDays(-3), now.AddHours(-1), null));
+    }
+
+    [Fact]
+    public void Event_Update_WhenPublishedAndNewToIsInFuture_Succeeds()
+    {
+        var from = DateTimeOffset.UtcNow.AddDays(1);
+        var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Fest", "fest",
+            from, from.AddHours(2), null, "");
+        ev.Publish();
+
+        ev.Update("Fest", from, from.AddHours(4), null);
+
+        Assert.Equal(from.AddHours(4).ToUniversalTime(), ev.To);
+    }
+
+    [Fact]
+    public void Event_Update_WhenNotPublished_CanSetToToAPastDate()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Fest", "fest",
+            now.AddDays(-3), now.AddDays(1), null, "");
+
+        var pastTo = now.AddHours(-1);
+        ev.Update("Fest", now.AddDays(-3), pastTo, null);
+
+        Assert.Equal(pastTo.ToUniversalTime(), ev.To);
+    }
+
+    // --- Unpublish happy paths ---
+
+    [Fact]
+    public void Event_Unpublish_WhenPublishedAndEventNotYetStarted_Succeeds()
+    {
+        var ev = CreateFutureEvent();
+        ev.Publish();
+
+        ev.Unpublish();
+
+        Assert.False(ev.IsPublished);
+    }
+
+    [Fact]
+    public void Event_Unpublish_WhenPublishedAndEventAlreadyEnded_Succeeds()
+    {
+        var past = DateTimeOffset.UtcNow.AddDays(-2);
+        var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Old", "old",
+            past, past.AddHours(1), null, "");
+        ev.Publish();
+
+        ev.Unpublish();
+
+        Assert.False(ev.IsPublished);
+    }
+
+    [Fact]
+    public void Event_Unpublish_WhenAlreadyUnpublished_Succeeds()
+    {
+        var ev = CreateFutureEvent();
+
+        ev.Unpublish();
+
+        Assert.False(ev.IsPublished);
     }
 
     private static Event CreateFutureEvent()

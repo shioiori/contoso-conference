@@ -11,7 +11,7 @@ public class EventCreatedEventHandler(
 {
     public async Task HandleAsync(EventCreatedEvent @event, CancellationToken cancellationToken = default)
     {
-        await eventScheduleRepository.UpsertAsync(@event.EventId, @event.From, @event.To, cancellationToken);
+        await eventScheduleRepository.UpsertAsync(@event.EventId, @event.From, @event.To, @event.IsPublished, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

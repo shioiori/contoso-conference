@@ -60,6 +60,7 @@ namespace Eventbox.EventManagement.EventApi.Services
                 Description = eventEntity.Description,
                 From = eventEntity.From,
                 To = eventEntity.To,
+                IsPublished = eventEntity.IsPublished,
                 AccessCode = accessCode
             };
             await _unitOfWork.Outbox.AddAsync(new OutboxMessage
@@ -88,6 +89,7 @@ namespace Eventbox.EventManagement.EventApi.Services
                 Description = eventEntity.Description,
                 From = eventEntity.From,
                 To = eventEntity.To,
+                IsPublished = eventEntity.IsPublished,
             };
             await _unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
@@ -156,8 +158,6 @@ namespace Eventbox.EventManagement.EventApi.Services
             var eventPublishedEvent = new EventPublishedEvent
             {
                 EventId = Event.Id,
-                Name = Event.Name,
-                Slug = Event.Slug,
             };
             await _unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
@@ -180,8 +180,6 @@ namespace Eventbox.EventManagement.EventApi.Services
             var eventUnpublishedEvent = new EventUnpublishedEvent
             {
                 EventId = Event.Id,
-                Name = Event.Name,
-                Slug = Event.Slug,
             };
             await _unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
