@@ -15,6 +15,7 @@ Business exceptions:
 - Không thể publish nếu dates không hợp lệ.
 - Không thể publish nếu không có ticket type có thể bán.
 - Không thể publish nếu slug bị trùng.
+- Không thể unpublish khi event đang diễn ra (`From <= now <= To`); organizer phải chờ event kết thúc.
 
 ## Workflow 2: Attendee Đăng Ký Vé Trả Phí
 

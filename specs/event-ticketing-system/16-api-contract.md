@@ -114,5 +114,6 @@ Callback `status` accepts `Succeeded` or `Failed`.
 ## Notes
 
 - The current Postman collection at `postman/Event.API.postman_collection.json` mirrors this implemented contract.
+- Collection variables default to local `dotnet run` URLs. `postman/Eventbox.Docker.postman_environment.json` overrides Docker URLs; set `eventApiUrl` from `docker compose ps` because Event API uses a dynamic host port.
 - OpenAPI is mapped for Auth and Event APIs in development; Ticketing and Payment currently rely on this spec plus Postman examples.
 - Planned routes for attendee management, reporting exports, notification settings, team roles, and platform support are still product/backlog scope unless code is added.

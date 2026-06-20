@@ -23,6 +23,9 @@ Acceptance criteria:
 - Updating dates validates all ticket sales windows.
 - Audit log records before/after critical fields.
 - If event is published, attendee-facing page reflects the latest saved information.
+- Start date (From) cannot be changed to a different value once the event has started (`now >= From`) and the event is published. Keeping the same From value is allowed.
+- End date (To) cannot be changed to a past date when the event is published.
+- Ticket type sales windows (pricing phase start/end times) must always fall within the event's From–To range.
 
 ### FR-CM-003 Publish/Unpublish Event
 
@@ -34,6 +37,7 @@ Acceptance criteria:
 - Published event appears in public catalog.
 - Unpublished event is hidden from public catalog.
 - Publish/unpublish action is audit logged.
+- **Cannot unpublish** while the event is currently in progress (i.e., `From <= now <= To` and event is published). Organizer must wait until the event ends or cancel instead.
 
 ### FR-CM-004 Create Ticket Type
 
@@ -44,6 +48,7 @@ Acceptance criteria:
 - Required fields: name, eventId, quota.
 - Price, currency, sales window and per-order limit follow event defaults when not explicitly set.
 - Organizer may configure multiple ticket types with different sales windows to support selling phases such as Early Bird, Regular and Last Minute.
+- Ticket type sales window (pricing phase start/end times) must fall within the event's From–To date range.
 - Ticket appears in Tickets overview after save.
 
 ### FR-CM-005 Add Seats
