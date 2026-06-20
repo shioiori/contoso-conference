@@ -4,7 +4,7 @@ namespace Eventbox.Contracts.IntegrationEvents;
 
 public class TicketCapacityAddedEvent : IntegrationEvent
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public Guid EventId { get; set; }
     public int PreviousQuantity { get; set; }
     public int NewQuantity { get; set; }

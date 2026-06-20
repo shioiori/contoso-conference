@@ -2,7 +2,7 @@ using Eventbox.EventManagement.EventApi.Domains;
 
 namespace Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories
 {
-    public interface ITicketTypeRepository : IRepository<TicketType, int>
+    public interface ITicketTypeRepository : IRepository<TicketType, Guid>
     {
         Task<IEnumerable<TicketType>> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default);
     }

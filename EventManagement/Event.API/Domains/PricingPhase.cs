@@ -2,7 +2,7 @@ using Eventbox.EventManagement.EventApi.Domains.Common;
 
 namespace Eventbox.EventManagement.EventApi.Domains;
 
-public class PricingPhase : Entity<int>
+public class PricingPhase : Entity<Guid>
 {
     private PricingPhase()
     {
@@ -20,6 +20,7 @@ public class PricingPhase : Entity<int>
         if (startTime.HasValue && endTime.HasValue && endTime <= startTime)
             throw new ArgumentException("End time must be after start time.", nameof(endTime));
 
+        Id = Guid.NewGuid();
         Name = name.Trim();
         Price = price;
         StartTime = startTime;

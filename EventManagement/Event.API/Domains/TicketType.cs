@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Eventbox.EventManagement.EventApi.Domains
 {
     [Table("TicketType")]
-    public class TicketType : Entity<int>
+    public class TicketType : Entity<Guid>
     {
         private readonly List<PricingPhase> _pricingPhases = [];
 
@@ -70,7 +70,61 @@ namespace Eventbox.EventManagement.EventApi.Domains
             MaxPerOrder = maxPerOrder;
             Visibility = visibility;
             AccessCodeHash = string.IsNullOrWhiteSpace(accessCodeHash) ? null : accessCodeHash.Trim();
+            Id = Guid.NewGuid();
             _pricingPhases.AddRange(phases);
+        }
+
+        public void Update(
+            string name,
+            string? description,
+            int quota,
+            string currency,
+            int minPerOrder,
+            int? maxPerOrder,
+            TicketVisibility visibility,
+            string? accessCodeHash,
+            IEnumerable<PricingPhase> pricingPhases)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Ticket type name is required.", nameof(name));
+
+            if (string.IsNullOrWhiteSpace(currency))
+                throw new ArgumentException("Currency is required.", nameof(currency));
+
+            if (quota < 0)
+                throw new ArgumentOutOfRangeException(nameof(quota), "Quota cannot be negative.");
+
+            ValidateOrderLimits(minPerOrder, maxPerOrder, quota);
+            ValidateAccessPolicy(visibility, accessCodeHash);
+
+            var phases = pricingPhases.ToList();
+            if (phases.Count == 0)
+                throw new ArgumentException("At least one pricing phase is required.", nameof(pricingPhases));
+
+            EnsureNoOverlappingPricingPhases(phases);
+
+            Name = name.Trim();
+            Description = string.IsNullOrWhiteSpace(description) ? null : description.Trim();
+            Quota = quota;
+            Currency = currency.Trim().ToUpperInvariant();
+            MinPerOrder = minPerOrder;
+            MaxPerOrder = maxPerOrder;
+            Visibility = visibility;
+            AccessCodeHash = string.IsNullOrWhiteSpace(accessCodeHash) ? null : accessCodeHash.Trim();
+            _pricingPhases.Clear();
+            _pricingPhases.AddRange(phases);
+        }
+
+        public void ValidatePricingPhasesAgainstEvent(DateTimeOffset eventFrom, DateTimeOffset eventTo)
+        {
+            foreach (var phase in _pricingPhases)
+            {
+                if (phase.StartTime.HasValue && phase.StartTime < eventFrom)
+                    throw new ValidationApiException($"Pricing phase '{phase.Name}' starts before the event starts.");
+
+                if (phase.EndTime.HasValue && phase.EndTime > eventTo)
+                    throw new ValidationApiException($"Pricing phase '{phase.Name}' ends after the event ends.");
+            }
         }
 
         public void IncreaseQuota(int quantity)

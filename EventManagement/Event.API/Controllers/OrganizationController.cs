@@ -1,4 +1,5 @@
 using Eventbox.EventManagement.EventApi.Dtos;
+using Eventbox.EventManagement.EventApi.Requests;
 using Eventbox.EventManagement.EventApi.Services.Abstractions;
 using Eventbox.Shared.Exceptions;
 using Microsoft.AspNetCore.Authorization;
@@ -11,6 +12,13 @@ namespace Eventbox.EventManagement.EventApi.Controllers
     [Route("api/organizations")]
     public class OrganizationController(IOrganizationService organizationService) : ControllerBase
     {
+        [HttpGet("me")]
+        public async Task<ActionResult<IEnumerable<OrganizationDto>>> GetMyOrganizations(CancellationToken cancellationToken)
+        {
+            var organizations = await organizationService.GetMyOrganizationsAsync(cancellationToken);
+            return Ok(organizations);
+        }
+
         [HttpPost]
         public async Task<ActionResult<OrganizationDto>> Create(
             [FromBody] OrganizationDto organizationDto,
@@ -44,6 +52,26 @@ namespace Eventbox.EventManagement.EventApi.Controllers
         public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
         {
             await organizationService.Delete(id, cancellationToken);
+            return NoContent();
+        }
+
+        [HttpPost("{id:guid}/organizers")]
+        public async Task<IActionResult> AddOrganizer(
+            Guid id,
+            [FromBody] AddOrganizerRequest request,
+            CancellationToken cancellationToken)
+        {
+            await organizationService.AddOrganizerAsync(id, request.OrganizerId, cancellationToken);
+            return NoContent();
+        }
+
+        [HttpDelete("{id:guid}/organizers/{organizerId:guid}")]
+        public async Task<IActionResult> RemoveOrganizer(
+            Guid id,
+            Guid organizerId,
+            CancellationToken cancellationToken)
+        {
+            await organizationService.RemoveOrganizerAsync(id, organizerId, cancellationToken);
             return NoContent();
         }
     }

@@ -1,6 +1,7 @@
 using Eventbox.EventManagement.EventApi.Domains;
 using Eventbox.EventManagement.EventApi.Enums;
 using Eventbox.Shared.Exceptions;
+using System.Reflection;
 
 namespace Eventbox.UnitTests.EventManagement;
 
@@ -48,6 +49,7 @@ public class EventAggregateTests
         var past = DateTimeOffset.UtcNow.AddDays(-2);
         var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Old", "old",
             past, past.AddHours(1), null, "");
+        AddTicketType(ev);
 
         ev.Publish();
         ev.Unpublish();
@@ -61,6 +63,7 @@ public class EventAggregateTests
         var now = DateTimeOffset.UtcNow;
         var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Live", "live",
             now.AddHours(-1), now.AddHours(1), null, "");
+        AddTicketType(ev);
         ev.Publish();
 
         Assert.Throws<ValidationApiException>(() => ev.Unpublish());
@@ -83,9 +86,10 @@ public class EventAggregateTests
         var now = DateTimeOffset.UtcNow;
         var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Live", "live",
             now.AddHours(-1), now.AddHours(3), null, "");
+        AddTicketType(ev);
         ev.Publish();
 
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<ValidationApiException>(() =>
             ev.Update("Live", now.AddHours(-2), now.AddHours(3), null));
     }
 
@@ -96,24 +100,23 @@ public class EventAggregateTests
         var from = now.AddHours(-1);
         var to = now.AddHours(3);
         var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Live", "live", from, to, null, "");
+        AddTicketType(ev);
         ev.Publish();
 
-        ev.Update("Live Updated", from, to, null);
+        ev.Update("Live", from, now.AddHours(4), null);
 
-        Assert.Equal("Live Updated", ev.Name);
+        Assert.Equal(now.AddHours(4).ToUniversalTime(), ev.To);
     }
 
     [Fact]
-    public void Event_Update_WhenNotPublished_CanChangePastFrom()
+    public void Event_Update_WhenNotPublishedAndNewFromIsPast_Throws()
     {
         var now = DateTimeOffset.UtcNow;
         var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Fest", "fest",
             now.AddHours(-1), now.AddHours(3), null, "");
 
-        var newFrom = now.AddHours(-2);
-        ev.Update("Fest", newFrom, now.AddHours(3), null);
-
-        Assert.Equal(newFrom.ToUniversalTime(), ev.From);
+        Assert.Throws<ValidationApiException>(() =>
+            ev.Update("Fest", now.AddHours(-2), now.AddHours(3), null));
     }
 
     // --- Update To restrictions ---
@@ -124,9 +127,10 @@ public class EventAggregateTests
         var now = DateTimeOffset.UtcNow;
         var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Fest", "fest",
             now.AddDays(-3), now.AddDays(1), null, "");
+        AddTicketType(ev);
         ev.Publish();
 
-        Assert.Throws<ArgumentException>(() =>
+        Assert.Throws<ValidationApiException>(() =>
             ev.Update("Fest", now.AddDays(-3), now.AddHours(-1), null));
     }
 
@@ -136,6 +140,7 @@ public class EventAggregateTests
         var from = DateTimeOffset.UtcNow.AddDays(1);
         var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Fest", "fest",
             from, from.AddHours(2), null, "");
+        AddTicketType(ev);
         ev.Publish();
 
         ev.Update("Fest", from, from.AddHours(4), null);
@@ -144,16 +149,14 @@ public class EventAggregateTests
     }
 
     [Fact]
-    public void Event_Update_WhenNotPublished_CanSetToToAPastDate()
+    public void Event_Update_WhenNotPublishedAndEventEnded_Throws()
     {
         var now = DateTimeOffset.UtcNow;
         var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Fest", "fest",
             now.AddDays(-3), now.AddDays(1), null, "");
 
-        var pastTo = now.AddHours(-1);
-        ev.Update("Fest", now.AddDays(-3), pastTo, null);
-
-        Assert.Equal(pastTo.ToUniversalTime(), ev.To);
+        Assert.Throws<ValidationApiException>(() =>
+            ev.Update("Fest", now.AddDays(-3), now.AddHours(-1), null));
     }
 
     // --- Unpublish happy paths ---
@@ -175,6 +178,7 @@ public class EventAggregateTests
         var past = DateTimeOffset.UtcNow.AddDays(-2);
         var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Old", "old",
             past, past.AddHours(1), null, "");
+        AddTicketType(ev);
         ev.Publish();
 
         ev.Unpublish();
@@ -195,8 +199,29 @@ public class EventAggregateTests
     private static Event CreateFutureEvent()
     {
         var from = DateTimeOffset.UtcNow.AddDays(1);
-        return new Event(Guid.NewGuid(), Guid.NewGuid(), "Fest", "fest",
+        var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Fest", "fest",
             from, from.AddHours(2), null, "");
+        AddTicketType(ev);
+        return ev;
+    }
+
+    private static void AddTicketType(Event ev)
+    {
+        var ticketTypes = (List<TicketType>)typeof(Event)
+            .GetField("_ticketTypes", BindingFlags.Instance | BindingFlags.NonPublic)!
+            .GetValue(ev)!;
+
+        ticketTypes.Add(new TicketType(
+            name: "General Admission",
+            eventId: ev.Id,
+            quota: 100,
+            description: null,
+            currency: "VND",
+            minPerOrder: 1,
+            maxPerOrder: null,
+            visibility: TicketVisibility.Public,
+            accessCodeHash: null,
+            pricingPhases: [new PricingPhase("Standard", 100_000, null, null)]));
     }
 }
 

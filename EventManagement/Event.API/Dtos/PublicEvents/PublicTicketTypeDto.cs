@@ -4,7 +4,7 @@ namespace Eventbox.EventManagement.EventApi.Dtos.PublicEvents;
 
 public class PublicTicketTypeDto
 {
-    public int Id { get; init; }
+    public Guid Id { get; init; }
     public string Name { get; init; } = "";
     public string? Description { get; init; }
     public int Quota { get; init; }
@@ -17,7 +17,7 @@ public class PublicTicketTypeDto
 
 public class PublicPricingPhaseDto
 {
-    public int Id { get; init; }
+    public Guid Id { get; init; }
     public string Name { get; init; } = "";
     public decimal Price { get; init; }
     public DateTimeOffset? StartTime { get; init; }

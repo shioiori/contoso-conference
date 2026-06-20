@@ -8,6 +8,7 @@ namespace Eventbox.EventManagement.EventApi.Application.Abstractions
         IEventRepository Events { get; }
         ITicketTypeRepository TicketTypes { get; }
         IOrganizationRepository Organizations { get; }
+        IOrganizationMemberRepository OrganizationMembers { get; }
         IOutbox Outbox { get; }
         Task<int> SaveChangesAsync(CancellationToken cancellationToken = default);
     }

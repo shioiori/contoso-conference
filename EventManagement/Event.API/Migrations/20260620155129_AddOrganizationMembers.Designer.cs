@@ -3,6 +3,7 @@ using System;
 using Eventbox.EventManagement.EventApi.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Eventbox.EventManagement.EventApi.Migrations
 {
     [DbContext(typeof(EventDbContext))]
-    partial class EventDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260620155129_AddOrganizationMembers")]
+    partial class AddOrganizationMembers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -121,8 +124,11 @@ namespace Eventbox.EventManagement.EventApi.Migrations
 
             modelBuilder.Entity("Eventbox.EventManagement.EventApi.Domains.TicketType", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AccessCodeHash")
                         .HasMaxLength(256)
@@ -231,9 +237,11 @@ namespace Eventbox.EventManagement.EventApi.Migrations
 
                     b.OwnsMany("Eventbox.EventManagement.EventApi.Domains.PricingPhase", "PricingPhases", b1 =>
                         {
-                            b1.Property<Guid>("Id")
+                            b1.Property<int>("Id")
                                 .ValueGeneratedOnAdd()
-                                .HasColumnType("uuid");
+                                .HasColumnType("integer");
+
+                            NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b1.Property<int>("Id"));
 
                             b1.Property<string>("CreatedBy")
                                 .HasColumnType("text");
@@ -256,8 +264,8 @@ namespace Eventbox.EventManagement.EventApi.Migrations
                             b1.Property<DateTimeOffset?>("StartTime")
                                 .HasColumnType("timestamp with time zone");
 
-                            b1.Property<Guid>("TicketTypeId")
-                                .HasColumnType("uuid");
+                            b1.Property<int>("TicketTypeId")
+                                .HasColumnType("integer");
 
                             b1.Property<string>("UpdatedBy")
                                 .HasColumnType("text");

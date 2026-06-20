@@ -6,9 +6,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
 {
-    public class TicketTypeRepository(EventDbContext dbContext) : BaseRepository<EventDbContext, TicketType, int>(dbContext), ITicketTypeRepository
+    public class TicketTypeRepository(EventDbContext dbContext) : BaseRepository<EventDbContext, TicketType, Guid>(dbContext), ITicketTypeRepository
     {
-        public new async Task<TicketType?> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+        public new async Task<TicketType?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
             => await dbContext.TicketTypes
                 .Include(s => s.PricingPhases)
                 .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);

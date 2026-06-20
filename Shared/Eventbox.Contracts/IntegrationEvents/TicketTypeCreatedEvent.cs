@@ -4,7 +4,7 @@ namespace Eventbox.Contracts.IntegrationEvents;
 
 public class TicketTypeCreatedEvent : IntegrationEvent
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public Guid EventId { get; set; }
     public string Name { get; set; } = "";
     public string? Description { get; set; }
@@ -19,7 +19,7 @@ public class TicketTypeCreatedEvent : IntegrationEvent
 
 public class TicketTypePricingPhaseSnapshot
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string Name { get; set; } = "";
     public decimal Price { get; set; }
     public DateTimeOffset? StartTime { get; set; }

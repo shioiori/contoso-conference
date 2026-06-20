@@ -14,6 +14,7 @@ builder.Services.AddEventboxMediatRAuditLogging();
 
 TypeAdapterConfig.GlobalSettings.Apply(new EventMappingConfig());
 
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddDatabase(builder.Configuration);
 builder.Services.AddApplicationServices();
 builder.Services.AddMessaging(builder.Configuration);

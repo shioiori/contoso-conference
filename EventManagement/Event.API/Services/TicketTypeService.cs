@@ -12,7 +12,7 @@ namespace Eventbox.EventManagement.EventApi.Services
 {
     public class TicketTypeService(IUnitOfWork unitOfWork) : ITicketTypeService
     {
-        public async Task<TicketType?> GetByIdAsync(Guid organizationId, Guid eventId, int id, CancellationToken cancellationToken = default)
+        public async Task<TicketType?> GetByIdAsync(Guid organizationId, Guid eventId, Guid id, CancellationToken cancellationToken = default)
         {
             await EnsureEventBelongsToOrganizationAsync(organizationId, eventId, cancellationToken);
             var ticketType = await unitOfWork.TicketTypes.GetByIdAsync(id, cancellationToken);
@@ -27,9 +27,12 @@ namespace Eventbox.EventManagement.EventApi.Services
 
         public async Task<TicketType> CreateAsync(Guid organizationId, TicketType ticketType, CancellationToken cancellationToken = default)
         {
-            await EnsureEventBelongsToOrganizationAsync(organizationId, ticketType.EventId, cancellationToken);
+            var eventEntity = await EnsureEventBelongsToOrganizationAsync(organizationId, ticketType.EventId, cancellationToken);
+            ticketType.ValidatePricingPhasesAgainstEvent(eventEntity.From, eventEntity.To);
 
             await unitOfWork.TicketTypes.AddAsync(ticketType, cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+
             var ticketTypeCreatedEvent = new TicketTypeCreatedEvent
             {
                 Id = ticketType.Id,
@@ -63,7 +66,35 @@ namespace Eventbox.EventManagement.EventApi.Services
             return ticketType;
         }
 
-        public async Task<TicketType> AddCapacityAsync(Guid organizationId, Guid eventId, int ticketTypeId, int quantity, CancellationToken cancellationToken = default)
+        public async Task<TicketType> UpdateAsync(Guid organizationId, Guid eventId, Guid ticketTypeId, TicketType updated, CancellationToken cancellationToken = default)
+        {
+            var eventEntity = await EnsureEventBelongsToOrganizationAsync(organizationId, eventId, cancellationToken);
+
+            if (DateTimeOffset.UtcNow >= eventEntity.From)
+                throw new ConflictException("Cannot edit ticket types after the event has started.");
+
+            var ticketType = await unitOfWork.TicketTypes.GetByIdAsync(ticketTypeId, cancellationToken);
+            if (ticketType is null || ticketType.EventId != eventId)
+                throw new NotFoundException("TicketType", ticketTypeId);
+
+            ticketType.Update(
+                updated.Name,
+                updated.Description,
+                updated.Quota,
+                updated.Currency,
+                updated.MinPerOrder,
+                updated.MaxPerOrder,
+                updated.Visibility,
+                updated.AccessCodeHash,
+                updated.PricingPhases);
+
+            ticketType.ValidatePricingPhasesAgainstEvent(eventEntity.From, eventEntity.To);
+
+            await unitOfWork.SaveChangesAsync(cancellationToken);
+            return ticketType;
+        }
+
+        public async Task<TicketType> AddCapacityAsync(Guid organizationId, Guid eventId, Guid ticketTypeId, int quantity, CancellationToken cancellationToken = default)
         {
             await EnsureEventBelongsToOrganizationAsync(organizationId, eventId, cancellationToken);
 
@@ -95,9 +126,9 @@ namespace Eventbox.EventManagement.EventApi.Services
             return ticketType;
         }
 
-        private async Task EnsureEventBelongsToOrganizationAsync(Guid organizationId, Guid eventId, CancellationToken cancellationToken)
+        private async Task<Event> EnsureEventBelongsToOrganizationAsync(Guid organizationId, Guid eventId, CancellationToken cancellationToken)
         {
-            _ = await unitOfWork.Events.GetByOrganizationAsync(
+            return await unitOfWork.Events.GetByOrganizationAsync(
                     organizationId,
                     eventId,
                     includeTicketTypes: false,
@@ -106,7 +137,7 @@ namespace Eventbox.EventManagement.EventApi.Services
                 ?? throw new NotFoundException($"Event '{eventId}' was not found in organization '{organizationId}'.");
         }
 
-        public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)
+        public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
         {
             var ticketType = await unitOfWork.TicketTypes.GetByIdAsync(id, cancellationToken)
                 ?? throw new NotFoundException("TicketType", id);

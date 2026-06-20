@@ -4,6 +4,6 @@ namespace Eventbox.Contracts.IntegrationEvents;
 
 public class TicketTypeDeletedEvent : IntegrationEvent
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public Guid EventId { get; set; }
 }

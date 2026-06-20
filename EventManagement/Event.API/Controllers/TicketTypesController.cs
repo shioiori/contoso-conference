@@ -1,3 +1,4 @@
+using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
 using Eventbox.EventManagement.EventApi.Dtos;
 using Eventbox.EventManagement.EventApi.Domains;
 using Eventbox.EventManagement.EventApi.Requests;
@@ -6,6 +7,9 @@ using Eventbox.Shared.Exceptions;
 using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Eventbox.EventManagement.EventApi.Controllers
 {
@@ -15,10 +19,30 @@ namespace Eventbox.EventManagement.EventApi.Controllers
     public class TicketTypesController : ControllerBase
     {
         private readonly ITicketTypeService _ticketTypeService;
+        private readonly IOrganizationMemberRepository _memberRepository;
 
-        public TicketTypesController(ITicketTypeService ticketTypeService)
+        public TicketTypesController(ITicketTypeService ticketTypeService, IOrganizationMemberRepository memberRepository)
         {
             _ticketTypeService = ticketTypeService;
+            _memberRepository = memberRepository;
+        }
+
+        private static string? HashAccessCode(string? accessCode)
+        {
+            if (string.IsNullOrWhiteSpace(accessCode)) return null;
+            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(accessCode.Trim()));
+            return Convert.ToHexString(bytes).ToLowerInvariant();
+        }
+
+        private async Task EnsureMemberAsync(Guid organizationId, CancellationToken cancellationToken)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdStr, out var userId))
+                throw new ForbiddenApiException("Access denied.");
+
+            var isMember = await _memberRepository.ExistsAsync(organizationId, userId, cancellationToken);
+            if (!isMember)
+                throw new ForbiddenApiException("You are not a member of this organization.");
         }
 
         [HttpGet]
@@ -27,6 +51,7 @@ namespace Eventbox.EventManagement.EventApi.Controllers
             Guid eventId,
             CancellationToken cancellationToken)
         {
+            await EnsureMemberAsync(organizationId, cancellationToken);
             var ticketTypes = await _ticketTypeService.GetByEventIdAsync(organizationId, eventId, cancellationToken);
             return Ok(ticketTypes.Adapt<IEnumerable<TicketTypeDto>>());
         }
@@ -38,6 +63,7 @@ namespace Eventbox.EventManagement.EventApi.Controllers
             [FromBody] CreateTicketTypeRequest request,
             CancellationToken cancellationToken)
         {
+            await EnsureMemberAsync(organizationId, cancellationToken);
             var ticketType = new TicketType(
                 request.Name,
                 eventId,
@@ -47,7 +73,7 @@ namespace Eventbox.EventManagement.EventApi.Controllers
                 request.MinPerOrder,
                 request.MaxPerOrder,
                 request.Visibility,
-                request.AccessCodeHash,
+                HashAccessCode(request.AccessCode),
                 request.PricingPhases.Select(phase => new PricingPhase(
                     phase.Name,
                     phase.Price,
@@ -58,51 +84,56 @@ namespace Eventbox.EventManagement.EventApi.Controllers
             return CreatedAtAction(nameof(GetByEvent), new { organizationId, eventId = ticketType.EventId }, ticketType.Adapt<TicketTypeDto>());
         }
 
-        [HttpPatch("{ticketTypeId}")]
+        [HttpPut("{ticketTypeId:guid}")]
         public async Task<ActionResult<TicketTypeDto>> Update(
             Guid organizationId,
             Guid eventId,
-            string ticketTypeId,
+            Guid ticketTypeId,
+            [FromBody] UpdateTicketTypeRequest request,
             CancellationToken cancellationToken)
         {
-            if (!int.TryParse(ticketTypeId, out var id))
-                throw new NotFoundException("TicketType", ticketTypeId);
+            await EnsureMemberAsync(organizationId, cancellationToken);
 
-            var ticketType = await _ticketTypeService.GetByIdAsync(organizationId, eventId, id, cancellationToken);
-            if (ticketType is null)
-                throw new NotFoundException("TicketType", id);
+            var stub = new TicketType(
+                request.Name,
+                eventId,
+                request.Quota,
+                request.Description,
+                request.Currency,
+                request.MinPerOrder,
+                request.MaxPerOrder,
+                request.Visibility,
+                HashAccessCode(request.AccessCode),
+                request.PricingPhases.Select(p => new PricingPhase(p.Name, p.Price, p.StartTime, p.EndTime)));
 
+            var ticketType = await _ticketTypeService.UpdateAsync(organizationId, eventId, ticketTypeId, stub, cancellationToken);
             return Ok(ticketType.Adapt<TicketTypeDto>());
         }
 
-        [HttpPost("{ticketTypeId}/capacity")]
+        [HttpPost("{ticketTypeId:guid}/capacity")]
         public async Task<ActionResult<TicketTypeDto>> AddCapacity(
             Guid organizationId,
             Guid eventId,
-            string ticketTypeId,
+            Guid ticketTypeId,
             [FromBody] AddCapacityRequest request,
             CancellationToken cancellationToken)
         {
-            if (!int.TryParse(ticketTypeId, out var id))
-                throw new NotFoundException("TicketType", ticketTypeId);
-
-            var ticketType = await _ticketTypeService.AddCapacityAsync(organizationId, eventId, id, request.Quantity, cancellationToken);
+            await EnsureMemberAsync(organizationId, cancellationToken);
+            var ticketType = await _ticketTypeService.AddCapacityAsync(organizationId, eventId, ticketTypeId, request.Quantity, cancellationToken);
             return Ok(ticketType.Adapt<TicketTypeDto>());
         }
 
-        [HttpGet("{ticketTypeId}/availability")]
+        [HttpGet("{ticketTypeId:guid}/availability")]
         public async Task<ActionResult<TicketTypeDto>> GetAvailability(
             Guid organizationId,
             Guid eventId,
-            string ticketTypeId,
+            Guid ticketTypeId,
             CancellationToken cancellationToken)
         {
-            if (!int.TryParse(ticketTypeId, out var id))
-                throw new NotFoundException("TicketType", ticketTypeId);
-
-            var ticketType = await _ticketTypeService.GetByIdAsync(organizationId, eventId, id, cancellationToken);
+            await EnsureMemberAsync(organizationId, cancellationToken);
+            var ticketType = await _ticketTypeService.GetByIdAsync(organizationId, eventId, ticketTypeId, cancellationToken);
             if (ticketType is null)
-                throw new NotFoundException("TicketType", id);
+                throw new NotFoundException("TicketType", ticketTypeId);
 
             return Ok(ticketType.Adapt<TicketTypeDto>());
         }

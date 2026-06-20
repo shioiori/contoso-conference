@@ -1,3 +1,4 @@
+using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
 using Eventbox.EventManagement.EventApi.Dtos;
 using Eventbox.EventManagement.EventApi.Dtos.OrganizerEvents;
 using Eventbox.EventManagement.EventApi.Requests;
@@ -6,6 +7,7 @@ using Eventbox.Shared.Exceptions;
 using Mapster;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Eventbox.EventManagement.EventApi.Controllers
 {
@@ -15,10 +17,23 @@ namespace Eventbox.EventManagement.EventApi.Controllers
     public class OrganizerEventsController : ControllerBase
     {
         private readonly IOrganizerEventService _eventService;
+        private readonly IOrganizationMemberRepository _memberRepository;
 
-        public OrganizerEventsController(IOrganizerEventService eventService)
+        public OrganizerEventsController(IOrganizerEventService eventService, IOrganizationMemberRepository memberRepository)
         {
             _eventService = eventService;
+            _memberRepository = memberRepository;
+        }
+
+        private async Task EnsureMemberAsync(Guid organizationId, CancellationToken cancellationToken)
+        {
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdStr, out var userId))
+                throw new ForbiddenApiException("Access denied.");
+
+            var isMember = await _memberRepository.ExistsAsync(organizationId, userId, cancellationToken);
+            if (!isMember)
+                throw new ForbiddenApiException("You are not a member of this organization.");
         }
 
         [HttpGet]
@@ -27,6 +42,7 @@ namespace Eventbox.EventManagement.EventApi.Controllers
             [FromQuery] OrganizerEventSearchDto searchDto,
             CancellationToken cancellationToken)
         {
+            await EnsureMemberAsync(organizationId, cancellationToken);
             searchDto.OrganizationId = organizationId;
             var Events = await _eventService.SearchAsync(searchDto, cancellationToken);
             return Ok(Events.Adapt<IEnumerable<EventDto>>());
@@ -38,6 +54,7 @@ namespace Eventbox.EventManagement.EventApi.Controllers
             [FromBody] CreateEventRequest request,
             CancellationToken cancellationToken)
         {
+            await EnsureMemberAsync(organizationId, cancellationToken);
             var Event = await _eventService.CreateAsync(
                 organizationId,
                 request.Name,
@@ -53,6 +70,7 @@ namespace Eventbox.EventManagement.EventApi.Controllers
         [HttpGet("{id:guid}")]
         public async Task<ActionResult<EventDto>> GetById(Guid organizationId, Guid id, CancellationToken cancellationToken)
         {
+            await EnsureMemberAsync(organizationId, cancellationToken);
             var Event = await _eventService.GetByIdAsync(organizationId, id, cancellationToken);
             if (Event is null)
                 throw new NotFoundException("Event", id);
@@ -67,6 +85,7 @@ namespace Eventbox.EventManagement.EventApi.Controllers
             [FromBody] UpdateEventRequest request,
             CancellationToken cancellationToken)
         {
+            await EnsureMemberAsync(organizationId, cancellationToken);
             var Event = await _eventService.UpdateAsync(
                 organizationId,
                 id,
@@ -82,6 +101,7 @@ namespace Eventbox.EventManagement.EventApi.Controllers
         [HttpGet("{id:guid}/publish-readiness")]
         public async Task<ActionResult<EventDto>> GetPublishReadiness(Guid organizationId, Guid id, CancellationToken cancellationToken)
         {
+            await EnsureMemberAsync(organizationId, cancellationToken);
             var Event = await _eventService.GetPublicReadiness(organizationId, id, cancellationToken);
             if (Event is null)
                 throw new ValidationApiException("Event is not ready to publish.");
@@ -96,6 +116,7 @@ namespace Eventbox.EventManagement.EventApi.Controllers
             [FromBody] SetVisibilityRequest request,
             CancellationToken cancellationToken)
         {
+            await EnsureMemberAsync(organizationId, cancellationToken);
             await _eventService.PublishedAsync(organizationId, id, cancellationToken);
             return NoContent();
         }
@@ -107,6 +128,7 @@ namespace Eventbox.EventManagement.EventApi.Controllers
             [FromBody] SetVisibilityRequest request,
             CancellationToken cancellationToken)
         {
+            await EnsureMemberAsync(organizationId, cancellationToken);
             await _eventService.UnpublishedAsync(organizationId, id, cancellationToken);
             return NoContent();
         }

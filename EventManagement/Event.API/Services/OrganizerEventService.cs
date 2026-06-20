@@ -128,15 +128,7 @@ namespace Eventbox.EventManagement.EventApi.Services
             var Event = await _unitOfWork.Events.GetByOrganizationAsync(organizationId, id, includeTicketTypes: true, asNoTracking: true, cancellationToken: cancellationToken)
                 ?? throw new NotFoundException("Event", id);
 
-            if (!string.IsNullOrWhiteSpace(Event.Name) &&
-                !string.IsNullOrWhiteSpace(Event.Slug) &&
-                Event.To > Event.From &&
-                Event.TicketTypes.Any())
-            {
-                return Event.Adapt<OrganizerEventDto>();
-            }
-
-            return null;
+            return Event.IsReadyToPublish ? Event.Adapt<OrganizerEventDto>() : null;
         }
 
         public async Task PublishedAsync(Guid organizationId, Guid id, CancellationToken cancellationToken = default)
@@ -144,17 +136,10 @@ namespace Eventbox.EventManagement.EventApi.Services
             var Event = await _unitOfWork.Events.GetByOrganizationAsync(organizationId, id, includeTicketTypes: true, asNoTracking: false, cancellationToken: cancellationToken)
                 ?? throw new NotFoundException("Event", id);
 
-            if (!string.IsNullOrWhiteSpace(Event.Name) &&
-                !string.IsNullOrWhiteSpace(Event.Slug) &&
-                Event.To > Event.From &&
-                Event.TicketTypes.Any())
-            {
-                Event.Publish();
-            }
-            else
-            {
-                throw new ValidationApiException("Event is not ready to publish.");
-            }
+            var wasPublished = Event.IsPublished;
+            Event.Publish(); // throws ValidationApiException if not ready
+            if (wasPublished) return;
+
             var eventPublishedEvent = new EventPublishedEvent
             {
                 EventId = Event.Id,
@@ -176,7 +161,10 @@ namespace Eventbox.EventManagement.EventApi.Services
             var Event = await _unitOfWork.Events.GetByOrganizationAsync(organizationId, id, asNoTracking: false, cancellationToken: cancellationToken)
                 ?? throw new NotFoundException("Event", id);
 
+            var wasPublished = Event.IsPublished;
             Event.Unpublish();
+            if (!wasPublished) return;
+
             var eventUnpublishedEvent = new EventUnpublishedEvent
             {
                 EventId = Event.Id,

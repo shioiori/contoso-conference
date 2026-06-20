@@ -11,7 +11,7 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Configurations
             builder.HasKey(s => s.Id);
 
             builder.Property(s => s.Id)
-                .ValueGeneratedOnAdd();
+                .ValueGeneratedNever();
 
             builder.Property(s => s.Name)
                 .IsRequired()

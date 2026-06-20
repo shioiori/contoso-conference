@@ -12,6 +12,7 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure
 
         public DbSet<Event> Events => Set<Event>();
         public DbSet<Organization> Organizations => Set<Organization>();
+        public DbSet<OrganizationMember> OrganizationMembers => Set<OrganizationMember>();
         public DbSet<TicketType> TicketTypes => Set<TicketType>();
         public DbSet<OutboxMessage> Outboxes => Set<OutboxMessage>();
 

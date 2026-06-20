@@ -4,7 +4,7 @@ using Eventbox.EventManagement.EventApi.Enums;
 
 namespace Eventbox.EventManagement.EventApi.Requests;
 
-public class CreateTicketTypeRequest
+public class UpdateTicketTypeRequest
 {
     [Required, MinLength(1), MaxLength(200)]
     public string Name { get; set; } = "";

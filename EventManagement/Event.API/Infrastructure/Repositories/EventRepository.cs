@@ -92,7 +92,7 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
             if (dateFrom.HasValue)
             {
                 var from = new DateTimeOffset(dateFrom.Value.ToDateTime(TimeOnly.MinValue), TimeSpan.Zero);
-                events = events.Where(c => c.To >= from);
+                events = events.Where(c => c.From >= from);
             }
 
             if (dateTo.HasValue)
