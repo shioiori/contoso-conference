@@ -13,7 +13,7 @@ namespace Eventbox.Ticketing.Infrastructure.Repositories
                     .ThenInclude(t => t.PricingPhases)
                 .FirstOrDefaultAsync(s => s.Id == EventId, cancellationToken);
 
-        public async Task<bool> TryReserveAsync(Guid eventId, int ticketTypeId, int quantity, CancellationToken cancellationToken = default)
+        public async Task<bool> TryReserveAsync(Guid eventId, Guid ticketTypeId, int quantity, CancellationToken cancellationToken = default)
         {
             var affectedRows = await dbContext.Set<TicketTypeAvailability>()
                 .Where(ticketType =>

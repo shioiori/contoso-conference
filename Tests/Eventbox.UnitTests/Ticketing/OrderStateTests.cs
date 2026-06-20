@@ -178,7 +178,7 @@ public class OrderStateTests
             Guid.NewGuid(),
             userId: null,
             new PersonalInfo("Buyer", "buyer@example.com"),
-            [new OrderItem(ticketTypeId: 1, quantity: 1)],
+            [new OrderItem(ticketTypeId: Guid.NewGuid(), quantity: 1)],
             accessCode: "TESTCODE",
             expiresAt);
 }

@@ -9,7 +9,7 @@ namespace Eventbox.Ticketing.Application.Commands
         public Guid? UserId { get; init; }
         public string Name { get; init; } = string.Empty;
         public string Email { get; init; } = string.Empty;
-        public int TicketTypeId { get; init; }
+        public Guid TicketTypeId { get; init; }
         public int Quantity { get; init; } = 1;
         public string? AccessCode { get; init; }
     }

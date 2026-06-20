@@ -11,25 +11,25 @@ namespace Eventbox.Ticketing.Domain.Entities.OrderAggregate
         {
         }
 
-        public OrderItem(int ticketTypeId, int quantity)
-            : this(ticketTypeId, 1, $"Ticket type {ticketTypeId}", "Default", 0, "VND", quantity)
+        public OrderItem(Guid ticketTypeId, int quantity)
+            : this(ticketTypeId, Guid.NewGuid(), $"Ticket type {ticketTypeId}", "Default", 0, "VND", quantity)
         {
         }
 
         public OrderItem(
-            int ticketTypeId,
-            int pricingPhaseId,
+            Guid ticketTypeId,
+            Guid pricingPhaseId,
             string ticketTypeName,
             string pricingPhaseName,
             decimal unitPrice,
             string currency,
             int quantity)
         {
-            if (ticketTypeId <= 0)
-                throw new ArgumentOutOfRangeException(nameof(ticketTypeId), "Ticket type id must be greater than zero.");
+            if (ticketTypeId == Guid.Empty)
+                throw new ArgumentException("Ticket type id must not be empty.", nameof(ticketTypeId));
 
-            if (pricingPhaseId <= 0)
-                throw new ArgumentOutOfRangeException(nameof(pricingPhaseId), "Pricing phase id must be greater than zero.");
+            if (pricingPhaseId == Guid.Empty)
+                throw new ArgumentException("Pricing phase id must not be empty.", nameof(pricingPhaseId));
 
             if (string.IsNullOrWhiteSpace(ticketTypeName))
                 throw new ArgumentException("Ticket type name is required.", nameof(ticketTypeName));
@@ -56,8 +56,8 @@ namespace Eventbox.Ticketing.Domain.Entities.OrderAggregate
             Quantity = quantity;
         }
 
-        public int TicketTypeId { get; private set; }
-        public int PricingPhaseId { get; private set; }
+        public Guid TicketTypeId { get; private set; }
+        public Guid PricingPhaseId { get; private set; }
         public string TicketTypeName { get; private set; } = "";
         public string PricingPhaseName { get; private set; } = "";
         public decimal UnitPrice { get; private set; }

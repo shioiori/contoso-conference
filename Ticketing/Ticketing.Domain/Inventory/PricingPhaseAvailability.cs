@@ -7,10 +7,10 @@ public class PricingPhaseAvailability
         Name = default!;
     }
 
-    public PricingPhaseAvailability(int id, string name, decimal price, DateTimeOffset? startTime, DateTimeOffset? endTime)
+    public PricingPhaseAvailability(Guid id, string name, decimal price, DateTimeOffset? startTime, DateTimeOffset? endTime)
     {
-        if (id <= 0)
-            throw new ArgumentOutOfRangeException(nameof(id), "Pricing phase id must be greater than zero.");
+        if (id == Guid.Empty)
+            throw new ArgumentException("Pricing phase id must not be empty.", nameof(id));
 
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Pricing phase name is required.", nameof(name));
@@ -28,7 +28,7 @@ public class PricingPhaseAvailability
         EndTime = endTime;
     }
 
-    public int Id { get; private set; }
+    public Guid Id { get; private set; }
     public string Name { get; private set; }
     public decimal Price { get; private set; }
     public DateTimeOffset? StartTime { get; private set; }

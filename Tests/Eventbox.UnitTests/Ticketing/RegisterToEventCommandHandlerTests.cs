@@ -31,7 +31,7 @@ public class RegisterToEventCommandHandlerTests
             EventId = eventId,
             Name = "Buyer",
             Email = "buyer@example.com",
-            TicketTypeId = 1,
+            TicketTypeId = Guid.NewGuid(),
             Quantity = 1
         };
 
@@ -84,7 +84,7 @@ public class RegisterToEventCommandHandlerTests
     private sealed class NullTicketAvailabilityRepository : ITicketAvailabilityRepository
     {
         public Task<TicketAvailability?> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default) => Task.FromResult<TicketAvailability?>(null);
-        public Task<bool> TryReserveAsync(Guid eventId, int ticketTypeId, int quantity, CancellationToken cancellationToken = default) => Task.FromResult(false);
+        public Task<bool> TryReserveAsync(Guid eventId, Guid ticketTypeId, int quantity, CancellationToken cancellationToken = default) => Task.FromResult(false);
         public Task<TicketAvailability?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<TicketAvailability?>(null);
         public Task AddAsync(TicketAvailability entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
         public void Update(TicketAvailability entity) { }

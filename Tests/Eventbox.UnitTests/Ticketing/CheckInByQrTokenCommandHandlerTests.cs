@@ -17,7 +17,7 @@ public class CheckInByQrTokenCommandHandlerTests
     {
         var eventId = Guid.NewGuid();
         const string qrToken = "qr-token";
-        var ticket = new Ticket(eventId, ticketTypeId: 7, sequenceNumber: 1);
+        var ticket = new Ticket(eventId, ticketTypeId: Guid.NewGuid(), sequenceNumber: 1);
         ticket.AssignQrToken(qrToken, qrToken);
 
         var orderRepository = new InMemoryOrderRepository(ticket);

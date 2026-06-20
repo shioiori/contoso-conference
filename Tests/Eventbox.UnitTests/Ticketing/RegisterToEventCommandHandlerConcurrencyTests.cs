@@ -18,7 +18,8 @@ public class RegisterToEventCommandHandlerConcurrencyTests
     public async Task RegisterToEventAsync_WhenTwoRequestsRaceForLastTicket_DoesNotOversell()
     {
         var eventId = Guid.NewGuid();
-        var ticketType = new TicketTypeAvailability(ticketTypeId: 7, quantity: 1);
+        var ticketTypeId = Guid.NewGuid();
+        var ticketType = new TicketTypeAvailability(ticketTypeId, quantity: 1);
         var availability = new TicketAvailability(eventId, [ticketType]);
         var orderRepository = new InMemoryOrderRepository();
         var ticketAvailabilityRepository = new InMemoryTicketAvailabilityRepository(availability);
@@ -27,8 +28,8 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         var unitOfWork = new InMemoryRegistrationUnitOfWork(orderRepository, ticketAvailabilityRepository, eventSnapshotRepository);
         var handler = new RegisterToEventCommandHandler(unitOfWork);
 
-        var firstRequest = CreateRequest(eventId, "first@example.com");
-        var secondRequest = CreateRequest(eventId, "second@example.com");
+        var firstRequest = CreateRequest(eventId, ticketTypeId, "first@example.com");
+        var secondRequest = CreateRequest(eventId, ticketTypeId, "second@example.com");
 
         var attempts = await Task.WhenAll(
             CaptureResult(() => handler.Handle(firstRequest, CancellationToken.None)),
@@ -42,13 +43,13 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         Assert.Equal(1, unitOfWork.SaveCount);
     }
 
-    private static RegisterToEventCommand CreateRequest(Guid eventId, string email)
+    private static RegisterToEventCommand CreateRequest(Guid eventId, Guid ticketTypeId, string email)
         => new()
         {
             EventId = eventId,
             Name = "Buyer",
             Email = email,
-            TicketTypeId = 7,
+            TicketTypeId = ticketTypeId,
             Quantity = 1
         };
 
@@ -71,7 +72,7 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         public Task<TicketAvailability?> GetByEventIdAsync(Guid EventId, CancellationToken cancellationToken = default)
             => Task.FromResult(EventId == availability.Id ? availability : null);
 
-        public Task<bool> TryReserveAsync(Guid eventId, int ticketTypeId, int quantity, CancellationToken cancellationToken = default)
+        public Task<bool> TryReserveAsync(Guid eventId, Guid ticketTypeId, int quantity, CancellationToken cancellationToken = default)
         {
             lock (_gate)
             {

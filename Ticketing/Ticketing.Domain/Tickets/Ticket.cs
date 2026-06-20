@@ -11,13 +11,13 @@ public class Ticket : Entity<Guid>
         QrTokenHash = null!;
     }
 
-    public Ticket(Guid eventId, int ticketTypeId, int sequenceNumber)
+    public Ticket(Guid eventId, Guid ticketTypeId, int sequenceNumber)
     {
         if (eventId == Guid.Empty)
             throw new ArgumentException("Event id is required.", nameof(eventId));
 
-        if (ticketTypeId <= 0)
-            throw new ArgumentOutOfRangeException(nameof(ticketTypeId), "Ticket type id must be greater than zero.");
+        if (ticketTypeId == Guid.Empty)
+            throw new ArgumentException("Ticket type id must not be empty.", nameof(ticketTypeId));
 
         if (sequenceNumber <= 0)
             throw new ArgumentOutOfRangeException(nameof(sequenceNumber), "Sequence number must be greater than zero.");
@@ -30,7 +30,7 @@ public class Ticket : Entity<Guid>
     }
 
     public Guid EventId { get; private set; }
-    public int TicketTypeId { get; private set; }
+    public Guid TicketTypeId { get; private set; }
     public int SequenceNumber { get; private set; }
     public TicketState TicketState { get; private set; }
     public string? QrToken { get; private set; }

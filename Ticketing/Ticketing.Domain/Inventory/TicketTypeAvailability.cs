@@ -12,7 +12,7 @@ namespace Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate
             Currency = default!;
         }
 
-        public TicketTypeAvailability(int ticketTypeId, int quantity)
+        public TicketTypeAvailability(Guid ticketTypeId, int quantity)
             : this(
                 ticketTypeId,
                 $"Ticket type {ticketTypeId}",
@@ -22,12 +22,12 @@ namespace Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate
                 null,
                 TicketVisibility.Public,
                 null,
-                [new PricingPhaseAvailability(1, "Default", 0, null, null)])
+                [new PricingPhaseAvailability(Guid.NewGuid(), "Default", 0, null, null)])
         {
         }
 
         public TicketTypeAvailability(
-            int id,
+            Guid id,
             string name,
             int quantity,
             string currency,
@@ -37,8 +37,8 @@ namespace Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate
             string? accessCodeHash,
             IEnumerable<PricingPhaseAvailability> pricingPhases)
         {
-            if (id <= 0)
-                throw new ArgumentOutOfRangeException(nameof(id), "Ticket type id must be greater than zero.");
+            if (id == Guid.Empty)
+                throw new ArgumentException("Ticket type id must not be empty.", nameof(id));
 
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Ticket type name is required.", nameof(name));
@@ -77,7 +77,7 @@ namespace Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate
             _pricingPhases.AddRange(phases);
         }
 
-        public int Id { get; private set; }
+        public Guid Id { get; private set; }
         public string Name { get; private set; }
         public int Quantity { get; private set; }
         public int Remaining { get; private set; }

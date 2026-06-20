@@ -21,16 +21,16 @@ namespace Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate
 
         public IReadOnlyCollection<TicketTypeAvailability> TicketTypes => _ticketTypes.AsReadOnly();
 
-        public TicketTypeAvailability GetTicketType(int ticketTypeId)
+        public TicketTypeAvailability GetTicketType(Guid ticketTypeId)
             => _ticketTypes.FirstOrDefault(s => s.Id == ticketTypeId)
                 ?? throw new KeyNotFoundException($"Ticket type '{ticketTypeId}' was not found.");
 
-        public void Reserve(int ticketTypeId, int quantity)
+        public void Reserve(Guid ticketTypeId, int quantity)
         {
             GetTicketType(ticketTypeId).Reserve(quantity);
         }
 
-        public void Release(int ticketTypeId, int quantity)
+        public void Release(Guid ticketTypeId, int quantity)
         {
             GetTicketType(ticketTypeId).Release(quantity);
         }
@@ -43,12 +43,12 @@ namespace Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate
             _ticketTypes.Add(ticketType);
         }
 
-        public void IncreaseTicketTypeQuantity(int ticketTypeId, int quantity)
+        public void IncreaseTicketTypeQuantity(Guid ticketTypeId, int quantity)
         {
             GetTicketType(ticketTypeId).IncreaseQuantity(quantity);
         }
 
-        public void RemoveTicketType(int ticketTypeId)
+        public void RemoveTicketType(Guid ticketTypeId)
         {
             var ticketType = _ticketTypes.FirstOrDefault(s => s.Id == ticketTypeId);
             if (ticketType is not null)

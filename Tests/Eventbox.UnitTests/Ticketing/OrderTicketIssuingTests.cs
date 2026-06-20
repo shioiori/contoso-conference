@@ -8,11 +8,12 @@ public class OrderTicketIssuingTests
     [Fact]
     public void Confirm_WhenOrderHasMultipleQuantity_IssuesOneTicketPerQuantity()
     {
+        var ticketTypeId = Guid.NewGuid();
         var order = new Order(
             Guid.NewGuid(),
             userId: null,
             new PersonalInfo("Buyer", "buyer@example.com"),
-            [new OrderItem(ticketTypeId: 7, quantity: 3)],
+            [new OrderItem(ticketTypeId, quantity: 3)],
             accessCode: "ABC12345",
             DateTimeOffset.UtcNow.AddMinutes(10));
 
@@ -21,7 +22,7 @@ public class OrderTicketIssuingTests
         Assert.True(changed);
         Assert.Equal(OrderState.Confirmed, order.OrderState);
         Assert.Equal(3, order.Tickets.Count);
-        Assert.All(order.Tickets, ticket => Assert.Equal(7, ticket.TicketTypeId));
+        Assert.All(order.Tickets, ticket => Assert.Equal(ticketTypeId, ticket.TicketTypeId));
         Assert.Equal([1, 2, 3], order.Tickets.Select(ticket => ticket.SequenceNumber));
     }
 
