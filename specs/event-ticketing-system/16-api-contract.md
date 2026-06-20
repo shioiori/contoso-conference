@@ -29,7 +29,8 @@ Docker compose defaults:
 | --- | --- | --- | --- |
 | `POST` | `/api/auth/customers/register` | Public | `email`, `password`, `name` |
 | `POST` | `/api/auth/organizers/register` | Public | `email`, `password`, `name` |
-| `POST` | `/api/auth/login` | Public | `email`, `password`, `keepLoggedIn` |
+| `POST` | `/api/auth/customers/login` | Public | `email`, `password`, `keepLoggedIn` |
+| `POST` | `/api/auth/organizers/login` | Public | `email`, `password`, `keepLoggedIn` |
 | `GET` | `/api/auth/me` | Bearer | none |
 
 Successful auth responses return:
@@ -52,24 +53,27 @@ Public routes:
 | `GET` | `/api/public/events` | `status`, `q`, `dateFrom`, `dateTo`, `startDate`, `endDate`, `page`, `pageSize` |
 | `GET` | `/api/public/events/{slug}` | `accessCode` |
 
-Organizer routes require `account_type = Organizer`.
+Organization management routes require `account_type = Organizer`. Event routes under `/api/organizations/{organizationId}/events` additionally require the organizer to be a member of that organization (added via `POST /api/organizations/{id}/organizers`).
 
 | Method | Route | Body |
 | --- | --- | --- |
+| `GET` | `/api/organizations/me` | none — returns organizations the current organizer belongs to |
 | `POST` | `/api/organizations` | `id` optional, `name` |
 | `GET` | `/api/organizations/{id}` | none |
 | `PUT` | `/api/organizations/{id}` | `id` optional, `name` |
 | `DELETE` | `/api/organizations/{id}` | none |
+| `POST` | `/api/organizations/{id}/organizers` | `organizerId` (Guid of the organizer account) |
+| `DELETE` | `/api/organizations/{id}/organizers/{organizerId}` | none |
 | `GET` | `/api/organizations/{organizationId}/events` | query: `status`, `q`, `dateFrom`, `dateTo`, `page`, `pageSize` |
 | `POST` | `/api/organizations/{organizationId}/events` | `name`, `slug`, `from`, `to`, `summary` optional, `description` optional |
 | `GET` | `/api/organizations/{organizationId}/events/{id}` | none |
-| `PUT` | `/api/organizations/{organizationId}/events/{id}` | `name`, `from`, `to`, `summary` optional, `description` optional |
+| `PUT` | `/api/organizations/{organizationId}/events/{id}` | `name`, `from`, `to`, `summary` optional, `description` optional — if active (`from ≤ now < to`), only `to` can be changed and must be in the future; editing ended events is not allowed |
 | `GET` | `/api/organizations/{organizationId}/events/{id}/publish-readiness` | none |
 | `POST` | `/api/organizations/{organizationId}/events/{id}/publish` | `isPublished` is accepted but ignored by the current action |
 | `POST` | `/api/organizations/{organizationId}/events/{id}/unpublish` | `isPublished` is accepted but ignored by the current action |
 | `GET` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types` | none |
 | `POST` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types` | `name`, `description`, `quota`, `currency`, `minPerOrder`, `maxPerOrder`, `visibility`, `accessCodeHash`, `pricingPhases` |
-| `PATCH` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types/{ticketTypeId}` | none in current code; returns the ticket type |
+| `PUT` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types/{ticketTypeId}` | `name`, `description`, `quota`, `currency`, `minPerOrder`, `maxPerOrder`, `visibility`, `accessCodeHash`, `pricingPhases` — only allowed before event start (`now < event.From`) |
 | `POST` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types/{ticketTypeId}/capacity` | `quantity` |
 | `GET` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types/{ticketTypeId}/availability` | none |
 
