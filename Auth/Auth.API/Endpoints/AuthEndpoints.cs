@@ -21,19 +21,15 @@ public static class AuthEndpoints
             UserManager<ApplicationUser> userManager,
             TokenService tokenService) => RegisterAsync(request, AccountType.Organizer, userManager, tokenService));
 
-        app.MapPost("/api/auth/login", async (
+        app.MapPost("/api/auth/customers/login", (
             LoginRequest request,
             UserManager<ApplicationUser> userManager,
-            TokenService tokenService) =>
-        {
-            var user = await userManager.FindByEmailAsync(request.Email);
-            if (user is null || !await userManager.CheckPasswordAsync(user, request.Password))
-            {
-                throw new UnauthorizedApiException("Invalid email or password.");
-            }
+            TokenService tokenService) => LoginAsync(request, AccountType.Customer, userManager, tokenService));
 
-            return Results.Ok(tokenService.CreateToken(user));
-        });
+        app.MapPost("/api/auth/organizers/login", (
+            LoginRequest request,
+            UserManager<ApplicationUser> userManager,
+            TokenService tokenService) => LoginAsync(request, AccountType.Organizer, userManager, tokenService));
 
         app.MapGet("/api/auth/me", (HttpContext httpContext) =>
         {
@@ -50,6 +46,21 @@ public static class AuthEndpoints
         }).RequireAuthorization();
 
         return app;
+    }
+
+    private static async Task<IResult> LoginAsync(
+        LoginRequest request,
+        AccountType accountType,
+        UserManager<ApplicationUser> userManager,
+        TokenService tokenService)
+    {
+        var user = await userManager.FindByEmailAsync(request.Email);
+        if (user is null || !await userManager.CheckPasswordAsync(user, request.Password) || user.AccountType != accountType)
+        {
+            throw new UnauthorizedApiException("Invalid email or password.");
+        }
+
+        return Results.Ok(tokenService.CreateToken(user));
     }
 
     private static async Task<IResult> RegisterAsync(
