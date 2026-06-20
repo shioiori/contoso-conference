@@ -7,10 +7,11 @@ services:
       - ConnectionStrings__Database=Host=eventdb;Port=5432;Database=AuthDb;Username=postgres;Password=Eventbox123!
       - Jwt__Issuer=Eventbox.Auth
       - Jwt__Audience=Eventbox.Api
-      - Jwt__SigningKey=eventbox-development-signing-key-change-me
+      - Jwt__SigningKey=U7Sknna8IkRyXFXqDrXK6ON+GPq39d0QWAK2gEX0mljWQUFkqiaVGL2Wn0nPIHiT
+      - Jwt__ExpirationMinutes=120
     ports:
-      - "8082:8080"
-      - "8083:8081"
+      - "8000:8080"
+      - "8001:8081"
     depends_on:
       - eventdb
     volumes:
@@ -52,10 +53,10 @@ services:
       - RabbitMQ__Password=guest
       - Jwt__Issuer=Eventbox.Auth
       - Jwt__Audience=Eventbox.Api
-      - Jwt__SigningKey=eventbox-development-signing-key-change-me
+      - Jwt__SigningKey=U7Sknna8IkRyXFXqDrXK6ON+GPq39d0QWAK2gEX0mljWQUFkqiaVGL2Wn0nPIHiT
     ports:
-      - "8080"
-      - "8081"
+      - "8010:8080"
+      - "8011:8081"
     depends_on:
       - eventdb
       - rabbitmq
@@ -71,31 +72,32 @@ services:
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings__Database=Host=eventdb;Port=5432;Database=PaymentDb;Username=postgres;Password=Eventbox123!
-      - RegistrationApi__BaseUrl=http://Ticketingapi:8080
+      - TicketingApi__BaseUrl=http://ticketing.api:8080
+      - Payment__ProviderSignature=4JEqxrjVAk9I8euMZA44kTkNxW6pPO7ZRfREeTupUiE=
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Port=5672
       - RabbitMQ__VirtualHost=/
       - RabbitMQ__Username=guest
       - RabbitMQ__Password=guest
     ports:
-      - "5193:8080"
-      - "7016:8081"
+      - "8030:8080"
+      - "8031:8081"
     depends_on:
       - eventdb
       - rabbitmq
-      - Ticketingapi
+      - ticketing.api
     volumes:
       - ${APPDATA}/Microsoft/UserSecrets:/home/app/.microsoft/usersecrets:ro
       - ${APPDATA}/Microsoft/UserSecrets:/root/.microsoft/usersecrets:ro
       - ${APPDATA}/ASP.NET/Https:/home/app/.aspnet/https:ro
       - ${APPDATA}/ASP.NET/Https:/root/.aspnet/https:ro
 
-  Ticketingapi:
+  ticketing.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_HTTP_PORTS=8080
       - ASPNETCORE_HTTPS_PORTS=8081
-      - ConnectionStrings__Database=Host=eventdb;Port=5432;Database=RegistrationDb;Username=postgres;Password=Eventbox123!
+      - ConnectionStrings__Database=Host=eventdb;Port=5432;Database=TicketingDb;Username=postgres;Password=Eventbox123!
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Port=5672
       - RabbitMQ__VirtualHost=/
@@ -103,10 +105,10 @@ services:
       - RabbitMQ__Password=guest
       - Jwt__Issuer=Eventbox.Auth
       - Jwt__Audience=Eventbox.Api
-      - Jwt__SigningKey=eventbox-development-signing-key-change-me
+      - Jwt__SigningKey=U7Sknna8IkRyXFXqDrXK6ON+GPq39d0QWAK2gEX0mljWQUFkqiaVGL2Wn0nPIHiT
     ports:
-      - "5151:8080"
-      - "7291:8081"
+      - "8020:8080"
+      - "8021:8081"
     depends_on:
       - eventdb
       - rabbitmq

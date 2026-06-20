@@ -998,19 +998,19 @@
   "variable": [
     {
       "key": "authApiUrl",
-      "value": "http://localhost:8082"
+      "value": "http://localhost:8000"
     },
     {
       "key": "eventApiUrl",
-      "value": "http://localhost:5145"
+      "value": "http://localhost:8010"
     },
     {
       "key": "ticketingApiUrl",
-      "value": "http://localhost:5151"
+      "value": "http://localhost:8020"
     },
     {
       "key": "paymentApiUrl",
-      "value": "http://localhost:5193"
+      "value": "http://localhost:8030"
     },
     {
       "key": "organizerToken",

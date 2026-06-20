@@ -10,10 +10,19 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "IntergrationEventType",
-                table: "Outboxes",
-                newName: "IntegrationEventType");
+            migrationBuilder.Sql(
+                """
+                DO $$
+                BEGIN
+                    IF EXISTS (
+                        SELECT 1 FROM information_schema.columns
+                        WHERE table_name = 'Outboxes'
+                          AND column_name = 'IntergrationEventType'
+                    ) THEN
+                        ALTER TABLE "Outboxes" RENAME COLUMN "IntergrationEventType" TO "IntegrationEventType";
+                    END IF;
+                END $$;
+                """);
         }
 
         /// <inheritdoc />

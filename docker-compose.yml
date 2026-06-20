@@ -17,11 +17,11 @@ services:
       context: .
       dockerfile: Payment/Payment.API/Dockerfile
 
-  Ticketingapi:
-    image: ${DOCKER_REGISTRY-}registrationapi
+  ticketing.api:
+    image: ${DOCKER_REGISTRY-}ticketingapi
     build:
       context: .
-      dockerfile: Registration/TicketingAPI/Dockerfile
+      dockerfile: Ticketing/Ticketing.API/Dockerfile
 
   eventdb:
     image: postgres:16

@@ -13,12 +13,6 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Payment/Payment.API/Payment.API.csproj", "Payment/Payment.API/"]
-COPY ["EventBus/EventBus.RabbitMQ/EventBus.RabbitMQ.csproj", "EventBus/EventBus.RabbitMQ/"]
-COPY ["EventBus/EventBus.Core/EventBus.Core.csproj", "EventBus/EventBus.Core/"]
-COPY ["Shared/Eventbox.Shared/Eventbox.Shared.csproj", "Shared/Eventbox.Shared/"]
-COPY ["Payment/Payment.Core/Payment.Core.csproj", "Payment/Payment.Core/"]
-COPY ["Shared/Eventbox.Contracts/Eventbox.Contracts.csproj", "Shared/Eventbox.Contracts/"]
-COPY ["Payment/Payment.Infrastructure/Payment.Infrastructure.csproj", "Payment/Payment.Infrastructure/"]
 RUN dotnet restore "./Payment/Payment.API/Payment.API.csproj"
 COPY . .
 WORKDIR "/src/Payment/Payment.API"

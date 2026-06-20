@@ -10,6 +10,7 @@ FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["Auth/Auth.API/Auth.API.csproj", "Auth/Auth.API/"]
+COPY ["Shared/Eventbox.Shared/Eventbox.Shared.csproj", "Shared/Eventbox.Shared/"]
 RUN dotnet restore "./Auth/Auth.API/Auth.API.csproj"
 COPY . .
 WORKDIR "/src/Auth/Auth.API"

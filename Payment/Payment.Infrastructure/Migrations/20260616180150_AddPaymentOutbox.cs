@@ -16,7 +16,7 @@ namespace Eventbox.Payment.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    IntergrationEventType = table.Column<string>(type: "text", nullable: false),
+                    IntegrationEventType = table.Column<string>(type: "text", nullable: false),
                     Content = table.Column<string>(type: "text", nullable: false),
                     OccurredOnUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     ProcessedOnUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
