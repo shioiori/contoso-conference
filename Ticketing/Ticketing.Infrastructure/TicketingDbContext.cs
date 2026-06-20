@@ -15,7 +15,7 @@ namespace Eventbox.Ticketing.Infrastructure
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
         public DbSet<Ticket> Tickets => Set<Ticket>();
-        public DbSet<EventSnapshot> EventSchedules => Set<EventSnapshot>();
+        public DbSet<EventSnapshot> EventSnapshots => Set<EventSnapshot>();
         public DbSet<TicketAvailability> TicketAvailabilities => Set<TicketAvailability>();
         public DbSet<OutboxMessage> Outboxes { get; set; }
 
@@ -61,11 +61,12 @@ namespace Eventbox.Ticketing.Infrastructure
                 ticket.HasIndex(t => new { t.EventId, t.TicketState });
             });
 
-            modelBuilder.Entity<EventSnapshot>(schedule =>
+            modelBuilder.Entity<EventSnapshot>(snapshot =>
             {
-                schedule.HasKey(e => e.Id);
-                schedule.Property(e => e.From).IsRequired();
-                schedule.Property(e => e.To).IsRequired();
+                snapshot.ToTable("EventSnapshots");
+                snapshot.HasKey(e => e.Id);
+                snapshot.Property(e => e.From).IsRequired();
+                snapshot.Property(e => e.To).IsRequired();
             });
 
             modelBuilder.Entity<TicketAvailability>(ticketAvailability =>

@@ -11,7 +11,7 @@ namespace Eventbox.Ticketing.Application.Commands;
 
 public class CheckInByQrTokenCommandHandler(
     IOrderRepository orderRepository,
-    IEventScheduleRepository eventScheduleRepository,
+    IEventSnapshotRepository eventSnapshotRepository,
     IQrTokenHasher qrTokenHasher,
     IEventBus eventBus) : IRequestHandler<CheckInByQrTokenCommand, CheckInResultDto>
 {
@@ -33,8 +33,8 @@ public class CheckInByQrTokenCommandHandler(
         if (ticket.TicketState == TicketState.Cancelled)
             return new CheckInResultDto(CheckInAttemptResult.Cancelled, "Ticket has been cancelled.", ticket.Adapt<TicketDto>());
 
-        var schedule = await eventScheduleRepository.GetByEventIdAsync(request.EventId, cancellationToken);
-        if (schedule is not null && !schedule.IsCheckInAvailable(now))
+        var snapshot = await eventSnapshotRepository.GetByEventIdAsync(request.EventId, cancellationToken);
+        if (snapshot is not null && !snapshot.IsCheckInAvailable(now))
             return new CheckInResultDto(CheckInAttemptResult.CheckInUnavailable, "Check-in is not available for this event time window.", ticket.Adapt<TicketDto>());
 
         if (ticket.CheckedInAt.HasValue)

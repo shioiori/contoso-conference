@@ -21,10 +21,10 @@ public class CheckInByQrTokenCommandHandlerTests
         ticket.AssignQrToken(qrToken, qrToken);
 
         var orderRepository = new InMemoryOrderRepository(ticket);
-        var scheduleRepository = new InMemoryEventScheduleRepository(
+        var snapshotRepository = new InMemoryEventSnapshotRepository(
             new EventSnapshot(eventId, DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddMinutes(5), isPublished: true));
         var eventBus = new RecordingEventBus();
-        var handler = new CheckInByQrTokenCommandHandler(orderRepository, scheduleRepository, new PassthroughQrTokenHasher(), eventBus);
+        var handler = new CheckInByQrTokenCommandHandler(orderRepository, snapshotRepository, new PassthroughQrTokenHasher(), eventBus);
 
         var command = new CheckInByQrTokenCommand
         {
@@ -69,10 +69,10 @@ public class CheckInByQrTokenCommandHandlerTests
             => Task.CompletedTask;
     }
 
-    private sealed class InMemoryEventScheduleRepository(EventSnapshot schedule) : IEventScheduleRepository
+    private sealed class InMemoryEventSnapshotRepository(EventSnapshot snapshot) : IEventSnapshotRepository
     {
         public Task<EventSnapshot?> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default)
-            => Task.FromResult(eventId == schedule.Id ? schedule : null);
+            => Task.FromResult(eventId == snapshot.Id ? snapshot : null);
 
         public Task UpsertAsync(Guid eventId, DateTimeOffset? from, DateTimeOffset? to, bool? isPublished, CancellationToken cancellationToken = default)
             => Task.CompletedTask;

@@ -2,36 +2,36 @@ using Eventbox.Ticketing.Domain.Entities;
 
 namespace Eventbox.UnitTests.Ticketing;
 
-public class EventScheduleTests
+public class EventSnapshotTests
 {
     private static readonly DateTimeOffset From = new(2025, 6, 1, 9, 0, 0, TimeSpan.Zero);
     private static readonly DateTimeOffset To   = new(2025, 6, 1, 21, 0, 0, TimeSpan.Zero);
 
-    private static EventSnapshot CreateSchedule() => new(Guid.NewGuid(), From, To, isPublished: true);
+    private static EventSnapshot CreateSnapshot() => new(Guid.NewGuid(), From, To, isPublished: true);
 
     [Fact]
     public void IsCheckInAvailable_WhenExactlyAtFrom_ReturnsTrue()
     {
-        Assert.True(CreateSchedule().IsCheckInAvailable(From));
+        Assert.True(CreateSnapshot().IsCheckInAvailable(From));
     }
 
     [Fact]
     public void IsCheckInAvailable_WhenExactlyAtTo_ReturnsTrue()
     {
         // To is inclusive
-        Assert.True(CreateSchedule().IsCheckInAvailable(To));
+        Assert.True(CreateSnapshot().IsCheckInAvailable(To));
     }
 
     [Fact]
     public void IsCheckInAvailable_WhenOneSecondBeforeFrom_ReturnsFalse()
     {
-        Assert.False(CreateSchedule().IsCheckInAvailable(From.AddSeconds(-1)));
+        Assert.False(CreateSnapshot().IsCheckInAvailable(From.AddSeconds(-1)));
     }
 
     [Fact]
     public void IsCheckInAvailable_WhenOneSecondAfterTo_ReturnsFalse()
     {
-        Assert.False(CreateSchedule().IsCheckInAvailable(To.AddSeconds(1)));
+        Assert.False(CreateSnapshot().IsCheckInAvailable(To.AddSeconds(1)));
     }
 
     [Fact]
@@ -39,11 +39,11 @@ public class EventScheduleTests
     {
         var mid = From + TimeSpan.FromTicks((To - From).Ticks / 2);
 
-        Assert.True(CreateSchedule().IsCheckInAvailable(mid));
+        Assert.True(CreateSnapshot().IsCheckInAvailable(mid));
     }
 
     [Fact]
-    public void EventSchedule_WhenToEqualsFrom_Throws()
+    public void EventSnapshot_WhenToEqualsFrom_Throws()
     {
         var at = From;
 
@@ -51,7 +51,7 @@ public class EventScheduleTests
     }
 
     [Fact]
-    public void EventSchedule_WhenToIsBeforeFrom_Throws()
+    public void EventSnapshot_WhenToIsBeforeFrom_Throws()
     {
         Assert.Throws<ArgumentException>(() => new EventSnapshot(Guid.NewGuid(), To, From, isPublished: true));
     }

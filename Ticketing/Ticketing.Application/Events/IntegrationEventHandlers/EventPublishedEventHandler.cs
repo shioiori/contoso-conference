@@ -6,12 +6,12 @@ using Eventbox.Ticketing.Application.Abstractions.Repositories;
 namespace Eventbox.Ticketing.Application.IntegrationEventHandlers;
 
 public class EventPublishedEventHandler(
-    IEventScheduleRepository eventScheduleRepository,
+    IEventSnapshotRepository eventSnapshotRepository,
     IUnitOfWork unitOfWork) : IIntegrationEventHandler<EventPublishedEvent>
 {
     public async Task HandleAsync(EventPublishedEvent @event, CancellationToken cancellationToken = default)
     {
-        await eventScheduleRepository.UpsertAsync(@event.EventId, null, null, true, cancellationToken);
+        await eventSnapshotRepository.UpsertAsync(@event.EventId, null, null, true, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

@@ -43,7 +43,7 @@ public class RegisterToEventCommandHandlerTests
     {
         public IOrderRepository Orders => new NullOrderRepository();
         public ITicketAvailabilityRepository TicketAvailabilities => new NullTicketAvailabilityRepository();
-        public IEventScheduleRepository EventSnapshots => new StubEventScheduleRepository(snapshot);
+        public IEventSnapshotRepository EventSnapshots => new StubEventSnapshotRepository(snapshot);
         public IOutbox Outbox => new NullOutbox();
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -53,7 +53,7 @@ public class RegisterToEventCommandHandlerTests
             => operation();
     }
 
-    private sealed class StubEventScheduleRepository(EventSnapshot snapshot) : IEventScheduleRepository
+    private sealed class StubEventSnapshotRepository(EventSnapshot snapshot) : IEventSnapshotRepository
     {
         public Task<EventSnapshot?> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default)
             => Task.FromResult(eventId == snapshot.Id ? snapshot : (EventSnapshot?)null);

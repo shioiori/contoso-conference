@@ -85,7 +85,7 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EventSchedules");
+                    b.ToTable("EventSnapshots");
                 });
 
             modelBuilder.Entity("Eventbox.Ticketing.Domain.Entities.OrderAggregate.Order", b =>

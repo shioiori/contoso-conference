@@ -22,7 +22,7 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         var availability = new TicketAvailability(eventId, [ticketType]);
         var orderRepository = new InMemoryOrderRepository();
         var ticketAvailabilityRepository = new InMemoryTicketAvailabilityRepository(availability);
-        var eventSnapshotRepository = new InMemoryEventScheduleRepository(
+        var eventSnapshotRepository = new InMemoryEventSnapshotRepository(
             new EventSnapshot(eventId, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1), isPublished: true));
         var unitOfWork = new InMemoryRegistrationUnitOfWork(orderRepository, ticketAvailabilityRepository, eventSnapshotRepository);
         var handler = new RegisterToEventCommandHandler(unitOfWork);
@@ -197,7 +197,7 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         }
     }
 
-    private sealed class InMemoryEventScheduleRepository(EventSnapshot eventSnapshot) : IEventScheduleRepository
+    private sealed class InMemoryEventSnapshotRepository(EventSnapshot eventSnapshot) : IEventSnapshotRepository
     {
         public Task<EventSnapshot?> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default)
             => Task.FromResult(eventId == eventSnapshot.Id ? eventSnapshot : null);
@@ -209,13 +209,13 @@ public class RegisterToEventCommandHandlerConcurrencyTests
     private sealed class InMemoryRegistrationUnitOfWork(
         IOrderRepository orderRepository,
         ITicketAvailabilityRepository ticketAvailabilityRepository,
-        IEventScheduleRepository eventScheduleRepository) : IUnitOfWork
+        IEventSnapshotRepository eventSnapshotRepository) : IUnitOfWork
     {
         private readonly InMemoryOutbox _outbox = new();
 
         public IOrderRepository Orders { get; } = orderRepository;
         public ITicketAvailabilityRepository TicketAvailabilities { get; } = ticketAvailabilityRepository;
-        public IEventScheduleRepository EventSnapshots { get; } = eventScheduleRepository;
+        public IEventSnapshotRepository EventSnapshots { get; } = eventSnapshotRepository;
         public IOutbox Outbox => _outbox;
         public IReadOnlyCollection<OutboxMessage> OutboxMessages => _outbox.Messages;
 

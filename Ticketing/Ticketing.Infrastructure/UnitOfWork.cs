@@ -14,13 +14,13 @@ public class UnitOfWork : IUnitOfWork
         _dbContext = dbContext;
         Orders = new OrderRepository(dbContext);
         TicketAvailabilities = new TicketAvailabilityRepository(dbContext);
-        EventSnapshots = new EventScheduleRepository(dbContext);
+        EventSnapshots = new EventSnapshotRepository(dbContext);
         Outbox = new OutboxRepository(dbContext);
     }
 
     public IOrderRepository Orders { get; }
     public ITicketAvailabilityRepository TicketAvailabilities { get; }
-    public IEventScheduleRepository EventSnapshots { get; }
+    public IEventSnapshotRepository EventSnapshots { get; }
     public IOutbox Outbox { get; }
 
     public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

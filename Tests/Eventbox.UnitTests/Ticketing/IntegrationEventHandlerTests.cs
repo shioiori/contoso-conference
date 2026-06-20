@@ -93,16 +93,16 @@ public class PaymentConfirmedIntegrationEventHandlerTests
 // EventCreatedEventHandler & EventUpdatedEventHandler
 // ════════════════════════════════════════════════════════════════════════
 
-public class EventScheduleHandlerTests
+public class EventSnapshotHandlerTests
 {
     private static readonly Guid EventId = Guid.NewGuid();
     private static readonly DateTimeOffset From = new(2025, 9, 1, 8, 0, 0, TimeSpan.Zero);
     private static readonly DateTimeOffset To = new(2025, 9, 1, 22, 0, 0, TimeSpan.Zero);
 
     [Fact]
-    public async Task EventCreated_UpsertsScheduleAndSaves()
+    public async Task EventCreated_UpsertsSnapshotAndSaves()
     {
-        var repo = new SpyEventScheduleRepository();
+        var repo = new SpyEventSnapshotRepository();
         var uow = new CountingUnitOfWork();
         var handler = new EventCreatedEventHandler(repo, uow);
 
@@ -113,9 +113,9 @@ public class EventScheduleHandlerTests
     }
 
     [Fact]
-    public async Task EventUpdated_UpsertsScheduleWithNewDatesAndSaves()
+    public async Task EventUpdated_UpsertsSnapshotWithNewDatesAndSaves()
     {
-        var repo = new SpyEventScheduleRepository();
+        var repo = new SpyEventSnapshotRepository();
         var uow = new CountingUnitOfWork();
         var handler = new EventUpdatedEventHandler(repo, uow);
         var newFrom = From.AddDays(7);
@@ -130,7 +130,7 @@ public class EventScheduleHandlerTests
     [Fact]
     public async Task EventPublished_UpdatesPublishedStateAndSaves()
     {
-        var repo = new SpyEventScheduleRepository();
+        var repo = new SpyEventSnapshotRepository();
         var uow = new CountingUnitOfWork();
         var handler = new EventPublishedEventHandler(repo, uow);
 
@@ -143,7 +143,7 @@ public class EventScheduleHandlerTests
     [Fact]
     public async Task EventUnpublished_UpdatesPublishedStateAndSaves()
     {
-        var repo = new SpyEventScheduleRepository();
+        var repo = new SpyEventSnapshotRepository();
         var uow = new CountingUnitOfWork();
         var handler = new EventUnpublishedEventHandler(repo, uow);
 
@@ -154,10 +154,10 @@ public class EventScheduleHandlerTests
     }
 
     [Fact]
-    public async Task EventCreated_WhenReceivedTwice_UpsertsScheduleTwice()
+    public async Task EventCreated_WhenReceivedTwice_UpsertsSnapshotTwice()
     {
         // Upserting is idempotent by design; handler should call UpsertAsync each time
-        var repo = new SpyEventScheduleRepository();
+        var repo = new SpyEventSnapshotRepository();
         var uow = new CountingUnitOfWork();
         var handler = new EventCreatedEventHandler(repo, uow);
         var @event = new EventCreatedEvent { EventId = EventId, From = From, To = To };
@@ -353,7 +353,7 @@ file sealed class CountingUnitOfWork : IUnitOfWork
 
     public IOrderRepository Orders => throw new NotSupportedException();
     public ITicketAvailabilityRepository TicketAvailabilities => throw new NotSupportedException();
-    public IEventScheduleRepository EventSnapshots => throw new NotSupportedException();
+    public IEventSnapshotRepository EventSnapshots => throw new NotSupportedException();
     public IOutbox Outbox => throw new NotSupportedException();
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default)
@@ -389,7 +389,7 @@ file sealed class StubOrderRepository(Order? order) : IOrderRepository
     public Task<int> TryMarkTicketCheckedInAsync(Guid tid, Guid? uid, DateTimeOffset at, CancellationToken ct = default) => Task.FromResult(0);
 }
 
-file sealed class SpyEventScheduleRepository : IEventScheduleRepository
+file sealed class SpyEventSnapshotRepository : IEventSnapshotRepository
 {
     public record UpsertCall(Guid EventId, DateTimeOffset? From, DateTimeOffset? To, bool? IsPublished);
     public List<UpsertCall> UpsertCalls { get; } = [];

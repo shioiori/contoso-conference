@@ -41,7 +41,7 @@ builder.Services.AddDbContext<TicketingDbContext>((serviceProvider, options) =>
 
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<ITicketAvailabilityRepository, TicketAvailabilityRepository>();
-builder.Services.AddScoped<IEventScheduleRepository, EventScheduleRepository>();
+builder.Services.AddScoped<IEventSnapshotRepository, EventSnapshotRepository>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IOutboxProcessorJob, OutboxProcessorJob>();
 builder.Services.AddSingleton<IQrTokenGenerator, QrTokenGenerator>();
