@@ -1,4 +1,5 @@
-using Eventbox.EventBus.RabbitMQ.Extensions;
+using Eventbox.Contracts.IntegrationEvents;
+using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.Payment.Api.Options;
 using Eventbox.Payment.Api.Services;
 using Eventbox.Payment.Core.Abstractions;
@@ -10,6 +11,7 @@ using Eventbox.Payment.Infrastructure.Persistence;
 using Eventbox.Shared.Auditing;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
+using EventBus.RabbitMQ;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Mapster;
@@ -45,7 +47,16 @@ builder.Services.AddHttpClient<IOrderAccessVerifier, TicketingOrderAccessVerifie
 {
     client.BaseAddress = new Uri(ticketingApiOptions.BaseUrl);
 });
-builder.Services.AddRabbitMqEventBus(builder.Configuration);
+
+builder.Services.Configure<RabbitMQOptions>(options =>
+{
+    builder.Configuration.GetSection("RabbitMQ").Bind(options);
+    options.Publish<PaymentConfirmedIntegrationEvent>("eventbox.payment");
+    options.Publish<PaymentFailedIntegrationEvent>("eventbox.payment");
+});
+builder.Services.AddSingleton<RabbitMQEventBus>();
+builder.Services.AddSingleton<IEventBus>(sp => sp.GetRequiredService<RabbitMQEventBus>());
+builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQEventBus>());
 
 builder.Services.AddHangfire(config =>
 {
@@ -70,8 +81,8 @@ app.UseEventboxSerilogRequestLogging();
 app.MapControllers();
 
 RecurringJob.AddOrUpdate<IOutboxProcessorJob>(
-    "Payment-outbox-processor",
+    "payment-outbox-processor",
     job => job.RunAsync(CancellationToken.None),
-    "*/30 * * * * *");
+    Cron.Minutely());
 
 app.Run();

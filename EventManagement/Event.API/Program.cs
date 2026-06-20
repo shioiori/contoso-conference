@@ -1,4 +1,5 @@
-using Eventbox.EventBus.RabbitMQ.Extensions;
+using Eventbox.Contracts.IntegrationEvents;
+using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.EventManagement.EventApi.Application.Abstractions;
 using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
 using Eventbox.EventManagement.EventApi.Infrastructure;
@@ -10,6 +11,7 @@ using Eventbox.EventManagement.Infrastructure.Jobs;
 using Eventbox.Shared.Auditing;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
+using EventBus.RabbitMQ;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Mapster;
@@ -35,7 +37,21 @@ builder.Services.AddDbContext<EventDbContext>((serviceProvider, options) =>
             serviceProvider.GetRequiredService<AuditableEntitySaveChangesInterceptor>(),
             serviceProvider.GetRequiredService<AuditSaveChangesInterceptor>()));
 
-builder.Services.AddRabbitMqEventBus(builder.Configuration);
+builder.Services.Configure<RabbitMQOptions>(options =>
+{
+    builder.Configuration.GetSection("RabbitMQ").Bind(options);
+    options.Publish<EventCreatedEvent>("eventbox.events");
+    options.Publish<EventUpdatedEvent>("eventbox.events");
+    options.Publish<EventPublishedEvent>("eventbox.events");
+    options.Publish<EventUnpublishedEvent>("eventbox.events");
+    options.Publish<TicketTypeCreatedEvent>("eventbox.ticketing");
+    options.Publish<TicketCapacityAddedEvent>("eventbox.ticketing");
+    options.Publish<TicketTypeDeletedEvent>("eventbox.ticketing");
+});
+
+builder.Services.AddSingleton<RabbitMQEventBus>();
+builder.Services.AddSingleton<IEventBus>(sp => sp.GetRequiredService<RabbitMQEventBus>());
+builder.Services.AddHostedService(sp => sp.GetRequiredService<RabbitMQEventBus>());
 
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<ITicketTypeRepository, TicketTypeRepository>();
@@ -104,7 +120,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 RecurringJob.AddOrUpdate<IOutboxProcessorJob>(
-    "Payment-outbox-processor",
+    "event-outbox-processor",
     job => job.RunAsync(CancellationToken.None),
     "*/30 * * * * *");
 

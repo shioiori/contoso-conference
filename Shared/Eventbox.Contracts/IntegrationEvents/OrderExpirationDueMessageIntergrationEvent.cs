@@ -1,12 +1,9 @@
-using Eventbox.EventBus.Core.Abstractions;
+using Eventbox.EventBus.Events;
 
 namespace Eventbox.Contracts.IntegrationEvents;
 
-public sealed class OrderExpirationDueMessageIntergrationEvent : IIntegrationEvent
+public sealed class OrderExpirationDueMessageIntergrationEvent : IntegrationEvent
 {
     public Guid OrderId { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }
-    public Guid IntegrationEventId { get; set; } = Guid.NewGuid();
-    public DateTime OccurredOn { get; set; } = DateTime.UtcNow;
-    public string EventType => GetType().Name;
 }
