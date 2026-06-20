@@ -35,6 +35,8 @@ public static class ApplicationServicesExtensions
         services.AddScoped<PaymentFailedIntegrationEventHandler>();
         services.AddScoped<EventCreatedEventHandler>();
         services.AddScoped<EventUpdatedEventHandler>();
+        services.AddScoped<EventPublishedEventHandler>();
+        services.AddScoped<EventUnpublishedEventHandler>();
         services.AddScoped<TicketTypeCreatedEventHandler>();
         services.AddScoped<TicketCapacityAddedEventHandler>();
         services.AddScoped<TicketTypeDeletedEventHandler>();

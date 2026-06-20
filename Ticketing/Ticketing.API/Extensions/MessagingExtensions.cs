@@ -15,6 +15,8 @@ public static class MessagingExtensions
             options.Subscribe<PaymentFailedIntegrationEvent>("eventbox.payment");
             options.Subscribe<EventCreatedEvent>("eventbox.events");
             options.Subscribe<EventUpdatedEvent>("eventbox.events");
+            options.Subscribe<EventPublishedEvent>("eventbox.events");
+            options.Subscribe<EventUnpublishedEvent>("eventbox.events");
             options.Subscribe<TicketTypeCreatedEvent>("eventbox.ticketing");
             options.Subscribe<TicketCapacityAddedEvent>("eventbox.ticketing");
             options.Subscribe<TicketTypeDeletedEvent>("eventbox.ticketing");

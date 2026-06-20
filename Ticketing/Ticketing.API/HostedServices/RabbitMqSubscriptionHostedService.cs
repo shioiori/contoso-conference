@@ -1,6 +1,8 @@
 using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.Ticketing.Application.IntegrationEventHandlers;
+using EventPublishedEventHandler = Eventbox.Ticketing.Application.IntegrationEventHandlers.EventPublishedEventHandler;
+using EventUnpublishedEventHandler = Eventbox.Ticketing.Application.IntegrationEventHandlers.EventUnpublishedEventHandler;
 
 namespace Eventbox.Ticketing.Api.HostedServices;
 
@@ -52,6 +54,14 @@ public sealed class RabbitMqSubscriptionHostedService : BackgroundService
         await _eventBus.SubscribeAsync<
             TicketTypeDeletedEvent,
             TicketTypeDeletedEventHandler>(stoppingToken);
+
+        await _eventBus.SubscribeAsync<
+            EventPublishedEvent,
+            EventPublishedEventHandler>(stoppingToken);
+
+        await _eventBus.SubscribeAsync<
+            EventUnpublishedEvent,
+            EventUnpublishedEventHandler>(stoppingToken);
 
         await Task.Delay(Timeout.InfiniteTimeSpan, stoppingToken);
     }

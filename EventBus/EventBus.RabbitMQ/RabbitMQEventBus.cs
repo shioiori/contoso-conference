@@ -46,7 +46,7 @@ namespace EventBus.RabbitMQ
                 exchange: mapping.Exchange,
                 routingKey: mapping.RoutingKey,
                 basicProperties: CreateBasicProperties(@event, mapping.Exchange, mapping.RoutingKey),
-                body: JsonSerializer.SerializeToUtf8Bytes(@event),
+                body: JsonSerializer.SerializeToUtf8Bytes(@event, @event.GetType()),
                 cancellationToken: cancellationToken);
         }
 
@@ -69,7 +69,7 @@ namespace EventBus.RabbitMQ
                 exchange: string.Empty,
                 routingKey: mapping.DelayQueue,
                 basicProperties: props,
-                body: JsonSerializer.SerializeToUtf8Bytes(@event),
+                body: JsonSerializer.SerializeToUtf8Bytes(@event, @event.GetType()),
                 cancellationToken: cancellationToken);
         }
 
