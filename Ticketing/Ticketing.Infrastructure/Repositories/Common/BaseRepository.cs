@@ -27,6 +27,11 @@ namespace Eventbox.Ticketing.Infrastructure.Repositories.Common
             await _dbSet.AddAsync(entity, cancellationToken);
         }
 
+        public async Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default)
+        {
+            await _dbSet.AddRangeAsync(entities, cancellationToken);
+        }
+
         public void Delete(TEntity entity)
         {
             _dbSet.Remove(entity);

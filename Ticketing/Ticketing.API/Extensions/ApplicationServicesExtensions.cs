@@ -7,6 +7,7 @@ using Eventbox.Ticketing.Infrastructure;
 using Eventbox.Ticketing.Infrastructure.Jobs;
 using Eventbox.Ticketing.Infrastructure.Repositories;
 using Eventbox.Ticketing.Infrastructure.Security;
+using Eventbox.Ticketing.Infrastructure.Tickets;
 using Eventbox.Shared.Outbox;
 
 namespace Eventbox.Ticketing.Api.Extensions;
@@ -17,6 +18,7 @@ public static class ApplicationServicesExtensions
     {
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<RegisterToEventCommand>());
         services.AddScoped<IOrderRepository, OrderRepository>();
+        services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<ITicketAvailabilityRepository, TicketAvailabilityRepository>();
         services.AddScoped<IEventSnapshotRepository, EventSnapshotRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();

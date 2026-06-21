@@ -6,17 +6,20 @@ using MediatR;
 namespace Eventbox.Ticketing.Application.Queries;
 
 public class GetOrderDetailQueryHandler(
-    IOrderRepository orderRepository)
+    IOrderRepository orderRepository,
+    ITicketRepository ticketRepository)
     : IRequestHandler<GetOrderDetailQuery, OrderDto?>
 {
     public async Task<OrderDto?> Handle(GetOrderDetailQuery request, CancellationToken cancellationToken)
     {
         var order = orderRepository
-            .Get(x => x.Id == request.OrderId, includeProperties: "OrderItems,Tickets")
+            .Get(x => x.Id == request.OrderId, includeProperties: "OrderItems")
             .FirstOrDefault();
 
         if (order is null)
             return null;
+
+        var tickets = await ticketRepository.GetByOrderIdAsync(order.Id, cancellationToken);
 
         return new OrderDto
         {
@@ -29,9 +32,9 @@ public class GetOrderDetailQueryHandler(
             Name = order.PersonalInfo.Name,
             Email = order.PersonalInfo.Email,
             Items = order.OrderItems.Adapt<IReadOnlyCollection<OrderItemDto>>(),
-            Tickets = order.Tickets
-                .OrderBy(ticket => ticket.SequenceNumber)
-                .Select(ticket => ticket.Adapt<TicketDto>())
+            Tickets = tickets
+                .OrderBy(t => t.SequenceNumber)
+                .Select(t => t.Adapt<TicketDto>())
                 .ToArray()
         };
     }

@@ -15,7 +15,6 @@ namespace Eventbox.Ticketing.Api.Endpoints
             var publicApi = app.MapGroup("api/public");
 
             publicApi.MapPost("/events/{eventId:guid}/orders", RegisterToEvent);
-            publicApi.MapPost("/order-lookup-requests", RequestOrderLookup);
             publicApi.MapGet("/self-service/orders", GetOrdersBySelfServiceToken);
 
             var customerApi = app.MapGroup("api/customer")
@@ -111,12 +110,6 @@ namespace Eventbox.Ticketing.Api.Endpoints
             }
             return Results.Ok(result);
 
-        }
-
-        public static IResult RequestOrderLookup()
-        {
-            // TODO: Queue a lookup email containing a secure self-service access link.
-            return Results.Accepted();
         }
 
         public static async Task<IResult> GetOrdersBySelfServiceToken(string token, IMediator mediator, CancellationToken cancellationToken)

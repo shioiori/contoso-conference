@@ -6,7 +6,7 @@ namespace Eventbox.UnitTests.Ticketing;
 public class OrderTicketIssuingTests
 {
     [Fact]
-    public void Confirm_WhenOrderHasMultipleQuantity_IssuesOneTicketPerQuantity()
+    public void Confirm_WhenOrderHasMultipleQuantity_ConfirmsOrder()
     {
         var ticketTypeId = Guid.NewGuid();
         var order = new Order(
@@ -21,9 +21,8 @@ public class OrderTicketIssuingTests
 
         Assert.True(changed);
         Assert.Equal(OrderState.Confirmed, order.OrderState);
-        Assert.Equal(3, order.Tickets.Count);
-        Assert.All(order.Tickets, ticket => Assert.Equal(ticketTypeId, ticket.TicketTypeId));
-        Assert.Equal([1, 2, 3], order.Tickets.Select(ticket => ticket.SequenceNumber));
+        Assert.Single(order.OrderItems);
+        Assert.Equal(3, order.OrderItems.Single().Quantity);
     }
 
     [Fact]

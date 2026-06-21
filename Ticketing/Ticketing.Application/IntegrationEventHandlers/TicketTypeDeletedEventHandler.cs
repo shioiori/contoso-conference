@@ -16,7 +16,6 @@ public class TicketTypeDeletedEventHandler(
             return;
 
         availability.RemoveTicketType(@event.Id);
-        ticketAvailabilityRepository.Update(availability);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

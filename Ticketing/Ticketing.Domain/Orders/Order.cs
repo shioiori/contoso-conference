@@ -1,15 +1,13 @@
-using Eventbox.Ticketing.Domain.SeedWork;
 using Eventbox.Ticketing.Domain.Enums;
+using Eventbox.Ticketing.Domain.SeedWork;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace Eventbox.Ticketing.Domain.Entities.OrderAggregate
 {
     public class Order : Aggregate<Guid>
     {
         private readonly List<OrderItem> _orderItems = new();
-        private readonly List<Ticket> _tickets = new();
 
         private Order()
         {
@@ -43,7 +41,6 @@ namespace Eventbox.Ticketing.Domain.Entities.OrderAggregate
         public PersonalInfo PersonalInfo { get; private set; }
 
         public IReadOnlyCollection<OrderItem> OrderItems => _orderItems.AsReadOnly();
-        public IReadOnlyCollection<Ticket> Tickets => _tickets.AsReadOnly();
 
         public OrderState GetCurrentState(DateTimeOffset utcNow)
         {
@@ -64,7 +61,6 @@ namespace Eventbox.Ticketing.Domain.Entities.OrderAggregate
             if (ReservationExpiresAt <= DateTimeOffset.UtcNow)
                 throw new InvalidOperationException("Expired reservations cannot be confirmed.");
 
-            EnsureTicketsIssued();
             OrderState = OrderState.Confirmed;
             ReservationExpiresAt = null;
             return true;
@@ -77,11 +73,6 @@ namespace Eventbox.Ticketing.Domain.Entities.OrderAggregate
 
             if (OrderState is OrderState.Cancelled or OrderState.Expired)
                 return false;
-
-            foreach (var ticket in _tickets)
-            {
-                ticket.Cancel();
-            }
 
             OrderState = OrderState.Cancelled;
             ReservationExpiresAt = null;
@@ -108,21 +99,6 @@ namespace Eventbox.Ticketing.Domain.Entities.OrderAggregate
             OrderState = OrderState.Expired;
             ReservationExpiresAt = null;
             return true;
-        }
-
-        private void EnsureTicketsIssued()
-        {
-            if (_tickets.Count > 0)
-                return;
-
-            var sequenceNumber = 1;
-            foreach (var item in _orderItems)
-            {
-                for (var i = 0; i < item.Quantity; i++)
-                {
-                    _tickets.Add(new Ticket(EventId, item.TicketTypeId, sequenceNumber++));
-                }
-            }
         }
     }
 }

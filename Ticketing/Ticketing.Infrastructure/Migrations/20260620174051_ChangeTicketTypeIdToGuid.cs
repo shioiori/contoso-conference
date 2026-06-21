@@ -1,6 +1,6 @@
 ﻿using System;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations;
-using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -12,109 +12,57 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<Guid>(
-                name: "Id",
-                table: "TicketTypeAvailability",
-                type: "uuid",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer")
-                .OldAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+            migrationBuilder.DropForeignKey(name: "FK_PricingPhaseAvailability_TicketTypeAvailability_TicketTypeA~", table: "PricingPhaseAvailability");
 
-            migrationBuilder.AlterColumn<Guid>(
-                name: "TicketTypeId",
-                table: "Tickets",
-                type: "uuid",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer");
+            migrationBuilder.Sql("ALTER TABLE \"TicketTypeAvailability\" ALTER COLUMN \"Id\" DROP IDENTITY IF EXISTS;");
+            migrationBuilder.Sql("ALTER TABLE \"TicketTypeAvailability\" ALTER COLUMN \"Id\" TYPE uuid USING gen_random_uuid();");
 
-            migrationBuilder.AlterColumn<Guid>(
-                name: "TicketTypeAvailabilityId",
+            migrationBuilder.Sql("ALTER TABLE \"Tickets\" ALTER COLUMN \"TicketTypeId\" DROP DEFAULT;");
+            migrationBuilder.Sql("ALTER TABLE \"Tickets\" ALTER COLUMN \"TicketTypeId\" TYPE uuid USING gen_random_uuid();");
+
+            migrationBuilder.Sql("ALTER TABLE \"PricingPhaseAvailability\" ALTER COLUMN \"Id\" DROP IDENTITY IF EXISTS;");
+            migrationBuilder.Sql("ALTER TABLE \"PricingPhaseAvailability\" ALTER COLUMN \"Id\" TYPE uuid USING gen_random_uuid();");
+            migrationBuilder.Sql("ALTER TABLE \"PricingPhaseAvailability\" ALTER COLUMN \"TicketTypeAvailabilityId\" DROP DEFAULT;");
+            migrationBuilder.Sql("ALTER TABLE \"PricingPhaseAvailability\" ALTER COLUMN \"TicketTypeAvailabilityId\" TYPE uuid USING gen_random_uuid();");
+
+            migrationBuilder.Sql("ALTER TABLE \"OrderItems\" ALTER COLUMN \"TicketTypeId\" DROP DEFAULT;");
+            migrationBuilder.Sql("ALTER TABLE \"OrderItems\" ALTER COLUMN \"TicketTypeId\" TYPE uuid USING gen_random_uuid();");
+            migrationBuilder.Sql("ALTER TABLE \"OrderItems\" ALTER COLUMN \"PricingPhaseId\" DROP DEFAULT;");
+            migrationBuilder.Sql("ALTER TABLE \"OrderItems\" ALTER COLUMN \"PricingPhaseId\" TYPE uuid USING gen_random_uuid();");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_PricingPhaseAvailability_TicketTypeAvailability_TicketTypeA~",
                 table: "PricingPhaseAvailability",
-                type: "uuid",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer");
-
-            migrationBuilder.AlterColumn<Guid>(
-                name: "Id",
-                table: "PricingPhaseAvailability",
-                type: "uuid",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer")
-                .OldAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-            migrationBuilder.AlterColumn<Guid>(
-                name: "TicketTypeId",
-                table: "OrderItems",
-                type: "uuid",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer");
-
-            migrationBuilder.AlterColumn<Guid>(
-                name: "PricingPhaseId",
-                table: "OrderItems",
-                type: "uuid",
-                nullable: false,
-                oldClrType: typeof(int),
-                oldType: "integer");
+                column: "TicketTypeAvailabilityId",
+                principalTable: "TicketTypeAvailability",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<int>(
-                name: "Id",
-                table: "TicketTypeAvailability",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(Guid),
-                oldType: "uuid")
-                .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+            migrationBuilder.DropForeignKey(name: "FK_PricingPhaseAvailability_TicketTypeAvailability_TicketTypeA~", table: "PricingPhaseAvailability");
 
-            migrationBuilder.AlterColumn<int>(
-                name: "TicketTypeId",
-                table: "Tickets",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(Guid),
-                oldType: "uuid");
+            migrationBuilder.Sql("ALTER TABLE \"PricingPhaseAvailability\" ALTER COLUMN \"TicketTypeAvailabilityId\" TYPE integer USING 0;");
+            migrationBuilder.Sql("ALTER TABLE \"PricingPhaseAvailability\" ALTER COLUMN \"Id\" TYPE integer USING 0;");
+            migrationBuilder.Sql("ALTER TABLE \"PricingPhaseAvailability\" ALTER COLUMN \"Id\" ADD GENERATED BY DEFAULT AS IDENTITY;");
 
-            migrationBuilder.AlterColumn<int>(
-                name: "TicketTypeAvailabilityId",
+            migrationBuilder.Sql("ALTER TABLE \"TicketTypeAvailability\" ALTER COLUMN \"Id\" TYPE integer USING 0;");
+            migrationBuilder.Sql("ALTER TABLE \"TicketTypeAvailability\" ALTER COLUMN \"Id\" ADD GENERATED BY DEFAULT AS IDENTITY;");
+
+            migrationBuilder.Sql("ALTER TABLE \"Tickets\" ALTER COLUMN \"TicketTypeId\" TYPE integer USING 0;");
+
+            migrationBuilder.Sql("ALTER TABLE \"OrderItems\" ALTER COLUMN \"TicketTypeId\" TYPE integer USING 0;");
+            migrationBuilder.Sql("ALTER TABLE \"OrderItems\" ALTER COLUMN \"PricingPhaseId\" TYPE integer USING 0;");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_PricingPhaseAvailability_TicketTypeAvailability_TicketTypeA~",
                 table: "PricingPhaseAvailability",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(Guid),
-                oldType: "uuid");
-
-            migrationBuilder.AlterColumn<int>(
-                name: "Id",
-                table: "PricingPhaseAvailability",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(Guid),
-                oldType: "uuid")
-                .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-            migrationBuilder.AlterColumn<int>(
-                name: "TicketTypeId",
-                table: "OrderItems",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(Guid),
-                oldType: "uuid");
-
-            migrationBuilder.AlterColumn<int>(
-                name: "PricingPhaseId",
-                table: "OrderItems",
-                type: "integer",
-                nullable: false,
-                oldClrType: typeof(Guid),
-                oldType: "uuid");
+                column: "TicketTypeAvailabilityId",
+                principalTable: "TicketTypeAvailability",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
     }
 }

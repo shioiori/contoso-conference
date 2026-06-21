@@ -31,10 +31,8 @@ namespace Eventbox.Ticketing.Infrastructure.Jobs
                             ticketAvailability.Release(item.TicketTypeId, item.Quantity);
                         }
 
-                        unitOfWork.TicketAvailabilities.Update(ticketAvailability);
-                    }
+                        }
 
-                    unitOfWork.Orders.Update(order);
                 }
             }
 

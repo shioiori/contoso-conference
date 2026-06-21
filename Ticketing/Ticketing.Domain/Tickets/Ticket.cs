@@ -1,7 +1,7 @@
 using Eventbox.Ticketing.Domain.Enums;
 using Eventbox.Ticketing.Domain.SeedWork;
 
-namespace Eventbox.Ticketing.Domain.Entities.OrderAggregate;
+namespace Eventbox.Ticketing.Domain.Tickets;
 
 public class Ticket : Entity<Guid>
 {
@@ -11,8 +11,11 @@ public class Ticket : Entity<Guid>
         QrTokenHash = null!;
     }
 
-    public Ticket(Guid eventId, Guid ticketTypeId, int sequenceNumber)
+    public Ticket(Guid orderId, Guid eventId, Guid ticketTypeId, int sequenceNumber)
     {
+        if (orderId == Guid.Empty)
+            throw new ArgumentException("Order id is required.", nameof(orderId));
+
         if (eventId == Guid.Empty)
             throw new ArgumentException("Event id is required.", nameof(eventId));
 
@@ -23,12 +26,14 @@ public class Ticket : Entity<Guid>
             throw new ArgumentOutOfRangeException(nameof(sequenceNumber), "Sequence number must be greater than zero.");
 
         Id = Guid.NewGuid();
+        OrderId = orderId;
         EventId = eventId;
         TicketTypeId = ticketTypeId;
         SequenceNumber = sequenceNumber;
         TicketState = TicketState.Active;
     }
 
+    public Guid OrderId { get; private set; }
     public Guid EventId { get; private set; }
     public Guid TicketTypeId { get; private set; }
     public int SequenceNumber { get; private set; }

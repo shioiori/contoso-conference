@@ -9,6 +9,7 @@ using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Domain.Entities;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
+using Eventbox.Ticketing.Domain.Tickets;
 
 namespace Eventbox.UnitTests.Ticketing;
 
@@ -97,6 +98,9 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         public Task AddAsync(TicketAvailability entity, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
 
+        public Task AddRangeAsync(IEnumerable<TicketAvailability> entities, CancellationToken cancellationToken = default)
+            => Task.CompletedTask;
+
         public void Update(TicketAvailability entity)
         {
         }
@@ -128,6 +132,12 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         public Task AddAsync(Order entity, CancellationToken cancellationToken = default)
         {
             _orders.Add(entity);
+            return Task.CompletedTask;
+        }
+
+        public Task AddRangeAsync(IEnumerable<Order> entities, CancellationToken cancellationToken = default)
+        {
+            _orders.AddRange(entities);
             return Task.CompletedTask;
         }
 
@@ -181,21 +191,6 @@ public class RegisterToEventCommandHandlerConcurrencyTests
             return Task.FromResult(hasOrder);
         }
 
-        public Task<Ticket?> GetTicketByQrTokenHashAsync(string qrTokenHash, CancellationToken cancellationToken = default)
-            => Task.FromResult(_orders.SelectMany(order => order.Tickets).FirstOrDefault(ticket => ticket.QrTokenHash == qrTokenHash));
-
-        public Task<bool> ExistsTicketByQrTokenHashAsync(string qrTokenHash, CancellationToken cancellationToken = default)
-            => Task.FromResult(_orders.SelectMany(order => order.Tickets).Any(ticket => ticket.QrTokenHash == qrTokenHash));
-
-        public Task<int> TryMarkTicketCheckedInAsync(Guid ticketId, Guid? staffUserId, DateTimeOffset checkedInAt, CancellationToken cancellationToken = default)
-        {
-            var ticket = _orders.SelectMany(order => order.Tickets).FirstOrDefault(ticket => ticket.Id == ticketId);
-            if (ticket is null || ticket.TicketState != TicketState.Active || ticket.CheckedInAt.HasValue)
-                return Task.FromResult(0);
-
-            ticket.CheckIn(staffUserId ?? Guid.Empty, checkedInAt);
-            return Task.FromResult(1);
-        }
     }
 
     private sealed class InMemoryEventSnapshotRepository(EventSnapshot eventSnapshot) : IEventSnapshotRepository
@@ -217,6 +212,7 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         public IOrderRepository Orders { get; } = orderRepository;
         public ITicketAvailabilityRepository TicketAvailabilities { get; } = ticketAvailabilityRepository;
         public IEventSnapshotRepository EventSnapshots { get; } = eventSnapshotRepository;
+        public ITicketRepository Tickets { get; } = new NullTicketRepository();
         public IOutbox Outbox => _outbox;
         public IReadOnlyCollection<OutboxMessage> OutboxMessages => _outbox.Messages;
 
@@ -230,6 +226,21 @@ public class RegisterToEventCommandHandlerConcurrencyTests
 
         public async Task ExecuteInTransactionAsync(Func<Task> operation, CancellationToken cancellationToken = default)
             => await operation();
+    }
+
+    private sealed class NullTicketRepository : ITicketRepository
+    {
+        public Task<Ticket?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<Ticket?>(null);
+        public Task AddAsync(Ticket entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task AddRangeAsync(IEnumerable<Ticket> entities, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public void Update(Ticket entity) { }
+        public void Delete(Ticket entity) { }
+        public IQueryable<Ticket> Get(Expression<Func<Ticket, bool>> filter = null!, Func<IQueryable<Ticket>, IOrderedQueryable<Ticket>> orderBy = null!, string includeProperties = null!, bool needAsNoTracking = true) => Enumerable.Empty<Ticket>().AsQueryable();
+        public Task<IReadOnlyList<Ticket>> GetByOrderIdAsync(Guid orderId, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<Ticket>>([]);
+        public Task<IReadOnlyList<Ticket>> GetByOrderIdsAsync(IEnumerable<Guid> orderIds, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<Ticket>>([]);
+        public Task<Ticket?> GetByQrTokenHashAsync(string qrTokenHash, CancellationToken cancellationToken = default) => Task.FromResult<Ticket?>(null);
+        public Task<bool> ExistsByQrTokenHashAsync(string qrTokenHash, CancellationToken cancellationToken = default) => Task.FromResult(false);
+        public Task<int> TryMarkCheckedInAsync(Guid ticketId, Guid? staffUserId, DateTimeOffset checkedInAt, CancellationToken cancellationToken = default) => Task.FromResult(0);
     }
 
     private sealed class InMemoryOutbox : IOutbox

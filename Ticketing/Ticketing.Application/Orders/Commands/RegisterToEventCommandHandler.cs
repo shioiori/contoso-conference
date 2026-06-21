@@ -24,9 +24,6 @@ namespace Eventbox.Ticketing.Application.Commands
             if (request.Quantity <= 0)
                 throw new ValidationApiException("Quantity must be greater than zero.");
 
-            if (request.Quantity > TicketingConstants.MaxTicketsPerOrder)
-                throw new ValidationApiException($"Cannot reserve more than {TicketingConstants.MaxTicketsPerOrder} tickets per order.");
-
             var eventSnapshot = await unitOfWork.EventSnapshots.GetByEventIdAsync(request.EventId, cancellationToken)
                 ?? throw new NotFoundException($"Event '{request.EventId}' was not found.");
             if (!eventSnapshot.IsPublished)

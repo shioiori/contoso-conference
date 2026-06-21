@@ -8,6 +8,7 @@ using Eventbox.Ticketing.Domain.Entities;
 using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
 using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
 using Eventbox.Ticketing.Domain.Enums;
+using Eventbox.Ticketing.Domain.Tickets;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
 using MediatR;
@@ -358,6 +359,7 @@ file sealed class CountingUnitOfWork : IUnitOfWork
     public IOrderRepository Orders => throw new NotSupportedException();
     public ITicketAvailabilityRepository TicketAvailabilities => throw new NotSupportedException();
     public IEventSnapshotRepository EventSnapshots => throw new NotSupportedException();
+    public ITicketRepository Tickets => throw new NotSupportedException();
     public IOutbox Outbox => throw new NotSupportedException();
 
     public Task<int> SaveChangesAsync(CancellationToken ct = default)
@@ -380,6 +382,7 @@ file sealed class StubOrderRepository(Order? order) : IOrderRepository
     // ── unused stubs ──
     public Task<Order?> GetByIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult<Order?>(null);
     public Task AddAsync(Order entity, CancellationToken ct = default) => Task.CompletedTask;
+    public Task AddRangeAsync(IEnumerable<Order> entities, CancellationToken ct = default) => Task.CompletedTask;
     public void Delete(Order entity) { }
     public IQueryable<Order> Get(Expression<Func<Order, bool>> f = null!, Func<IQueryable<Order>, IOrderedQueryable<Order>> o = null!, string i = null!, bool n = true) => Enumerable.Empty<Order>().AsQueryable();
     public Task<IEnumerable<Order>> GetByEventIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult(Enumerable.Empty<Order>());
@@ -388,9 +391,6 @@ file sealed class StubOrderRepository(Order? order) : IOrderRepository
     public Task<IEnumerable<Order>> GetByStateAsync(OrderState state, CancellationToken ct = default) => Task.FromResult(Enumerable.Empty<Order>());
     public Task<Order?> GetByAccessCodeAsync(string code, CancellationToken ct = default) => Task.FromResult<Order?>(null);
     public Task<bool> HasActivePendingOrderAsync(Guid eid, Guid? uid, string email, DateTimeOffset now, CancellationToken ct = default) => Task.FromResult(false);
-    public Task<Ticket?> GetTicketByQrTokenHashAsync(string hash, CancellationToken ct = default) => Task.FromResult<Ticket?>(null);
-    public Task<bool> ExistsTicketByQrTokenHashAsync(string hash, CancellationToken ct = default) => Task.FromResult(false);
-    public Task<int> TryMarkTicketCheckedInAsync(Guid tid, Guid? uid, DateTimeOffset at, CancellationToken ct = default) => Task.FromResult(0);
 }
 
 file sealed class SpyEventSnapshotRepository : IEventSnapshotRepository
@@ -423,6 +423,14 @@ file sealed class InMemoryTicketAvailabilityRepository : ITicketAvailabilityRepo
     public Task AddAsync(TicketAvailability entity, CancellationToken ct = default)
     {
         Stored[entity.Id] = entity;
+        return Task.CompletedTask;
+    }
+
+    public Task AddRangeAsync(IEnumerable<TicketAvailability> entities, CancellationToken ct = default)
+    {
+        foreach (var entity in entities)
+            Stored[entity.Id] = entity;
+
         return Task.CompletedTask;
     }
 

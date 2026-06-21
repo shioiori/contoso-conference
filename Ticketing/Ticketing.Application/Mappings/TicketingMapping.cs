@@ -1,6 +1,7 @@
 using Eventbox.Ticketing.Application.Dtos;
 using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
 using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Domain.Tickets;
 using Mapster;
 
 namespace Eventbox.Ticketing.Application.Mappings
@@ -13,7 +14,8 @@ namespace Eventbox.Ticketing.Application.Mappings
                 .Map(dest => dest.OrderState, src => src.GetCurrentState(DateTimeOffset.UtcNow))
                 .Map(dest => dest.Name, src => src.PersonalInfo.Name)
                 .Map(dest => dest.Email, src => src.PersonalInfo.Email)
-                .Map(dest => dest.Items, src => src.OrderItems.Adapt<IReadOnlyCollection<OrderItemDto>>());
+                .Map(dest => dest.Items, src => src.OrderItems.Adapt<IReadOnlyCollection<OrderItemDto>>())
+                .Ignore(dest => dest.Tickets);
 
             config.NewConfig<OrderItem, OrderItemDto>();
 

@@ -2,66 +2,29 @@ namespace Eventbox.Ticketing.Application.Dtos
 {
     public class TicketAvailabilityDto
     {
-        public TicketAvailabilityDto(Guid eventId, IReadOnlyCollection<TicketTypeAvailabilityDto> ticketTypes)
-        {
-            EventId = eventId;
-            TicketTypes = ticketTypes;
-        }
-
-        public Guid EventId { get; }
-        public IReadOnlyCollection<TicketTypeAvailabilityDto> TicketTypes { get; }
+        public Guid EventId { get; init; }
+        public IReadOnlyCollection<TicketTypeAvailabilityDto> TicketTypes { get; init; } = [];
     }
 
     public class TicketTypeAvailabilityDto
     {
-        public TicketTypeAvailabilityDto(
-            int id,
-            string name,
-            int quantity,
-            int remaining,
-            string currency,
-            int minPerOrder,
-            int? maxPerOrder,
-            string visibility,
-            IReadOnlyCollection<PricingPhaseAvailabilityDto> pricingPhases)
-        {
-            Id = id;
-            Name = name;
-            Quantity = quantity;
-            Remaining = remaining;
-            Currency = currency;
-            MinPerOrder = minPerOrder;
-            MaxPerOrder = maxPerOrder;
-            Visibility = visibility;
-            PricingPhases = pricingPhases;
-        }
-
-        public int Id { get; }
-        public string Name { get; }
-        public int Quantity { get; }
-        public int Remaining { get; }
-        public string Currency { get; }
-        public int MinPerOrder { get; }
-        public int? MaxPerOrder { get; }
-        public string Visibility { get; }
-        public IReadOnlyCollection<PricingPhaseAvailabilityDto> PricingPhases { get; }
+        public Guid Id { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public int Quantity { get; init; }
+        public int Remaining { get; init; }
+        public string Currency { get; init; } = string.Empty;
+        public int MinPerOrder { get; init; }
+        public int? MaxPerOrder { get; init; }
+        public string Visibility { get; init; } = string.Empty;
+        public IReadOnlyCollection<PricingPhaseAvailabilityDto> PricingPhases { get; init; } = [];
     }
 
     public class PricingPhaseAvailabilityDto
     {
-        public PricingPhaseAvailabilityDto(int id, string name, decimal price, DateTimeOffset? startTime, DateTimeOffset? endTime)
-        {
-            Id = id;
-            Name = name;
-            Price = price;
-            StartTime = startTime;
-            EndTime = endTime;
-        }
-
-        public int Id { get; }
-        public string Name { get; }
-        public decimal Price { get; }
-        public DateTimeOffset? StartTime { get; }
-        public DateTimeOffset? EndTime { get; }
+        public Guid Id { get; init; }
+        public string Name { get; init; } = string.Empty;
+        public decimal Price { get; init; }
+        public DateTimeOffset? StartTime { get; init; }
+        public DateTimeOffset? EndTime { get; init; }
     }
 }

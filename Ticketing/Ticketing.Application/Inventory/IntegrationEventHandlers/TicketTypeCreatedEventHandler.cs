@@ -42,7 +42,6 @@ public class TicketTypeCreatedEventHandler(
         else if (!availability.TicketTypes.Any(existing => existing.Id == @event.Id))
         {
             availability.AddTicketType(ticketType);
-            ticketAvailabilityRepository.Update(availability);
         }
 
         await unitOfWork.SaveChangesAsync(cancellationToken);

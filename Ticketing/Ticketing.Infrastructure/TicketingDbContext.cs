@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Eventbox.Ticketing.Domain.Entities;
 using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
 using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Domain.Tickets;
 using Eventbox.Shared.Outbox;
 
 namespace Eventbox.Ticketing.Infrastructure
@@ -28,17 +29,16 @@ namespace Eventbox.Ticketing.Infrastructure
             {
                 order.HasKey(o => o.Id);
                 order.OwnsOne(o => o.PersonalInfo);
+                order.HasMany<Ticket>()
+                    .WithOne()
+                    .HasForeignKey(t => t.OrderId)
+                    .IsRequired()
+                    .OnDelete(DeleteBehavior.Cascade);
                 order.HasMany(o => o.OrderItems)
                     .WithOne()
                     .IsRequired()
                     .OnDelete(DeleteBehavior.Cascade);
                 order.Navigation(o => o.OrderItems)
-                    .UsePropertyAccessMode(PropertyAccessMode.Field);
-                order.HasMany(o => o.Tickets)
-                    .WithOne()
-                    .IsRequired()
-                    .OnDelete(DeleteBehavior.Cascade);
-                order.Navigation(o => o.Tickets)
                     .UsePropertyAccessMode(PropertyAccessMode.Field);
             });
 
@@ -54,11 +54,13 @@ namespace Eventbox.Ticketing.Infrastructure
             modelBuilder.Entity<Ticket>(ticket =>
             {
                 ticket.HasKey(t => t.Id);
+                ticket.Property(t => t.OrderId).IsRequired();
                 ticket.Property(t => t.QrToken).HasMaxLength(128);
                 ticket.Property(t => t.QrTokenHash).HasMaxLength(128);
                 ticket.HasIndex(t => t.QrToken).IsUnique();
                 ticket.HasIndex(t => t.QrTokenHash).IsUnique();
                 ticket.HasIndex(t => new { t.EventId, t.TicketState });
+                ticket.HasIndex(t => t.OrderId);
             });
 
             modelBuilder.Entity<EventSnapshot>(snapshot =>

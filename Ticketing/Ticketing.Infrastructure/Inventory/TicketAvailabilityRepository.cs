@@ -15,13 +15,12 @@ namespace Eventbox.Ticketing.Infrastructure.Repositories
 
         public async Task<bool> TryReserveAsync(Guid eventId, Guid ticketTypeId, int quantity, CancellationToken cancellationToken = default)
         {
-            var affectedRows = await dbContext.Set<TicketTypeAvailability>()
-                .Where(ticketType =>
-                    EF.Property<Guid>(ticketType, "TicketAvailabilityId") == eventId &&
-                    ticketType.Id == ticketTypeId &&
-                    ticketType.Remaining >= quantity)
+            var affectedRows = await dbContext.TicketAvailabilities
+                .Where(ta => ta.Id == eventId)
+                .SelectMany(ta => ta.TicketTypes)
+                .Where(tt => tt.Id == ticketTypeId && tt.Remaining >= quantity)
                 .ExecuteUpdateAsync(setters => setters
-                    .SetProperty(ticketType => ticketType.Remaining, ticketType => ticketType.Remaining - quantity),
+                    .SetProperty(tt => tt.Remaining, tt => tt.Remaining - quantity),
                     cancellationToken);
 
             return affectedRows == 1;
