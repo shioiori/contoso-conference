@@ -34,7 +34,7 @@ namespace Eventbox.Payment.Core.Entities
             ReturnUrl = returnUrl;
             CancelUrl = cancelUrl;
             IdempotencyKey = string.IsNullOrWhiteSpace(idempotencyKey) ? null : idempotencyKey.Trim();
-            Status = Enums.PaymentStatus.Pending;
+            Status = PaymentStatus.Pending;
         }
 
         public Guid Id { get; private set; }
@@ -86,15 +86,15 @@ namespace Eventbox.Payment.Core.Entities
         {
             ValidateCallback(providerEventId, orderId, amount, currency);
 
-            if (IsDuplicateCallback(providerEventId, Enums.PaymentStatus.Succeeded))
+            if (IsDuplicateCallback(providerEventId, PaymentStatus.Succeeded))
                 return false;
 
-            if (Status != Enums.PaymentStatus.Pending)
+            if (Status != PaymentStatus.Pending)
                 throw new InvalidOperationException($"Payment intent '{Id}' is already {Status}.");
 
             CaptureCallbackAmountIfNeeded(amount, currency);
             ProviderEventId = providerEventId;
-            Status = Enums.PaymentStatus.Succeeded;
+            Status = PaymentStatus.Succeeded;
             CompletedAt = paidAt;
             FailureReason = null;
             return true;

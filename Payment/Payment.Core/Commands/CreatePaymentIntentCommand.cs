@@ -1,7 +1,9 @@
 using Eventbox.Payment.Core.Abstractions;
 using Eventbox.Payment.Core.Dtos;
+using Eventbox.Shared.Exceptions;
 using Mapster;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using PaymentEntity = Eventbox.Payment.Core.Entities.Payment;
 
 namespace Eventbox.Payment.Core.Commands
@@ -39,8 +41,15 @@ namespace Eventbox.Payment.Core.Commands
                 request.CancelUrl,
                 request.IdempotencyKey);
 
-            await unitOfWork.Payments.AddAsync(payment, cancellationToken);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
+            try
+            {
+                await unitOfWork.Payments.AddAsync(payment, cancellationToken);
+                await unitOfWork.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("IX_Payments_OrderId_Pending") == true)
+            {
+                throw new ConflictException("A pending payment already exists for this order.");
+            }
 
             return payment.Adapt<PaymentIntentDto>();
         }

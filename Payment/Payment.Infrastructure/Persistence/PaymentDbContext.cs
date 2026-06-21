@@ -25,6 +25,10 @@ namespace Eventbox.Payment.Infrastructure.Persistence
                 payment.Property(p => p.CancelUrl).HasMaxLength(2048);
                 payment.HasIndex(p => p.IdempotencyKey).IsUnique();
                 payment.HasIndex(p => p.ProviderEventId).IsUnique();
+                payment.HasIndex(p => p.OrderId)
+                    .IsUnique()
+                    .HasFilter("\"Status\" = 0")
+                    .HasDatabaseName("IX_Payments_OrderId_Pending");
             });
         }
     }
