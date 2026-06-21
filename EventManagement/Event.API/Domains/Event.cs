@@ -62,7 +62,7 @@ namespace Eventbox.EventManagement.EventApi.Domains
 
             var utcNow = DateTimeOffset.UtcNow;
 
-            if (utcNow < From && from < utcNow)
+            if (utcNow < From && from < utcNow && IsPublished)
                 throw new ValidationApiException("Start date cannot be set to a past time.");
 
             if (utcNow >= From)

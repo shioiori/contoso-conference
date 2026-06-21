@@ -1,8 +1,6 @@
-using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
 using Eventbox.EventManagement.EventApi.Domains;
 using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.EventManagement.EventApi.Services.Abstractions;
-using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.Shared.Exceptions;
 using Eventbox.EventManagement.EventApi.Application.Abstractions;
 using Eventbox.Shared.Outbox;
