@@ -21,6 +21,12 @@ internal static class ProblemDetailsMapping
                 apiException.Message,
                 apiException.ErrorCode,
                 path),
+            BadHttpRequestException badHttpRequestException => Create(
+                badHttpRequestException.StatusCode,
+                "Bad request",
+                badHttpRequestException.Message,
+                "bad-request",
+                path),
             KeyNotFoundException keyNotFoundException => Create(
                 StatusCodes.Status404NotFound,
                 "Resource not found",
