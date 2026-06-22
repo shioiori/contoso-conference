@@ -26,12 +26,12 @@ namespace Eventbox.Ticketing.Domain.Orders
             _orderItems.AddRange(items);
         }
 
-        public Guid EventId { get; set; }
-        public Guid? UserId { get; set; }
-        public OrderState OrderState { get; set; }
-        public string? AccessCode { get; set; }
-        public DateTimeOffset? ReservationExpiresAt { get; set; }
-        public PersonalInfo PersonalInfo { get; set; }
+        public Guid EventId { get; private set; }
+        public Guid? UserId { get; private set; }
+        public OrderState OrderState { get; private set; }
+        public string? AccessCode { get; private set; }
+        public DateTimeOffset? ReservationExpiresAt { get; private set; }
+        public PersonalInfo PersonalInfo { get; private set; }
 
         public IReadOnlyCollection<OrderItem> OrderItems => _orderItems.AsReadOnly();
 

@@ -77,15 +77,15 @@ namespace Eventbox.Ticketing.Domain.Inventory
             _pricingPhases.AddRange(phases);
         }
 
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-        public int Quantity { get; set; }
-        public int Remaining { get; set; }
-        public string Currency { get; set; }
-        public int MinPerOrder { get; set; }
-        public int? MaxPerOrder { get; set; }
-        public TicketVisibility Visibility { get; set; }
-        public string? AccessCodeHash { get; set; }
+        public Guid Id { get; private set; }
+        public string Name { get; private set; }
+        public int Quantity { get; private set; }
+        public int Remaining { get; private set; }
+        public string Currency { get; private set; }
+        public int MinPerOrder { get; private set; }
+        public int? MaxPerOrder { get; private set; }
+        public TicketVisibility Visibility { get; private set; }
+        public string? AccessCodeHash { get; private set; }
         public IReadOnlyCollection<PricingPhaseAvailability> PricingPhases => _pricingPhases.AsReadOnly();
 
         public PricingPhaseAvailability GetActivePricingPhase(DateTimeOffset utcNow)

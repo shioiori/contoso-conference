@@ -26,15 +26,15 @@ public class Ticket : AuditableEntity<Guid>
         TicketState = TicketState.Active;
     }
 
-    public Guid OrderId { get; set; }
-    public Guid EventId { get; set; }
-    public Guid TicketTypeId { get; set; }
-    public int SequenceNumber { get; set; }
-    public TicketState TicketState { get; set; }
-    public string? QrToken { get; set; }
-    public string? QrTokenHash { get; set; }
-    public DateTimeOffset? CheckedInAt { get; set; }
-    public Guid? CheckedInByUserId { get; set; }
+    public Guid OrderId { get; private set; }
+    public Guid EventId { get; private set; }
+    public Guid TicketTypeId { get; private set; }
+    public int SequenceNumber { get; private set; }
+    public TicketState TicketState { get; private set; }
+    public string? QrToken { get; private set; }
+    public string? QrTokenHash { get; private set; }
+    public DateTimeOffset? CheckedInAt { get; private set; }
+    public Guid? CheckedInByUserId { get; private set; }
 
     public void AssignQrToken(string qrToken, string qrTokenHash)
     {
