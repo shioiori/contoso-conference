@@ -1,6 +1,7 @@
 using Eventbox.EventManagement.EventApi.Api.Requests;
 using Eventbox.EventManagement.EventApi.Application.Abstractions.Services;
 using Eventbox.EventManagement.EventApi.Application.Dtos;
+using Eventbox.Shared.Constants;
 using Eventbox.Shared.Exceptions;
 using Mapster;
 using Microsoft.AspNetCore.Authorization;

@@ -1,7 +1,7 @@
 using Eventbox.EventManagement.EventApi.Domains.Enums;
 using Eventbox.EventManagement.EventApi.Domains.Extensions;
 using Eventbox.Shared.Exceptions;
-using Eventbox.Shared.Objects;
+using Eventbox.Shared.SeedWorks;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Eventbox.EventManagement.EventApi.Domains

@@ -1,4 +1,4 @@
-﻿using Eventbox.Shared.Objects;
+﻿using Eventbox.Shared.SeedWorks;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Eventbox.EventManagement.EventApi.Domains

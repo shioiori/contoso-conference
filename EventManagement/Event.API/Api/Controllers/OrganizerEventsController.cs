@@ -6,6 +6,7 @@ using Eventbox.Shared.Exceptions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Eventbox.EventManagement.EventApi.Application.Abstractions.Services;
+using Eventbox.Shared.Constants;
 
 namespace Eventbox.EventManagement.EventApi.Api.Controllers
 {
