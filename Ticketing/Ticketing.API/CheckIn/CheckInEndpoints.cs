@@ -1,7 +1,10 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Eventbox.Shared.Constants;
 using Eventbox.Ticketing.Api.Requests;
 using Eventbox.Ticketing.Application.Commands.CheckIn;
+using Eventbox.Ticketing.Domain.Enums;
+using MediatR;
 
 namespace Eventbox.Ticketing.Api.Endpoints;
 
