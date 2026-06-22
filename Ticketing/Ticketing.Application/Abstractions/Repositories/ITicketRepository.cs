@@ -1,3 +1,4 @@
+using Eventbox.Shared.Abstractions;
 using Eventbox.Ticketing.Domain.Tickets;
 
 namespace Eventbox.Ticketing.Application.Abstractions.Repositories;

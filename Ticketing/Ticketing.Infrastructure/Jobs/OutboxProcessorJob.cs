@@ -23,7 +23,7 @@ namespace Eventbox.Ticketing.Infrastructure.Jobs
                 await unitOfWork.SaveChangesAsync(cancellationToken);
                 try
                 {
-                    var @event = Deserialize(message) as OrderExpirationDueMessageIntergrationEvent;
+                    var @event = Deserialize(message) as OrderExpirationDueMessageIntegrationEvent;
                     await delayedEventScheduler.ScheduleAsync(@event, @event.ExpiresAt, cancellationToken);
                     message.Status = ProcessStatus.Processed;
                     message.ProcessedOnUtc = DateTime.UtcNow;
@@ -43,8 +43,8 @@ namespace Eventbox.Ticketing.Infrastructure.Jobs
         private static IIntegrationEvent Deserialize(OutboxMessage message) =>
             message.IntegrationEventType switch
             {
-                nameof(OrderExpirationDueMessageIntergrationEvent) =>
-                    JsonSerializer.Deserialize<OrderExpirationDueMessageIntergrationEvent>(message.Content)
+                nameof(OrderExpirationDueMessageIntegrationEvent) =>
+                    JsonSerializer.Deserialize<OrderExpirationDueMessageIntegrationEvent>(message.Content)
                     ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}"),
                 _ => throw new InvalidOperationException($"Unknown integration event type: {message.IntegrationEventType}")
             };

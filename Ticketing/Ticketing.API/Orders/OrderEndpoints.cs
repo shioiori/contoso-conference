@@ -1,10 +1,11 @@
 using MediatR;
 using Eventbox.Ticketing.Api.Requests;
-using Eventbox.Ticketing.Application.Commands;
-using Eventbox.Ticketing.Application.Queries;
 using Eventbox.Shared.Exceptions;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Eventbox.Ticketing.Application.Commands.Orders;
+using Eventbox.Ticketing.Application.Queries.Inventory;
+using Eventbox.Ticketing.Application.Queries.Orders;
 
 namespace Eventbox.Ticketing.Api.Endpoints
 {
@@ -104,10 +105,6 @@ namespace Eventbox.Ticketing.Api.Endpoints
             }
 
             var result = await mediator.Send(new GetOrdersByEmailQuery(email), cancellationToken);
-            if (result is null || !result.Any())
-            {
-                throw new NotFoundException($"No orders were found for email '{email}'.");
-            }
             return Results.Ok(result);
 
         }

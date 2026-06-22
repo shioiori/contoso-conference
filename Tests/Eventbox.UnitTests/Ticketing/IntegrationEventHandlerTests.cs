@@ -2,8 +2,9 @@ using System.Linq.Expressions;
 using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
-using Eventbox.Ticketing.Application.Commands;
-using Eventbox.Ticketing.Application.IntegrationEventHandlers;
+using Eventbox.Ticketing.Application.IntegrationEventHandlers.Orders;
+using Eventbox.Ticketing.Application.IntegrationEventHandlers.Inventory;
+using Eventbox.Ticketing.Application.IntegrationEventHandlers.Events;
 using Eventbox.Ticketing.Domain.Events;
 using Eventbox.Ticketing.Domain.Orders;
 using Eventbox.Ticketing.Domain.Inventory;
@@ -12,6 +13,7 @@ using Eventbox.Ticketing.Domain.Tickets;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
 using MediatR;
+using Eventbox.Ticketing.Application.Commands.Orders;
 
 namespace Eventbox.UnitTests.Ticketing;
 
@@ -25,9 +27,8 @@ public class PaymentFailedIntegrationEventHandlerTests
     public async Task HandleAsync_WhenOrderExists_MarksPaymentFailedAndSavesOnce()
     {
         var order = PendingOrder();
-        var repo = new StubOrderRepository(order);
-        var uow = new CountingUnitOfWork();
-        var handler = new PaymentFailedIntegrationEventHandler(repo, uow);
+        var uow = new CountingUnitOfWork(new StubOrderRepository(order));
+        var handler = new PaymentFailedIntegrationEventHandler(uow);
 
         await handler.HandleAsync(new PaymentFailedIntegrationEvent { OrderId = order.Id });
 
@@ -38,9 +39,8 @@ public class PaymentFailedIntegrationEventHandlerTests
     [Fact]
     public async Task HandleAsync_WhenOrderNotFound_DoesNothing()
     {
-        var repo = new StubOrderRepository(null);
-        var uow = new CountingUnitOfWork();
-        var handler = new PaymentFailedIntegrationEventHandler(repo, uow);
+        var uow = new CountingUnitOfWork(new StubOrderRepository(null));
+        var handler = new PaymentFailedIntegrationEventHandler(uow);
 
         await handler.HandleAsync(new PaymentFailedIntegrationEvent { OrderId = Guid.NewGuid() });
 
@@ -52,9 +52,8 @@ public class PaymentFailedIntegrationEventHandlerTests
     {
         var order = PendingOrder();
         order.Confirm();
-        var repo = new StubOrderRepository(order);
-        var uow = new CountingUnitOfWork();
-        var handler = new PaymentFailedIntegrationEventHandler(repo, uow);
+        var uow = new CountingUnitOfWork(new StubOrderRepository(order));
+        var handler = new PaymentFailedIntegrationEventHandler(uow);
 
         await handler.HandleAsync(new PaymentFailedIntegrationEvent { OrderId = order.Id });
 
@@ -181,7 +180,7 @@ public class TicketTypeCreatedEventHandlerTests
     public async Task HandleAsync_WhenNoAvailabilityExists_CreatesNewAvailabilityWithTicketType()
     {
         var repo = new InMemoryTicketAvailabilityRepository();
-        var uow = new CountingUnitOfWork();
+        var uow = new CountingUnitOfWork(ticketAvailabilities: repo);
         var handler = new TicketTypeCreatedEventHandler(repo, uow);
         var eventId = Guid.NewGuid();
         var ticketTypeId = Guid.NewGuid();
@@ -200,7 +199,7 @@ public class TicketTypeCreatedEventHandlerTests
         var eventId = Guid.NewGuid();
         var existing = new TicketAvailability(eventId, [new TicketTypeAvailability(Guid.NewGuid(), 50)]);
         var repo = new InMemoryTicketAvailabilityRepository(existing);
-        var uow = new CountingUnitOfWork();
+        var uow = new CountingUnitOfWork(ticketAvailabilities: repo);
         var handler = new TicketTypeCreatedEventHandler(repo, uow);
 
         await handler.HandleAsync(TicketTypeCreatedFor(eventId, Guid.NewGuid()));
@@ -215,7 +214,7 @@ public class TicketTypeCreatedEventHandlerTests
         var ticketTypeId = Guid.NewGuid();
         var existing = new TicketAvailability(eventId, [new TicketTypeAvailability(ticketTypeId, 50)]);
         var repo = new InMemoryTicketAvailabilityRepository(existing);
-        var uow = new CountingUnitOfWork();
+        var uow = new CountingUnitOfWork(ticketAvailabilities: repo);
         var handler = new TicketTypeCreatedEventHandler(repo, uow);
 
         await handler.HandleAsync(TicketTypeCreatedFor(eventId, ticketTypeId));
@@ -227,7 +226,7 @@ public class TicketTypeCreatedEventHandlerTests
     public async Task HandleAsync_WhenVisibilityIsInvalidString_DefaultsToPublic()
     {
         var repo = new InMemoryTicketAvailabilityRepository();
-        var uow = new CountingUnitOfWork();
+        var uow = new CountingUnitOfWork(ticketAvailabilities: repo);
         var handler = new TicketTypeCreatedEventHandler(repo, uow);
         var eventId = Guid.NewGuid();
         var @event = TicketTypeCreatedFor(eventId, Guid.NewGuid());
@@ -352,12 +351,12 @@ public class TicketTypeDeletedEventHandlerTests
 // Shared test doubles
 // ════════════════════════════════════════════════════════════════════════
 
-file sealed class CountingUnitOfWork : IUnitOfWork
+file sealed class CountingUnitOfWork(IOrderRepository? orders = null, ITicketAvailabilityRepository? ticketAvailabilities = null) : IUnitOfWork
 {
     public int SaveCount { get; set; }
 
-    public IOrderRepository Orders => throw new NotSupportedException();
-    public ITicketAvailabilityRepository TicketAvailabilities => throw new NotSupportedException();
+    public IOrderRepository Orders => orders ?? throw new NotSupportedException();
+    public ITicketAvailabilityRepository TicketAvailabilities => ticketAvailabilities ?? throw new NotSupportedException();
     public IEventSnapshotRepository EventSnapshots => throw new NotSupportedException();
     public ITicketRepository Tickets => throw new NotSupportedException();
     public IOutbox Outbox => throw new NotSupportedException();
@@ -406,6 +405,13 @@ file sealed class SpyEventSnapshotRepository : IEventSnapshotRepository
         UpsertCalls.Add(new(eventId, from, to, isPublished));
         return Task.CompletedTask;
     }
+
+    public Task<EventSnapshot?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<EventSnapshot?>(null);
+    public Task AddAsync(EventSnapshot entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public Task AddRangeAsync(IEnumerable<EventSnapshot> entities, CancellationToken cancellationToken = default) => Task.CompletedTask;
+    public void Update(EventSnapshot entity) { }
+    public void Delete(EventSnapshot entity) { }
+    public IQueryable<EventSnapshot> Get(Expression<Func<EventSnapshot, bool>> filter = null!, Func<IQueryable<EventSnapshot>, IOrderedQueryable<EventSnapshot>> orderBy = null!, string includeProperties = null!, bool needAsNoTracking = true) => Enumerable.Empty<EventSnapshot>().AsQueryable();
 }
 
 file sealed class InMemoryTicketAvailabilityRepository : ITicketAvailabilityRepository

@@ -3,7 +3,6 @@ using Eventbox.Shared.SeedWorks;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Infrastructure.Repositories;
-using Eventbox.Ticketing.Infrastructure.Tickets;
 
 namespace Eventbox.Ticketing.Infrastructure;
 

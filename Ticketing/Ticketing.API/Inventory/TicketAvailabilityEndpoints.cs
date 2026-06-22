@@ -1,4 +1,4 @@
-using Eventbox.Ticketing.Application.Queries;
+using Eventbox.Ticketing.Application.Queries.Inventory;
 using MediatR;
 
 namespace Eventbox.Ticketing.Api.Endpoints

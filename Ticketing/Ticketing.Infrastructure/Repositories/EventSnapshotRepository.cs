@@ -1,10 +1,12 @@
+using Eventbox.Shared.Infrastructure.Repositories;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Domain.Events;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eventbox.Ticketing.Infrastructure.Repositories;
 
-public class EventSnapshotRepository(TicketingDbContext dbContext) : IEventSnapshotRepository
+public class EventSnapshotRepository(TicketingDbContext dbContext) 
+    : BaseRepository<DbContext, EventSnapshot, Guid>(dbContext), IEventSnapshotRepository
 {
     public Task<EventSnapshot?> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default)
         => dbContext.EventSnapshots.FirstOrDefaultAsync(e => e.Id == eventId, cancellationToken);
