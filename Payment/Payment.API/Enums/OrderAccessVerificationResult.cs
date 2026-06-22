@@ -1,4 +1,4 @@
-namespace Eventbox.Payment.Api.Services;
+namespace Eventbox.Payment.Api.Enums;
 
 public enum OrderAccessVerificationResult
 {

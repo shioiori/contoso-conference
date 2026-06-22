@@ -1,6 +1,6 @@
 using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.Payment.Core.Abstractions;
-using Eventbox.Payment.Core.Dtos;
+using Eventbox.Payment.Core.Responses;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
 using MediatR;
@@ -56,7 +56,7 @@ namespace Eventbox.Payment.Core.Commands
                 {
                     Id = Guid.NewGuid(),
                     IntegrationEventType = nameof(PaymentConfirmedIntegrationEvent),
-                    Content = JsonSerializer.Serialize(new
+                    Content = JsonSerializer.Serialize(new PaymentConfirmedIntegrationEvent
                     {
                         PaymentId = payment.Id,
                         ProviderEventId = request.ProviderEventId,

@@ -1,9 +1,12 @@
+using Eventbox.Payment.Api.Enums;
+using Eventbox.Payment.Api.Options;
 using Eventbox.Payment.Api.Requests;
 using Eventbox.Payment.Api.Services;
 using Eventbox.Payment.Core.Commands;
 using Eventbox.Shared.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Eventbox.Payment.Api.Controllers
 {
@@ -11,7 +14,7 @@ namespace Eventbox.Payment.Api.Controllers
     [Route("api/payments")]
     public class PaymentController(
         IMediator mediator,
-        IConfiguration configuration,
+        IOptions<PaymentOptions> paymentOptions,
         IOrderAccessVerifier orderAccessVerifier) : ControllerBase
     {
         [HttpPost("intents")]
@@ -47,7 +50,7 @@ namespace Eventbox.Payment.Api.Controllers
             [FromBody] SimulatedPaymentCallbackRequest request,
             CancellationToken cancellationToken)
         {
-            var expectedSignature = configuration["Payment:ProviderSignature"];
+            var expectedSignature = paymentOptions.Value.ProviderSignature;
             if (string.IsNullOrWhiteSpace(expectedSignature) || providerSignature != expectedSignature)
             {
                 throw new UnauthorizedApiException("Invalid payment provider signature.");

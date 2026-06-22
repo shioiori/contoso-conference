@@ -1,22 +1,17 @@
-using Eventbox.Shared.Auditing;
 using Eventbox.Payment.Core.Enums;
+using Eventbox.Shared.Objects;
 
 namespace Eventbox.Payment.Core.Entities
 {
-    public class Payment : IAuditableEntity
+    public class Payment : AuditableEntity<Guid>
     {
-        private Payment()
-        {
-            Currency = null!;
-        }
-
         private Payment(
             Guid orderId,
             decimal amount,
             string currency,
             string? returnUrl,
             string? cancelUrl,
-            string? idempotencyKey)
+            string? idempotencyKey) : base(Guid.NewGuid())
         {
             if (orderId == Guid.Empty)
                 throw new ArgumentException("Order id is required.", nameof(orderId));
@@ -27,7 +22,6 @@ namespace Eventbox.Payment.Core.Entities
             if (string.IsNullOrWhiteSpace(currency))
                 throw new ArgumentException("Currency is required.", nameof(currency));
 
-            Id = Guid.NewGuid();
             OrderId = orderId;
             Amount = amount;
             Currency = currency.Trim().ToUpperInvariant();
@@ -37,22 +31,17 @@ namespace Eventbox.Payment.Core.Entities
             Status = PaymentStatus.Pending;
         }
 
-        public Guid Id { get; private set; }
-        public Guid OrderId { get; private set; }
-        public decimal Amount { get; private set; }
-        public string Currency { get; private set; }
-        public Enums.PaymentStatus Status { get; private set; }
-        public DateTimeOffset CreatedDate { get; private set; }
-        public DateTimeOffset? UpdatedDate { get; private set; }
-        public string? CreatedBy { get; private set; }
-        public string? UpdatedBy { get; private set; }
-        public DateTimeOffset? CompletedAt { get; private set; }
-        public DateTimeOffset? FailedAt { get; private set; }
-        public string? IdempotencyKey { get; private set; }
-        public string? ProviderEventId { get; private set; }
-        public string? FailureReason { get; private set; }
-        public string? ReturnUrl { get; private set; }
-        public string? CancelUrl { get; private set; }
+        public Guid OrderId { get; set; }
+        public decimal Amount { get; set; }
+        public string Currency { get; set; }
+        public PaymentStatus Status { get; set; }
+        public DateTimeOffset? CompletedAt { get; set; }
+        public DateTimeOffset? FailedAt { get; set; }
+        public string? IdempotencyKey { get; set; }
+        public string? ProviderEventId { get; set; }
+        public string? FailureReason { get; set; }
+        public string? ReturnUrl { get; set; }
+        public string? CancelUrl { get; set; }
 
         public static Payment CreateIntent(
             Guid orderId,
@@ -62,20 +51,6 @@ namespace Eventbox.Payment.Core.Entities
             string? cancelUrl,
             string? idempotencyKey)
             => new(orderId, amount, currency, returnUrl, cancelUrl, idempotencyKey);
-
-        public void MarkCreated(string? userId, DateTimeOffset utcNow)
-        {
-            CreatedDate = utcNow;
-            CreatedBy = userId;
-            UpdatedDate = null;
-            UpdatedBy = null;
-        }
-
-        public void MarkUpdated(string? userId, DateTimeOffset utcNow)
-        {
-            UpdatedDate = utcNow;
-            UpdatedBy = userId;
-        }
 
         public bool MarkSucceeded(
             string providerEventId,
@@ -110,21 +85,21 @@ namespace Eventbox.Payment.Core.Entities
         {
             ValidateCallback(providerEventId, orderId, amount, currency);
 
-            if (IsDuplicateCallback(providerEventId, Enums.PaymentStatus.Failed))
+            if (IsDuplicateCallback(providerEventId, PaymentStatus.Failed))
                 return false;
 
-            if (Status != Enums.PaymentStatus.Pending)
+            if (Status != PaymentStatus.Pending)
                 throw new InvalidOperationException($"Payment intent '{Id}' is already {Status}.");
 
             CaptureCallbackAmountIfNeeded(amount, currency);
             ProviderEventId = providerEventId;
-            Status = Enums.PaymentStatus.Failed;
+            Status = PaymentStatus.Failed;
             FailedAt = failedAt;
             FailureReason = failureReason;
             return true;
         }
 
-        private bool IsDuplicateCallback(string providerEventId, Enums.PaymentStatus expectedStatus)
+        private bool IsDuplicateCallback(string providerEventId, PaymentStatus expectedStatus)
             => string.Equals(ProviderEventId, providerEventId, StringComparison.Ordinal)
                 && Status == expectedStatus;
 

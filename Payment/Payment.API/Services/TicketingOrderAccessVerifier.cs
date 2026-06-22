@@ -1,6 +1,6 @@
+using Eventbox.Payment.Api.Enums;
 using System.Net;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace Eventbox.Payment.Api.Services;
@@ -9,8 +9,8 @@ public class TicketingOrderAccessVerifier(HttpClient httpClient) : IOrderAccessV
 {
     public async Task<OrderAccessVerificationResult> VerifyAsync(
         Guid orderId,
-        string? orderAccessCode,
-        string? authorizationHeader,
+        string orderAccessCode,
+        string authorizationHeader,
         CancellationToken cancellationToken)
     {
         OrderAccessVerificationResult? guestResult = null;

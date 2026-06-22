@@ -1,6 +1,6 @@
 using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.Payment.Core.Abstractions;
-using Eventbox.Payment.Core.Dtos;
+using Eventbox.Payment.Core.Responses;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
 using MediatR;
