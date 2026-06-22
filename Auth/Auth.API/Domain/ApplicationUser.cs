@@ -1,4 +1,4 @@
-using Eventbox.Shared.Auditing;
+using Eventbox.Shared.SeedWorks;
 using Microsoft.AspNetCore.Identity;
 
 namespace Eventbox.Auth.Api.Domain;
@@ -6,10 +6,10 @@ namespace Eventbox.Auth.Api.Domain;
 public class ApplicationUser : IdentityUser<Guid>, IAuditableEntity
 {
     public AccountType AccountType { get; set; }
-    public DateTimeOffset CreatedDate { get; private set; }
-    public DateTimeOffset? UpdatedDate { get; private set; }
-    public string? CreatedBy { get; private set; }
-    public string? UpdatedBy { get; private set; }
+    public DateTimeOffset CreatedDate { get; set; }
+    public DateTimeOffset? UpdatedDate { get; set; }
+    public string? CreatedBy { get; set; }
+    public string? UpdatedBy { get; set; }
 
     public void MarkCreated(string? userId, DateTimeOffset utcNow)
     {

@@ -5,9 +5,5 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Eventbox.Auth.Api.Persistence;
 
-public class AuthDbContext : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>
-{
-    public AuthDbContext(DbContextOptions<AuthDbContext> options) : base(options)
-    {
-    }
-}
+public class AuthDbContext(DbContextOptions<AuthDbContext> options)
+    : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options);
