@@ -1,0 +1,3 @@
+CREATE DATABASE "AuthDb";
+CREATE DATABASE "TicketingDb";
+CREATE DATABASE "PaymentDb";

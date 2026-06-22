@@ -721,7 +721,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Linh Nguyen\",\n  \"email\": \"linh@example.com\",\n  \"ticketTypeId\": {{ticketTypeId}},\n  \"quantity\": 1,\n  \"accessCode\": \"{{accessCode}}\"\n}",
+              "raw": "{\n  \"name\": \"Linh Nguyen\",\n  \"email\": \"linh@example.com\",\n  \"ticketTypeId\": \"{{ticketTypeId}}\",\n  \"quantity\": 1,\n  \"accessCode\": \"{{accessCode}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -766,7 +766,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Customer User\",\n  \"ticketTypeId\": {{ticketTypeId}},\n  \"quantity\": 1,\n  \"accessCode\": \"{{accessCode}}\"\n}",
+              "raw": "{\n  \"name\": \"Customer User\",\n  \"ticketTypeId\": \"{{ticketTypeId}}\",\n  \"quantity\": 1,\n  \"accessCode\": \"{{accessCode}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -774,18 +774,6 @@
               }
             },
             "url": "{{ticketingApiUrl}}/api/public/events/{{eventId}}/orders"
-          },
-          "response": []
-        },
-        {
-          "name": "Request Order Lookup",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [],
-            "url": "{{ticketingApiUrl}}/api/public/order-lookup-requests"
           },
           "response": []
         },
@@ -1116,11 +1104,11 @@
     },
     {
       "key": "ticketTypeId",
-      "value": "1"
+      "value": ""
     },
     {
       "key": "freeTicketTypeId",
-      "value": "2"
+      "value": ""
     },
     {
       "key": "orderId",
