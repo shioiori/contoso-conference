@@ -1,6 +1,5 @@
 using System.Linq.Expressions;
 using Eventbox.Ticketing.Application.Abstractions;
-using Eventbox.Ticketing.Application.Commands;
 using Eventbox.Ticketing.Domain.Orders;
 using Eventbox.Ticketing.Domain.Inventory;
 using Eventbox.Ticketing.Domain.Enums;
