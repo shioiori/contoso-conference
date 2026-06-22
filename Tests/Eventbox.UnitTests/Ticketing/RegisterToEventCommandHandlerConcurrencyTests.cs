@@ -216,7 +216,7 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         public IOutbox Outbox => _outbox;
         public IReadOnlyCollection<OutboxMessage> OutboxMessages => _outbox.Messages;
 
-        public int SaveCount { get; private set; }
+        public int SaveCount { get; set; }
 
         public Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {

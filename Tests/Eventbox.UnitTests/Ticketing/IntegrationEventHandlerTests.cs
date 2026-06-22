@@ -354,7 +354,7 @@ public class TicketTypeDeletedEventHandlerTests
 
 file sealed class CountingUnitOfWork : IUnitOfWork
 {
-    public int SaveCount { get; private set; }
+    public int SaveCount { get; set; }
 
     public IOrderRepository Orders => throw new NotSupportedException();
     public ITicketAvailabilityRepository TicketAvailabilities => throw new NotSupportedException();

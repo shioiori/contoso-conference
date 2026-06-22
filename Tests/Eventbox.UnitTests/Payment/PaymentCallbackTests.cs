@@ -88,7 +88,7 @@ public class PaymentCallbackTests
 
     private sealed class InMemoryPaymentUnitOfWork(IPaymentRepository paymentRepository, IOutbox outbox) : IUnitOfWork
     {
-        public int SaveChangesCount { get; private set; }
+        public int SaveChangesCount { get; set; }
 
         public IPaymentRepository Payments { get; } = paymentRepository;
         public IOutbox Outbox { get; } = outbox;
