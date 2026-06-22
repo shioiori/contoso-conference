@@ -10,7 +10,7 @@ public sealed class HttpAuditContextAccessor(IHttpContextAccessor httpContextAcc
         var context = httpContextAccessor.HttpContext;
         if (context is null)
         {
-            return new AuditContext(null, null, null);
+            return new AuditContext();
         }
 
         var userId = context.User.FindFirstValue(ClaimTypes.NameIdentifier)
@@ -20,10 +20,12 @@ public sealed class HttpAuditContextAccessor(IHttpContextAccessor httpContextAcc
             ?? GetRouteValue(context, "orgId")
             ?? context.Request.Headers["X-Organization-Id"].FirstOrDefault();
 
-        return new AuditContext(
-            Normalize(organizationId),
-            Normalize(userId),
-            Normalize(context.TraceIdentifier));
+        return new AuditContext
+        {
+            OrganizationId = Normalize(organizationId),
+            UserId = Normalize(userId),
+            TraceId = Normalize(context.TraceIdentifier)
+        };
     }
 
     private static string? GetRouteValue(HttpContext context, string key)

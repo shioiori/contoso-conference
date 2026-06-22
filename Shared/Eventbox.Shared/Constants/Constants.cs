@@ -8,6 +8,11 @@
     public class AccountTypes
     {
         public const string Organizer = "Organizer";
-        public const string Attendee = "Attendee";
+        public const string Customer = "Customer";
+    }
+    public class PolicyName
+    {
+        public const string RequireOrganizerAccount = "RequireOrganizerAccount";
+        public const string RequireCustomerAccount = "RequireCustomerAccount";
     }
 }
