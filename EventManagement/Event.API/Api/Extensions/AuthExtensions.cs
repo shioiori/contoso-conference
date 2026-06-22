@@ -31,7 +31,7 @@ public static class AuthExtensions
 
         services.AddAuthorization(options =>
         {
-            options.AddPolicy("RequireOrganizerAccount", policy =>
+            options.AddPolicy(PolicyName.RequireOrganizerAccount, policy =>
                 policy.RequireAuthenticatedUser()
                     .RequireClaim(CustomClaimTypes.AccountType, AccountTypes.Organizer));
         });
