@@ -1,15 +1,13 @@
 using Microsoft.EntityFrameworkCore;
 using Eventbox.Ticketing.Domain.Orders;
 using Eventbox.Ticketing.Domain.Enums;
-using Eventbox.Ticketing.Infrastructure.Repositories.Common;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
+using Eventbox.Shared.Infrastructure.Repositories;
 
 namespace Eventbox.Ticketing.Infrastructure.Repositories;
 
-public class OrderRepository : BaseRepository<TicketingDbContext, Order, Guid>, IOrderRepository
+public class OrderRepository(TicketingDbContext dbContext) : BaseRepository<TicketingDbContext, Order, Guid>(dbContext), IOrderRepository
 {
-    public OrderRepository(TicketingDbContext dbContext) : base(dbContext) { }
-
     public async Task<IEnumerable<Order>> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default)
         => await DbContext.Orders
             .Include(o => o.OrderItems)

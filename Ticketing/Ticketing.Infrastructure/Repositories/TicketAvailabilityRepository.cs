@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Eventbox.Ticketing.Domain.Inventory;
-using Eventbox.Ticketing.Infrastructure.Repositories.Common;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
+using Eventbox.Shared.Infrastructure.Repositories;
 
 namespace Eventbox.Ticketing.Infrastructure.Repositories
 {

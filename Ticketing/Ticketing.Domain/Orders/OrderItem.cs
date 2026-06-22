@@ -1,19 +1,13 @@
-using Eventbox.Ticketing.Domain.SeedWork;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Eventbox.Shared.SeedWorks;
 
 namespace Eventbox.Ticketing.Domain.Orders
 {
-    public class OrderItem : Entity<Guid>
+    public class OrderItem : AuditableEntity<Guid>
     {
-        private OrderItem()
-        {
-        }
-
         public OrderItem(Guid ticketTypeId, int quantity)
             : this(ticketTypeId, Guid.NewGuid(), $"Ticket type {ticketTypeId}", "Default", 0, "VND", quantity)
         {
+
         }
 
         public OrderItem(
@@ -23,7 +17,7 @@ namespace Eventbox.Ticketing.Domain.Orders
             string pricingPhaseName,
             decimal unitPrice,
             string currency,
-            int quantity)
+            int quantity) : base(Guid.NewGuid())
         {
             if (ticketTypeId == Guid.Empty)
                 throw new ArgumentException("Ticket type id must not be empty.", nameof(ticketTypeId));
@@ -46,7 +40,6 @@ namespace Eventbox.Ticketing.Domain.Orders
             if (quantity <= 0)
                 throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be greater than zero.");
 
-            Id = Guid.NewGuid();
             TicketTypeId = ticketTypeId;
             PricingPhaseId = pricingPhaseId;
             TicketTypeName = ticketTypeName.Trim();
@@ -56,12 +49,12 @@ namespace Eventbox.Ticketing.Domain.Orders
             Quantity = quantity;
         }
 
-        public Guid TicketTypeId { get; private set; }
-        public Guid PricingPhaseId { get; private set; }
-        public string TicketTypeName { get; private set; } = "";
-        public string PricingPhaseName { get; private set; } = "";
-        public decimal UnitPrice { get; private set; }
-        public string Currency { get; private set; } = "";
-        public int Quantity { get; private set; }
+        public Guid TicketTypeId { get; set; }
+        public Guid PricingPhaseId { get; set; }
+        public string TicketTypeName { get; set; } = "";
+        public string PricingPhaseName { get; set; } = "";
+        public decimal UnitPrice { get; set; }
+        public string Currency { get; set; } = "";
+        public int Quantity { get; set; }
     }
 }

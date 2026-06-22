@@ -7,12 +7,8 @@ using Eventbox.Shared.Outbox;
 
 namespace Eventbox.Ticketing.Infrastructure
 {
-    public class TicketingDbContext : DbContext
+    public class TicketingDbContext(DbContextOptions<TicketingDbContext> options) : DbContext(options)
     {
-        public TicketingDbContext(DbContextOptions<TicketingDbContext> options) : base(options)
-        {
-        }
-
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
         public DbSet<Ticket> Tickets => Set<Ticket>();

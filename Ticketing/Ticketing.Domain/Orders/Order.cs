@@ -1,7 +1,5 @@
+using Eventbox.Shared.SeedWorks;
 using Eventbox.Ticketing.Domain.Enums;
-using Eventbox.Ticketing.Domain.SeedWork;
-using System;
-using System.Collections.Generic;
 
 namespace Eventbox.Ticketing.Domain.Orders
 {
@@ -9,12 +7,8 @@ namespace Eventbox.Ticketing.Domain.Orders
     {
         private readonly List<OrderItem> _orderItems = new();
 
-        private Order()
-        {
-            PersonalInfo = null!;
-        }
-
-        public Order(Guid eventId, Guid? userId, PersonalInfo personalInfo, IEnumerable<OrderItem> orderItems, string accessCode, DateTimeOffset reservationExpiresAt)
+        public Order(Guid eventId, Guid? userId, PersonalInfo personalInfo, 
+            IEnumerable<OrderItem> orderItems, string accessCode, DateTimeOffset reservationExpiresAt) : base(Guid.NewGuid())
         {
             var items = orderItems.ToList();
             if (eventId == Guid.Empty)
@@ -23,7 +17,6 @@ namespace Eventbox.Ticketing.Domain.Orders
             if (items.Count == 0)
                 throw new ArgumentException("An order must have at least one item.", nameof(orderItems));
 
-            Id = Guid.NewGuid();
             EventId = eventId;
             UserId = userId;
             OrderState = OrderState.Pending;
@@ -33,12 +26,12 @@ namespace Eventbox.Ticketing.Domain.Orders
             _orderItems.AddRange(items);
         }
 
-        public Guid EventId { get; private set; }
-        public Guid? UserId { get; private set; }
-        public OrderState OrderState { get; private set; }
-        public string? AccessCode { get; private set; }
-        public DateTimeOffset? ReservationExpiresAt { get; private set; }
-        public PersonalInfo PersonalInfo { get; private set; }
+        public Guid EventId { get; set; }
+        public Guid? UserId { get; set; }
+        public OrderState OrderState { get; set; }
+        public string? AccessCode { get; set; }
+        public DateTimeOffset? ReservationExpiresAt { get; set; }
+        public PersonalInfo PersonalInfo { get; set; }
 
         public IReadOnlyCollection<OrderItem> OrderItems => _orderItems.AsReadOnly();
 

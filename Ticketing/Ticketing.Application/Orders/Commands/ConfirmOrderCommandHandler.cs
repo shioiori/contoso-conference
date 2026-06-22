@@ -1,3 +1,5 @@
+using Eventbox.Contracts.IntegrationEvents;
+using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Domain.Tickets;
@@ -8,7 +10,8 @@ namespace Eventbox.Ticketing.Application.Commands;
 public class ConfirmOrderCommandHandler(
     IUnitOfWork unitOfWork,
     IQrTokenGenerator qrTokenGenerator,
-    IQrTokenHasher qrTokenHasher) : IRequestHandler<ConfirmOrderCommand, bool>
+    IQrTokenHasher qrTokenHasher,
+    IEventBus eventBus) : IRequestHandler<ConfirmOrderCommand, bool>
 {
     public async Task<bool> Handle(ConfirmOrderCommand request, CancellationToken cancellationToken)
     {
@@ -34,6 +37,21 @@ public class ConfirmOrderCommandHandler(
 
             await unitOfWork.Tickets.AddRangeAsync(tickets, cancellationToken);
             await unitOfWork.SaveChangesAsync(cancellationToken);
+
+            await eventBus.PublishAsync(new OrderConfirmedIntegrationEvent
+            {
+                OrderId = order.Id,
+                CustomerName = order.PersonalInfo.Name,
+                CustomerEmail = order.PersonalInfo.Email,
+                AccessCode = order.AccessCode ?? string.Empty,
+                Items = order.OrderItems.Select(i => new OrderConfirmedIntegrationEvent.OrderItemInfo
+                {
+                    TicketTypeName = i.TicketTypeName,
+                    Quantity = i.Quantity,
+                    UnitPrice = i.UnitPrice,
+                    Currency = i.Currency
+                }).ToList()
+            }, cancellationToken);
         }
 
         return true;

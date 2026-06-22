@@ -1,10 +1,9 @@
-using Eventbox.Shared.Auditing;
 using Eventbox.Shared.Outbox;
+using Eventbox.Shared.SeedWorks;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Infrastructure.Repositories;
 using Eventbox.Ticketing.Infrastructure.Tickets;
-using Microsoft.EntityFrameworkCore;
 
 namespace Eventbox.Ticketing.Infrastructure;
 

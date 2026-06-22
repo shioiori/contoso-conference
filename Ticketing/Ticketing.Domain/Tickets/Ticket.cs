@@ -1,17 +1,11 @@
+using Eventbox.Shared.SeedWorks;
 using Eventbox.Ticketing.Domain.Enums;
-using Eventbox.Ticketing.Domain.SeedWork;
 
 namespace Eventbox.Ticketing.Domain.Tickets;
 
-public class Ticket : Entity<Guid>
+public class Ticket : AuditableEntity<Guid>
 {
-    private Ticket()
-    {
-        QrToken = null!;
-        QrTokenHash = null!;
-    }
-
-    public Ticket(Guid orderId, Guid eventId, Guid ticketTypeId, int sequenceNumber)
+    public Ticket(Guid orderId, Guid eventId, Guid ticketTypeId, int sequenceNumber) : base(Guid.NewGuid())
     {
         if (orderId == Guid.Empty)
             throw new ArgumentException("Order id is required.", nameof(orderId));
@@ -25,7 +19,6 @@ public class Ticket : Entity<Guid>
         if (sequenceNumber <= 0)
             throw new ArgumentOutOfRangeException(nameof(sequenceNumber), "Sequence number must be greater than zero.");
 
-        Id = Guid.NewGuid();
         OrderId = orderId;
         EventId = eventId;
         TicketTypeId = ticketTypeId;
@@ -33,15 +26,15 @@ public class Ticket : Entity<Guid>
         TicketState = TicketState.Active;
     }
 
-    public Guid OrderId { get; private set; }
-    public Guid EventId { get; private set; }
-    public Guid TicketTypeId { get; private set; }
-    public int SequenceNumber { get; private set; }
-    public TicketState TicketState { get; private set; }
-    public string? QrToken { get; private set; }
-    public string? QrTokenHash { get; private set; }
-    public DateTimeOffset? CheckedInAt { get; private set; }
-    public Guid? CheckedInByUserId { get; private set; }
+    public Guid OrderId { get; set; }
+    public Guid EventId { get; set; }
+    public Guid TicketTypeId { get; set; }
+    public int SequenceNumber { get; set; }
+    public TicketState TicketState { get; set; }
+    public string? QrToken { get; set; }
+    public string? QrTokenHash { get; set; }
+    public DateTimeOffset? CheckedInAt { get; set; }
+    public Guid? CheckedInByUserId { get; set; }
 
     public void AssignQrToken(string qrToken, string qrTokenHash)
     {

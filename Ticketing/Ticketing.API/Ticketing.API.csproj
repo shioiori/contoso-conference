@@ -26,6 +26,7 @@
 	  <ProjectReference Include="..\..\EventBus\EventBus.Core\EventBus.Core.csproj" />
 	  <ProjectReference Include="..\..\EventBus\EventBus.RabbitMQ\EventBus.RabbitMQ.csproj" />
     <ProjectReference Include="..\..\Shared\Eventbox.Shared\Eventbox.Shared.csproj" />
+    <ProjectReference Include="..\..\Shared\Eventbox.Shared.Infrastructure\Eventbox.Shared.Infrastructure.csproj" />
     <ProjectReference Include="..\Ticketing.Application\Ticketing.Application.csproj" />
     <ProjectReference Include="..\Ticketing.Infrastructure\Ticketing.Infrastructure.csproj" />
   </ItemGroup>

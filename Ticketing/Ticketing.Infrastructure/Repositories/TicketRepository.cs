@@ -1,15 +1,14 @@
+using Eventbox.Shared.Infrastructure.Repositories;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Domain.Enums;
 using Eventbox.Ticketing.Domain.Tickets;
-using Eventbox.Ticketing.Infrastructure.Repositories.Common;
 using Microsoft.EntityFrameworkCore;
 
-namespace Eventbox.Ticketing.Infrastructure.Tickets;
+namespace Eventbox.Ticketing.Infrastructure.Repositories;
 
-public class TicketRepository : BaseRepository<TicketingDbContext, Ticket, Guid>, ITicketRepository
+public class TicketRepository(TicketingDbContext dbContext) 
+    : BaseRepository<TicketingDbContext, Ticket, Guid>(dbContext), ITicketRepository
 {
-    public TicketRepository(TicketingDbContext dbContext) : base(dbContext) { }
-
     public async Task<IReadOnlyList<Ticket>> GetByOrderIdAsync(Guid orderId, CancellationToken cancellationToken = default)
         => await DbContext.Tickets.Where(t => t.OrderId == orderId).ToListAsync(cancellationToken);
 

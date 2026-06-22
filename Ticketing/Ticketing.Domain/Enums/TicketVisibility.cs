@@ -1,5 +1,4 @@
 namespace Eventbox.Ticketing.Domain.Enums;
-
 public enum TicketVisibility
 {
     Public = 0,

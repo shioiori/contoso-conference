@@ -24,6 +24,7 @@ public static class MessagingExtensions
                 "eventbox.ticketing",
                 routingKey: "ticketing.expire",
                 queue: "eventbox.ticketing.expire");
+            options.Publish<OrderConfirmedIntegrationEvent>("eventbox.ticketing");
         });
 
         services.AddSingleton<RabbitMQEventBus>();

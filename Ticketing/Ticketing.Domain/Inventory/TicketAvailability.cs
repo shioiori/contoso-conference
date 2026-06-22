@@ -1,21 +1,15 @@
-using Eventbox.Ticketing.Domain.SeedWork;
+using Eventbox.Shared.SeedWorks;
 
 namespace Eventbox.Ticketing.Domain.Inventory
 {
-    public class TicketAvailability : Entity<Guid>
+    public class TicketAvailability : AuditableEntity<Guid>
     {
         private readonly List<TicketTypeAvailability> _ticketTypes = new();
 
-        private TicketAvailability()
-        {
-        }
-
-        public TicketAvailability(Guid eventId, IEnumerable<TicketTypeAvailability> ticketTypes)
+        public TicketAvailability(Guid eventId, IEnumerable<TicketTypeAvailability> ticketTypes) : base(eventId)
         {
             if (eventId == Guid.Empty)
                 throw new ArgumentException("Event id is required.", nameof(eventId));
-
-            Id = eventId;
             _ticketTypes.AddRange(ticketTypes);
         }
 
