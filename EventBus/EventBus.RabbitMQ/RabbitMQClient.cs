@@ -8,11 +8,11 @@ namespace EventBus.RabbitMQ
     {
         private readonly RabbitMQOptions _options;
         private readonly ILogger<RabbitMQClient> _logger;
-        private IConnection _connection = default!;
+        private IConnection _connection;
         public IConnection Connection => _connection;
-        private IChannel _publishChannel = default!;
+        private IChannel _publishChannel;
         public IChannel PublishChannel => _publishChannel;
-        private IChannel _consumeChannel = default!;
+        private IChannel _consumeChannel;
         public IChannel ConsumeChannel => _consumeChannel;
 
         public RabbitMQClient(RabbitMQOptions options, ILogger<RabbitMQClient> logger)
