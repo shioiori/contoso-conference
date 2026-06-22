@@ -20,8 +20,8 @@ public class EventSnapshot : AuditableEntity<Guid>
         IsPublished = isPublished;
     }
 
-    public DateTimeOffset From { get; set; }
-    public DateTimeOffset To { get; set; }
+    public DateTimeOffset From { get; private set; }
+    public DateTimeOffset To { get; private set; }
     public bool IsPublished { get; private set;  }
 
     public void Update(DateTimeOffset from, DateTimeOffset to, bool? isPublished)

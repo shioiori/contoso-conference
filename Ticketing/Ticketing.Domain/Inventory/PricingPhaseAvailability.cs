@@ -28,11 +28,11 @@ public class PricingPhaseAvailability
         EndTime = endTime;
     }
 
-    public Guid Id { get; set; }
-    public string Name { get; set; }
-    public decimal Price { get; set; }
-    public DateTimeOffset? StartTime { get; set; }
-    public DateTimeOffset? EndTime { get; set; }
+    public Guid Id { get; private set; }
+    public string Name { get; private set; }
+    public decimal Price { get; private set; }
+    public DateTimeOffset? StartTime { get; private set; }
+    public DateTimeOffset? EndTime { get; private set; }
 
     public bool IsActive(DateTimeOffset utcNow)
         => (!StartTime.HasValue || StartTime <= utcNow)

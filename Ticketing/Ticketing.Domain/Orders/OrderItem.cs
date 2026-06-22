@@ -49,12 +49,12 @@ namespace Eventbox.Ticketing.Domain.Orders
             Quantity = quantity;
         }
 
-        public Guid TicketTypeId { get; set; }
-        public Guid PricingPhaseId { get; set; }
-        public string TicketTypeName { get; set; } = "";
-        public string PricingPhaseName { get; set; } = "";
-        public decimal UnitPrice { get; set; }
-        public string Currency { get; set; } = "";
-        public int Quantity { get; set; }
+        public Guid TicketTypeId { get; private set; }
+        public Guid PricingPhaseId { get; private set; }
+        public string TicketTypeName { get; private set; } = "";
+        public string PricingPhaseName { get; private set; } = "";
+        public decimal UnitPrice { get; private set; }
+        public string Currency { get; private set; } = "";
+        public int Quantity { get; private set; }
     }
 }
