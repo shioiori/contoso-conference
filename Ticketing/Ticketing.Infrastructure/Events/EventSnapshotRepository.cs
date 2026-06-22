@@ -1,5 +1,5 @@
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
-using Eventbox.Ticketing.Domain.Entities;
+using Eventbox.Ticketing.Domain.Events;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eventbox.Ticketing.Infrastructure.Repositories;

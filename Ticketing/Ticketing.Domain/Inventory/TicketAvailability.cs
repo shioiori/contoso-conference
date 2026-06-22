@@ -1,6 +1,6 @@
 using Eventbox.Ticketing.Domain.SeedWork;
 
-namespace Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate
+namespace Eventbox.Ticketing.Domain.Inventory
 {
     public class TicketAvailability : Entity<Guid>
     {

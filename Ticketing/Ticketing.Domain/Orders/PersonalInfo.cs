@@ -1,4 +1,4 @@
-namespace Eventbox.Ticketing.Domain.Entities.OrderAggregate
+namespace Eventbox.Ticketing.Domain.Orders
 {
     using System.Net.Mail;
 

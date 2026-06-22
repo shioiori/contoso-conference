@@ -4,9 +4,9 @@ using Eventbox.Shared.Outbox;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Application.Commands;
-using Eventbox.Ticketing.Domain.Entities;
-using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
-using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Domain.Events;
+using Eventbox.Ticketing.Domain.Orders;
+using Eventbox.Ticketing.Domain.Inventory;
 using Eventbox.Ticketing.Domain.Enums;
 using Eventbox.Ticketing.Domain.Tickets;
 

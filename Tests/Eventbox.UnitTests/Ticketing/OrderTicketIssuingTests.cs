@@ -1,4 +1,4 @@
-using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
+using Eventbox.Ticketing.Domain.Orders;
 using Eventbox.Ticketing.Domain.Enums;
 
 namespace Eventbox.UnitTests.Ticketing;

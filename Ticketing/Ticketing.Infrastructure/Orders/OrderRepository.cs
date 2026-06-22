@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
+using Eventbox.Ticketing.Domain.Orders;
 using Eventbox.Ticketing.Domain.Enums;
 using Eventbox.Ticketing.Infrastructure.Repositories.Common;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;

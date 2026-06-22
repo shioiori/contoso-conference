@@ -91,7 +91,7 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
                     b.ToTable("EventSchedules");
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Entities.OrderAggregate.Order", b =>
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Orders.Order", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -129,7 +129,7 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Entities.OrderAggregate.OrderItem", b =>
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Orders.OrderItem", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -185,7 +185,7 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
                     b.ToTable("OrderItems");
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Entities.OrderAggregate.Ticket", b =>
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Orders.Ticket", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -247,7 +247,7 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
                     b.ToTable("Tickets");
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate.TicketAvailability", b =>
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Inventory.TicketAvailability", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -270,9 +270,9 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
                     b.ToTable("TicketAvailabilities");
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Entities.OrderAggregate.Order", b =>
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Orders.Order", b =>
                 {
-                    b.OwnsOne("Eventbox.Ticketing.Domain.Entities.OrderAggregate.PersonalInfo", "PersonalInfo", b1 =>
+                    b.OwnsOne("Eventbox.Ticketing.Domain.Orders.PersonalInfo", "PersonalInfo", b1 =>
                         {
                             b1.Property<Guid>("OrderId")
                                 .HasColumnType("uuid");
@@ -297,27 +297,27 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Entities.OrderAggregate.OrderItem", b =>
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Orders.OrderItem", b =>
                 {
-                    b.HasOne("Eventbox.Ticketing.Domain.Entities.OrderAggregate.Order", null)
+                    b.HasOne("Eventbox.Ticketing.Domain.Orders.Order", null)
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Entities.OrderAggregate.Ticket", b =>
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Orders.Ticket", b =>
                 {
-                    b.HasOne("Eventbox.Ticketing.Domain.Entities.OrderAggregate.Order", null)
+                    b.HasOne("Eventbox.Ticketing.Domain.Orders.Order", null)
                         .WithMany("Tickets")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate.TicketAvailability", b =>
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Inventory.TicketAvailability", b =>
                 {
-                    b.OwnsMany("Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate.TicketTypeAvailability", "TicketTypes", b1 =>
+                    b.OwnsMany("Eventbox.Ticketing.Domain.Inventory.TicketTypeAvailability", "TicketTypes", b1 =>
                         {
                             b1.Property<int>("Id")
                                 .ValueGeneratedOnAdd()
@@ -368,7 +368,7 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("TicketAvailabilityId");
 
-                            b1.OwnsMany("Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate.PricingPhaseAvailability", "PricingPhases", b2 =>
+                            b1.OwnsMany("Eventbox.Ticketing.Domain.Inventory.PricingPhaseAvailability", "PricingPhases", b2 =>
                                 {
                                     b2.Property<int>("Id")
                                         .ValueGeneratedOnAdd()
@@ -410,7 +410,7 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
                     b.Navigation("TicketTypes");
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Entities.OrderAggregate.Order", b =>
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Orders.Order", b =>
                 {
                     b.Navigation("OrderItems");
 

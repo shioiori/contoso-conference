@@ -1,4 +1,4 @@
-using Eventbox.Ticketing.Domain.Entities;
+using Eventbox.Ticketing.Domain.Events;
 
 namespace Eventbox.UnitTests.Ticketing;
 

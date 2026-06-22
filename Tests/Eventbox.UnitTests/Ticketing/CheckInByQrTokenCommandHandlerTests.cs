@@ -2,7 +2,7 @@ using System.Linq.Expressions;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Application.Commands;
-using Eventbox.Ticketing.Domain.Entities;
+using Eventbox.Ticketing.Domain.Events;
 using Eventbox.Ticketing.Domain.Enums;
 using Eventbox.Ticketing.Domain.Tickets;
 

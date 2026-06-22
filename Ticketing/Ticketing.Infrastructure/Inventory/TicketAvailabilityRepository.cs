@@ -1,5 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Domain.Inventory;
 using Eventbox.Ticketing.Infrastructure.Repositories.Common;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
 

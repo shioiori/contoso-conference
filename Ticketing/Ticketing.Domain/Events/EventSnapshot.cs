@@ -1,6 +1,6 @@
 using Eventbox.Ticketing.Domain.SeedWork;
 
-namespace Eventbox.Ticketing.Domain.Entities;
+namespace Eventbox.Ticketing.Domain.Events;
 
 public class EventSnapshot : Entity<Guid>
 {

@@ -2,7 +2,7 @@ using Eventbox.EventBus.Core.Abstractions;
 using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
-using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Domain.Inventory;
 using Eventbox.Ticketing.Domain.Enums;
 
 namespace Eventbox.Ticketing.Application.IntegrationEventHandlers;

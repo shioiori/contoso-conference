@@ -4,7 +4,7 @@ using Eventbox.Shared.Outbox;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Constants;
 using Eventbox.Ticketing.Application.Dtos;
-using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
+using Eventbox.Ticketing.Domain.Orders;
 using Mapster;
 using MediatR;
 using System.Security.Cryptography;

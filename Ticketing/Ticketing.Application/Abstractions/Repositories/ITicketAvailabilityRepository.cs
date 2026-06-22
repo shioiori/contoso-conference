@@ -1,4 +1,4 @@
-using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Domain.Inventory;
 
 namespace Eventbox.Ticketing.Application.Abstractions.Repositories
 {

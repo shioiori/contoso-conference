@@ -1,6 +1,6 @@
 using Eventbox.Ticketing.Application.Dtos;
-using Eventbox.Ticketing.Domain.Entities.OrderAggregate;
-using Eventbox.Ticketing.Domain.Entities.TicketAvailabilityAggregate;
+using Eventbox.Ticketing.Domain.Orders;
+using Eventbox.Ticketing.Domain.Inventory;
 using Eventbox.Ticketing.Domain.Tickets;
 using Mapster;
 
