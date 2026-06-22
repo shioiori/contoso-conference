@@ -1,5 +1,5 @@
 using Eventbox.Payment.Core.Enums;
-using Eventbox.Shared.Objects;
+using Eventbox.Shared.SeedWorks;
 
 namespace Eventbox.Payment.Core.Entities
 {
