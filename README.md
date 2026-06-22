@@ -203,6 +203,31 @@ Default Docker HTTP endpoints:
 | Ticketing API | `http://localhost:8020` |
 | Payment API | `http://localhost:8030` |
 
+### AWS EC2 Staging With Docker Compose
+
+Use the staging Compose override instead of the local `docker-compose.override.yml` file. Copy the example environment file on the EC2 host and replace every placeholder with staging secrets:
+
+```bash
+cp .env.staging.example .env.staging
+```
+
+Start the stack with explicit Compose files so Docker does not automatically merge the local development override:
+
+```bash
+docker compose --env-file .env.staging -f docker-compose.yml -f docker-compose.staging.yml up -d --build
+```
+
+The staging override:
+
+- runs APIs with `ASPNETCORE_ENVIRONMENT=Staging`
+- serves HTTP only inside the containers on port `8080`
+- uses Docker service names for PostgreSQL, RabbitMQ, and internal API calls
+- stores PostgreSQL and RabbitMQ data in named Docker volumes
+- does not publish PostgreSQL or RabbitMQ ports to the EC2 host
+- creates `AuthDb`, `TicketingDb`, and `PaymentDb` on first PostgreSQL volume initialization; `EventDb` is created by `POSTGRES_DB`
+
+For EC2, keep the instance security group limited to the API or reverse-proxy ports you intend to expose. If you terminate HTTPS at an ALB, Nginx, or Caddy, forward traffic to the API HTTP ports and keep database and RabbitMQ ports private.
+
 ### Run Locally With Docker Infrastructure
 
 Start only PostgreSQL and RabbitMQ:
