@@ -3,6 +3,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Staging
       - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=
     ports:
       - "8000:8080"
     volumes: []
@@ -11,6 +12,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Staging
       - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=
     ports:
       - "8010:8080"
     volumes: []
@@ -19,6 +21,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Staging
       - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=
     ports:
       - "8030:8080"
     volumes: []
@@ -27,6 +30,7 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Staging
       - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTPS_PORTS=
     ports:
       - "8020:8080"
     volumes: []
