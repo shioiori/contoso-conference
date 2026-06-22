@@ -1,0 +1,32 @@
+services:
+  auth.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Staging
+      - ASPNETCORE_HTTP_PORTS=8080
+    ports:
+      - "8000:8080"
+    volumes: []
+
+  event.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Staging
+      - ASPNETCORE_HTTP_PORTS=8080
+    ports:
+      - "8010:8080"
+    volumes: []
+
+  payment.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Staging
+      - ASPNETCORE_HTTP_PORTS=8080
+    ports:
+      - "8030:8080"
+    volumes: []
+
+  ticketing.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Staging
+      - ASPNETCORE_HTTP_PORTS=8080
+    ports:
+      - "8020:8080"
+    volumes: []
