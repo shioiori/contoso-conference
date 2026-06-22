@@ -82,7 +82,8 @@ Base URL when running locally: `http://localhost:8000`
 | --- | --- | --- | --- |
 | `POST` | `/api/auth/customers/register` | Public | Register a customer account and return a JWT. |
 | `POST` | `/api/auth/organizers/register` | Public | Register an organizer account and return a JWT. |
-| `POST` | `/api/auth/login` | Public | Login by email/password and return a JWT. |
+| `POST` | `/api/auth/customers/login` | Public | Login a customer by email/password and return a JWT. |
+| `POST` | `/api/auth/organizers/login` | Public | Login an organizer by email/password and return a JWT. |
 | `GET` | `/api/auth/me` | Bearer token | Return current user id, email, and `account_type`. |
 
 ### Event API
@@ -101,9 +102,12 @@ Organizer routes require a JWT with `account_type = Organizer`:
 | Method | Route | Purpose |
 | --- | --- | --- |
 | `POST` | `/api/organizations` | Create an organization. |
+| `GET` | `/api/organizations/me` | Get organizations for the current organizer. |
 | `GET` | `/api/organizations/{id}` | Get organization detail. |
 | `PUT` | `/api/organizations/{id}` | Update an organization. |
 | `DELETE` | `/api/organizations/{id}` | Delete an organization. |
+| `POST` | `/api/organizations/{id}/organizers?organizerId={organizerId}` | Add an organizer account to an organization. |
+| `DELETE` | `/api/organizations/{id}/organizers/{organizerId}` | Remove an organizer account from an organization. |
 | `GET` | `/api/organizations/{organizationId}/events` | Search/list organizer events. |
 | `POST` | `/api/organizations/{organizationId}/events` | Create a draft event. |
 | `GET` | `/api/organizations/{organizationId}/events/{id}` | Get organizer event detail. |
@@ -113,7 +117,7 @@ Organizer routes require a JWT with `account_type = Organizer`:
 | `POST` | `/api/organizations/{organizationId}/events/{id}/unpublish` | Unpublish an event. |
 | `GET` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types` | List ticket types for an event. |
 | `POST` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types` | Create a ticket type. |
-| `PATCH` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types/{ticketTypeId}` | Update a ticket type. |
+| `PUT` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types/{ticketTypeId}` | Update a ticket type. |
 | `POST` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types/{ticketTypeId}/capacity` | Add capacity to a ticket type. |
 | `GET` | `/api/organizations/{organizationId}/events/{eventId}/ticket-types/{ticketTypeId}/availability` | Get ticket type availability. |
 
@@ -127,7 +131,6 @@ Public routes:
 | --- | --- | --- |
 | `GET` | `/api/public/events/{eventId}/ticket-availability` | Get ticket availability by event id. |
 | `POST` | `/api/public/events/{eventId}/orders` | Create an order/reservation. Supports guest checkout when email is supplied. |
-| `POST` | `/api/public/order-lookup-requests` | Request a self-service order lookup email. |
 | `GET` | `/api/public/self-service/orders?token={token}` | Get an order by self-service token. |
 
 Customer routes require a JWT with `account_type = Customer`:
@@ -339,9 +342,12 @@ Current unit test coverage focuses on:
 
 ## Postman
 
+The v2 API contract is tracked in `specs/event-ticketing-system/16-api-contract.md`. Product features such as attendee list APIs, manual attendee lookup/check-in, order lookup email requests, reporting/export, notification settings, and richer team roles are v3 backlog unless code is added.
+
 The `postman/` folder contains:
 
 - `Event.API.postman_collection.json`
 - `Eventbox.Docker.postman_environment.json`
+- `Eventbox.Staging.postman_environment.json`
 
 Import both files into Postman and select the **Eventbox Docker** environment to test against the Docker Compose setup.
