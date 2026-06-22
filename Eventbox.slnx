@@ -27,7 +27,7 @@
     <Project Path="Ticketing/Ticketing.Domain/Ticketing.Domain.csproj" />
     <Project Path="Ticketing/Ticketing.Infrastructure/Ticketing.Infrastructure.csproj" />
   </Folder>
-  <Project Path="D:/Personal/Projects/eventbox-api/docker-compose.dcproj">
+  <Project Path="docker-compose.dcproj">
     <Build />
   </Project>
 </Solution>
