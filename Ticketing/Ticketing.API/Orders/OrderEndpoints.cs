@@ -6,6 +6,7 @@ using System.Security.Claims;
 using Eventbox.Ticketing.Application.Commands.Orders;
 using Eventbox.Ticketing.Application.Queries.Inventory;
 using Eventbox.Ticketing.Application.Queries.Orders;
+using Eventbox.Shared.Constants;
 
 namespace Eventbox.Ticketing.Api.Endpoints
 {
@@ -19,7 +20,7 @@ namespace Eventbox.Ticketing.Api.Endpoints
             publicApi.MapGet("/self-service/orders", GetOrdersBySelfServiceToken);
 
             var customerApi = app.MapGroup("api/customer")
-                .RequireAuthorization("RequireCustomerAccount");
+                .RequireAuthorization(PolicyName.RequireCustomerAccount);
 
             customerApi.MapGet("/orders", GetCurrentCustomerOrders);
             customerApi.MapGet("/orders/by-email", GetOrdersByEmail);
