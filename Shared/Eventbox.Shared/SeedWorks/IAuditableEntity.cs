@@ -1,4 +1,4 @@
-namespace Eventbox.Shared.Auditing;
+namespace Eventbox.Shared.SeedWorks;
 
 public interface IAuditableEntity
 {
@@ -6,7 +6,6 @@ public interface IAuditableEntity
     DateTimeOffset? UpdatedDate { get; }
     string? CreatedBy { get; }
     string? UpdatedBy { get; }
-
     void MarkCreated(string? userId, DateTimeOffset utcNow);
     void MarkUpdated(string? userId, DateTimeOffset utcNow);
 }

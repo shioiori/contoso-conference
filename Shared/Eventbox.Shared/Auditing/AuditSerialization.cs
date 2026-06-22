@@ -2,7 +2,7 @@ using System.Text.Json;
 
 namespace Eventbox.Shared.Auditing;
 
-internal static class AuditSerialization
+public static class AuditSerialization
 {
     private static readonly JsonSerializerOptions Options = new(JsonSerializerDefaults.Web)
     {

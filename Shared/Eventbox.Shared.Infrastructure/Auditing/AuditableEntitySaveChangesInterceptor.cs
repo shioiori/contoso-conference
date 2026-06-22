@@ -1,3 +1,4 @@
+using Eventbox.Shared.SeedWorks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 
