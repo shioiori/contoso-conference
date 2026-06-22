@@ -2,5 +2,5 @@ namespace Eventbox.Notification.Api.Email;
 
 public interface IEmailSender
 {
-    Task SendAsync(string toEmail, string toName, string subject, string htmlBody, CancellationToken cancellationToken = default);
+    Task SendEmailAsync(string[] emails, string subject, string htmlMessage, CancellationToken cancellationToken = default);
 }

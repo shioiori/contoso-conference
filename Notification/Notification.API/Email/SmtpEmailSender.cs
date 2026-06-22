@@ -5,27 +5,23 @@ using MimeKit;
 
 namespace Eventbox.Notification.Api.Email;
 
-public class SmtpEmailSender : IEmailSender
+public class SmtpEmailSender(IOptions<EmailOptions> options) : IEmailSender
 {
-    private readonly EmailOptions _options;
+    private readonly EmailOptions _options = options.Value;
 
-    public SmtpEmailSender(IOptions<EmailOptions> options)
-    {
-        _options = options.Value;
-    }
-
-    public async Task SendAsync(string toEmail, string toName, string subject, string htmlBody, CancellationToken cancellationToken = default)
+    public async Task SendEmailAsync(string[] emails, string subject, string htmlMessage, CancellationToken cancellationToken = default)
     {
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(_options.FromName, _options.FromAddress));
-        message.To.Add(new MailboxAddress(toName, toEmail));
+        foreach (var email in emails)
+            message.To.Add(MailboxAddress.Parse(email));
         message.Subject = subject;
-        message.Body = new TextPart("html") { Text = htmlBody };
+        message.Body = new TextPart("html") { Text = htmlMessage };
 
         using var client = new SmtpClient();
-        await client.ConnectAsync(_options.Host, _options.Port, SecureSocketOptions.None, cancellationToken);
+        await client.ConnectAsync(_options.Host, _options.Port, SecureSocketOptions.Auto, cancellationToken);
 
-        if (!string.IsNullOrEmpty(_options.Username))
+        if (!string.IsNullOrEmpty(_options.Username) && !string.IsNullOrEmpty(_options.Password))
             await client.AuthenticateAsync(_options.Username, _options.Password, cancellationToken);
 
         await client.SendAsync(message, cancellationToken);
