@@ -1,40 +1,30 @@
-using Eventbox.EventManagement.EventApi.Domains.Common;
+using Eventbox.EventManagement.EventApi.Domains.Enums;
+using Eventbox.EventManagement.EventApi.Domains.Extensions;
 using Eventbox.Shared.Exceptions;
+using Eventbox.Shared.Objects;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Eventbox.EventManagement.EventApi.Domains
 {
     [Table("Event")]
-    public class Event : Entity<Guid>
+    public class Event : AuditableEntity<Guid>
     {
-        public Guid OrganizationId { get; private set; }
-        public string Name { get; private set; } = default!;
-        public string? Description { get; private set; }
-        public string Slug { get; private set; } = default!;
-        public DateTimeOffset From { get; private set; }
-        public DateTimeOffset To { get; private set; }
-        public bool IsPublished { get; private set; }
-        public string? AccessCode { get; private set; }
+        public Guid OrganizationId { get; set; }
+        public string Name { get; set; } = default!;
+        public string? Description { get; set; }
+        public string Slug { get; set; } = default!;
+        public DateTimeOffset From { get; set; }
+        public DateTimeOffset To { get; set; }
+        public bool IsPublished { get; set; }
+        public string? AccessCode { get; set; }
 
-        public EventStatus Status
-        {
-            get
-            {
-                if (IsPublished)
-                    return EventStatus.Published;
-                else if (From > DateTimeOffset.UtcNow)
-                    return EventStatus.Draft;
-                else
-                    return EventStatus.Cancelled;
-            }
-        }
+        public EventStatus Status => EventStatusHelper.GetCurrentEventStatus(IsPublished, From);
 
         private readonly List<TicketType> _ticketTypes = [];
         public IReadOnlyCollection<TicketType> TicketTypes => _ticketTypes.AsReadOnly();
 
-        private Event() { }
-
         public Event(Guid id, Guid organizationId, string name, string slug, DateTimeOffset from, DateTimeOffset to, string? description, string accessCode)
+            : base(id)
         {
             from = from.ToUniversalTime();
             to = to.ToUniversalTime();
@@ -109,12 +99,5 @@ namespace Eventbox.EventManagement.EventApi.Domains
 
             IsPublished = false;
         }
-    }
-
-    public enum EventStatus
-    {
-        Draft,
-        Published,
-        Cancelled
     }
 }

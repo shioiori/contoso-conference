@@ -1,12 +1,13 @@
 using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
-using Eventbox.EventManagement.EventApi.Domains;
-using Eventbox.EventManagement.EventApi.Infrastructure.Repositories.Common;
+using Eventbox.EventManagement.EventApi.Domains.Enums;
+using Eventbox.Shared.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Event = Eventbox.EventManagement.EventApi.Domains.Event;
 
 namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
 {
-    public class EventRepository(EventDbContext dbContext) : BaseRepository<EventDbContext, Domains.Event, Guid>(dbContext), IEventRepository
+    public class EventRepository(EventDbContext dbContext) 
+        : BaseRepository<EventDbContext, Event, Guid>(dbContext), IEventRepository
     {
         public async Task<bool> SlugExistsAsync(string slug, CancellationToken cancellationToken = default)
             => await dbContext.Events.AnyAsync(c => c.Slug == slug, cancellationToken);

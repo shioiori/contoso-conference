@@ -1,15 +1,10 @@
-using Eventbox.EventManagement.EventApi.Domains.Common;
+using Eventbox.Shared.Objects;
 
 namespace Eventbox.EventManagement.EventApi.Domains;
 
-public class PricingPhase : Entity<Guid>
+public class PricingPhase : AuditableEntity<Guid>
 {
-    private PricingPhase()
-    {
-        Name = default!;
-    }
-
-    public PricingPhase(string name, decimal price, DateTimeOffset? startTime, DateTimeOffset? endTime)
+    public PricingPhase(string name, decimal price, DateTimeOffset? startTime, DateTimeOffset? endTime) : base(Guid.NewGuid())
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ArgumentException("Pricing phase name is required.", nameof(name));
@@ -20,17 +15,16 @@ public class PricingPhase : Entity<Guid>
         if (startTime.HasValue && endTime.HasValue && endTime <= startTime)
             throw new ArgumentException("End time must be after start time.", nameof(endTime));
 
-        Id = Guid.NewGuid();
         Name = name.Trim();
         Price = price;
         StartTime = startTime;
         EndTime = endTime;
     }
 
-    public string Name { get; private set; }
-    public decimal Price { get; private set; }
-    public DateTimeOffset? StartTime { get; private set; }
-    public DateTimeOffset? EndTime { get; private set; }
+    public string Name { get; set; }
+    public decimal Price { get; set; }
+    public DateTimeOffset? StartTime { get; set; }
+    public DateTimeOffset? EndTime { get; set; }
 
     public bool IsActive(DateTimeOffset utcNow)
         => (!StartTime.HasValue || StartTime <= utcNow)

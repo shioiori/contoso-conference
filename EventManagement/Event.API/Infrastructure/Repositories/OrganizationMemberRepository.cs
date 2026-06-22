@@ -1,7 +1,6 @@
 using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
 using Eventbox.EventManagement.EventApi.Domains;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 
 namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
 {

@@ -1,0 +1,21 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace Eventbox.EventManagement.EventApi.Api.Requests;
+
+public class UpdateEventRequest
+{
+    [Required, MinLength(1), MaxLength(200)]
+    public string Name { get; set; } = "";
+
+    [Required]
+    public DateTimeOffset From { get; set; }
+
+    [Required]
+    public DateTimeOffset To { get; set; }
+
+    [MaxLength(500)]
+    public string? Summary { get; set; }
+
+    [MaxLength(2000)]
+    public string? Description { get; set; }
+}

@@ -1,22 +1,17 @@
-﻿using Eventbox.EventManagement.EventApi.Domains.Common;
+﻿using Eventbox.Shared.Objects;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Eventbox.EventManagement.EventApi.Domains
 {
     [Table("Organization")]
-    public class Organization : Entity<Guid>
+    public class Organization : AuditableEntity<Guid>
     {
-        public string Name { get; private set; }
+        public string Name { get; set; }
 
         public Organization(Guid id, string name) : base(id)
         {
             Name = string.Empty;
             SetName(name);
-        }
-
-        private Organization()
-        {
-            Name = string.Empty;
         }
 
         public void Update(string name)
