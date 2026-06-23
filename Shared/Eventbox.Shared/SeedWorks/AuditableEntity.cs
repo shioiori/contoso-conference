@@ -1,11 +1,13 @@
 namespace Eventbox.Shared.SeedWorks
 {
-    public abstract class AuditableEntity<T>(T id) : Entity<T>(id), IAuditableEntity
+    public abstract class AuditableEntity<T> : Entity<T>, IAuditableEntity
     {
         public DateTimeOffset CreatedDate { get; set; }
         public DateTimeOffset? UpdatedDate { get; set; }
         public string? CreatedBy { get; set; }
         public string? UpdatedBy { get; set; }
+        protected AuditableEntity() { }
+        protected AuditableEntity(T id) : base(id) { }
 
         public void MarkCreated(string? userId, DateTimeOffset utcNow)
         {
