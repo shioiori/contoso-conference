@@ -5,6 +5,8 @@ namespace Eventbox.Payment.Core.Entities
 {
     public class Payment : AuditableEntity<Guid>
     {
+        private Payment() { }
+
         private Payment(
             Guid orderId,
             decimal amount,

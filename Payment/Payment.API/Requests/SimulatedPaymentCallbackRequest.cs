@@ -10,6 +10,6 @@ namespace Eventbox.Payment.Api.Requests
         public string Currency { get; set; } = string.Empty;
         public DateTimeOffset? PaidAt { get; set; }
         public DateTimeOffset? FailedAt { get; set; }
-        public string FailureReason { get; set; }
+        public string? FailureReason { get; set; }
     }
 }
