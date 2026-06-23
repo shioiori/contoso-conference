@@ -1,30 +1,32 @@
 # Eventbox API
 
-Version 2 of Eventbox API, an event ticketing backend built with .NET 10, PostgreSQL, RabbitMQ, and an event-driven microservice layout.
+Eventbox API is an event ticketing backend built with .NET 10, PostgreSQL, RabbitMQ, and an event-driven microservice layout.
 
 ## Overview
 
-Eventbox v2 covers the core flow for organizers publishing events and customers registering for tickets:
+Eventbox covers the core flow for organizers publishing events and customers registering for tickets:
 
-- Organizer accounts create organizations, events, and ticket types.
+- Organizer accounts create organizations, events, ticket types, and ticket capacity.
 - Public users discover published events and check ticket availability.
 - Customers or guests create orders for an event.
-- Orders reserve ticket availability and can expire automatically.
-- Payment simulation confirms paid orders through RabbitMQ integration events.
+- Orders reserve ticket availability, can be paid, cancelled, confirmed for free, or expired automatically.
+- Payment simulation confirms or fails paid orders through RabbitMQ integration events.
+- Notification consumes order confirmation events and sends email through SMTP.
 - Organizers check attendees in by QR token at the door.
 
 ## Services
 
 | Service | Project | Responsibility |
 | --- | --- | --- |
-| Auth API | `Auth/Auth.API` | Customer/organizer registration, login, JWT issuance, current-user endpoint. |
-| Event API | `EventManagement/Event.API` | Organizations, organizer event management, public event discovery, ticket type management. |
-| Ticketing API | `Ticketing/Ticketing.API` | Public checkout, customer orders, order cancellation/confirmation, ticket availability, order expiration jobs, QR check-in. |
-| Payment API | `Payment/Payment.API` | Payment intent creation and simulated payment provider callbacks. |
-| EventBus | `EventBus/EventBus`, `EventBus/EventBus.Core`, `EventBus/EventBus.RabbitMQ` | Shared abstractions and RabbitMQ implementation for integration events, commands, and serialization. |
+| YarpApiGateway | `ApiGateway/YarpApiGateway` | YARP reverse proxy for the public API surface. |
+| Auth API | `Auth/Auth.API` | Customer/organizer registration, login, logout, JWT issuance, and current-user endpoint. |
+| Event API | `EventManagement/Event.API` | Organizations, organizer event management, public event discovery, ticket type management, and event outbox publishing. |
+| Ticketing API | `Ticketing/Ticketing.API` | Public checkout, customer orders, internal payment start endpoint, ticket availability, order expiration jobs, and QR check-in. |
+| Payment API | `Payment/Payment.API` | Payment intent creation, order access verification against Ticketing, and simulated payment provider callbacks. |
+| Notification API | `Notification/Notification.API` | RabbitMQ subscriber that sends transactional emails through SMTP/MailHog. |
+| EventBus | `EventBus/EventBus.Core`, `EventBus/EventBus.RabbitMQ` | Shared abstractions and RabbitMQ implementation for integration events and serialization. |
 | Contracts | `Shared/Eventbox.Contracts` | Shared integration event contracts across services. |
-| Shared | `Shared/Eventbox.Shared` | Cross-cutting concerns: outbox, exception handling, auditing. |
-| CheckIn Domain | `CheckIn/CheckIn.Domain` | Domain model for check-in operations shared by Ticketing. |
+| Shared | `Shared/Eventbox.Shared`, `Shared/Eventbox.Shared.Infrastructure` | Cross-cutting concerns: seedwork, exceptions, auditing, logging, repositories, and outbox support. |
 
 ## Tech Stack
 
@@ -32,12 +34,14 @@ Eventbox v2 covers the core flow for organizers publishing events and customers 
 - Entity Framework Core with PostgreSQL
 - ASP.NET Core Identity for Auth
 - JWT Bearer authentication and account-type authorization policies
+- YARP reverse proxy for the public API gateway
 - RabbitMQ for integration events
 - Transactional outbox pattern for reliable event publishing
 - MediatR for Ticketing and Payment application flows
-- Hangfire with PostgreSQL storage for order expiration reconciliation jobs
+- Hangfire with PostgreSQL storage for outbox and order expiration jobs
 - Mapster for object mapping
 - Serilog for structured request and application logging
+- MailKit/QRCoder in Notification
 - xUnit v3 unit tests
 - Docker Compose for local infrastructure and API services
 
@@ -45,6 +49,8 @@ Eventbox v2 covers the core flow for organizers publishing events and customers 
 
 ```text
 Eventbox.slnx
+├── ApiGateway/
+│   └── YarpApiGateway/
 ├── Auth/
 │   └── Auth.API/
 ├── EventManagement/
@@ -58,15 +64,15 @@ Eventbox.slnx
 │   ├── Payment.API/
 │   ├── Payment.Core/
 │   └── Payment.Infrastructure/
-├── CheckIn/
-│   └── CheckIn.Domain/
+├── Notification/
+│   └── Notification.API/
 ├── EventBus/
-│   ├── EventBus/
 │   ├── EventBus.Core/
 │   └── EventBus.RabbitMQ/
 ├── Shared/
 │   ├── Eventbox.Contracts/
-│   └── Eventbox.Shared/
+│   ├── Eventbox.Shared/
+│   └── Eventbox.Shared.Infrastructure/
 ├── Tests/
 ├── postman/
 └── specs/
@@ -74,9 +80,25 @@ Eventbox.slnx
 
 ## Main API Surface
 
+### YarpApiGateway
+
+Base URL in Docker Compose: `http://localhost:8050`
+
+| External route | Proxied route | Target service |
+| --- | --- | --- |
+| `/auth/{**catch-all}` | `/api/auth/{**catch-all}` | Auth API |
+| `/events/{**catch-all}` | `/api/events/{**catch-all}` | Event API |
+| `/organizations/{**catch-all}` | `/api/organizations/{**catch-all}` | Event API |
+| `/ticketing/public/{**catch-all}` | `/api/public/{**catch-all}` | Ticketing API |
+| `/ticketing/customer/{**catch-all}` | `/api/customer/{**catch-all}` | Ticketing API |
+| `/ticketing/events/{**catch-all}` | `/api/events/{**catch-all}` | Ticketing API |
+| `/payments/{**catch-all}` | `/api/payments/{**catch-all}` | Payment API |
+
+The gateway also exposes `GET /health`.
+
 ### Auth API
 
-Base URL when running locally: `http://localhost:8000`
+Direct local base URL: `http://localhost:8000`
 
 | Method | Route | Auth | Purpose |
 | --- | --- | --- | --- |
@@ -84,18 +106,19 @@ Base URL when running locally: `http://localhost:8000`
 | `POST` | `/api/auth/organizers/register` | Public | Register an organizer account and return a JWT. |
 | `POST` | `/api/auth/customers/login` | Public | Login a customer by email/password and return a JWT. |
 | `POST` | `/api/auth/organizers/login` | Public | Login an organizer by email/password and return a JWT. |
-| `GET` | `/api/auth/me` | Bearer token | Return current user id, email, and `account_type`. |
+| `GET` | `/api/auth/me` | Bearer token | Return current user id, email, and account type. |
+| `POST` | `/api/auth/logout` | Bearer token | Stateless logout endpoint; returns no content. |
 
 ### Event API
 
-Base URL when running locally: `http://localhost:8010`
+Direct local base URL: `http://localhost:8010`
 
 Public routes:
 
 | Method | Route | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/public/events` | Search/list published events. |
-| `GET` | `/api/public/events/{slug}` | Get detail for a published event. |
+| `GET` | `/api/public/events/{slug}` | Get detail for a published event; supports optional `accessCode` query. |
 
 Organizer routes require a JWT with `account_type = Organizer`:
 
@@ -106,7 +129,7 @@ Organizer routes require a JWT with `account_type = Organizer`:
 | `GET` | `/api/organizations/{id}` | Get organization detail. |
 | `PUT` | `/api/organizations/{id}` | Update an organization. |
 | `DELETE` | `/api/organizations/{id}` | Delete an organization. |
-| `POST` | `/api/organizations/{id}/organizers?organizerId={organizerId}` | Add an organizer account to an organization. |
+| `POST` | `/api/organizations/{id}/organizers` | Add an organizer account to an organization. |
 | `DELETE` | `/api/organizations/{id}/organizers/{organizerId}` | Remove an organizer account from an organization. |
 | `GET` | `/api/organizations/{organizationId}/events` | Search/list organizer events. |
 | `POST` | `/api/organizations/{organizationId}/events` | Create a draft event. |
@@ -123,21 +146,21 @@ Organizer routes require a JWT with `account_type = Organizer`:
 
 ### Ticketing API
 
-Base URL when running locally: `http://localhost:8020`
+Direct local base URL: `http://localhost:8020`
 
 Public routes:
 
 | Method | Route | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/public/events/{eventId}/ticket-availability` | Get ticket availability by event id. |
-| `POST` | `/api/public/events/{eventId}/orders` | Create an order/reservation. Supports guest checkout when email is supplied. |
+| `POST` | `/api/public/events/{eventId}/orders` | Create an order/reservation. Authenticated customers are linked by token; guests must supply email. |
 | `GET` | `/api/public/self-service/orders?token={token}` | Get an order by self-service token. |
 
 Customer routes require a JWT with `account_type = Customer`:
 
 | Method | Route | Purpose |
 | --- | --- | --- |
-| `GET` | `/api/customer/orders` | Get orders for the current customer. |
+| `GET` | `/api/customer/orders` | Get orders for the current customer email. |
 | `GET` | `/api/customer/orders/by-email?email={email}` | Get orders by the authenticated customer's email. |
 | `GET` | `/api/customer/orders/{orderId}` | Get order detail if owned by current customer. |
 | `POST` | `/api/customer/orders/{orderId}/confirm-free` | Confirm a free order. |
@@ -149,29 +172,42 @@ Organizer routes require a JWT with `account_type = Organizer`:
 | --- | --- | --- |
 | `POST` | `/api/events/{eventId}/check-ins` | Check in an attendee by QR token. |
 
+Internal routes require the `X-Internal-Service-Token` header:
+
+| Method | Route | Purpose |
+| --- | --- | --- |
+| `POST` | `/api/internal/orders/{orderId}/start-payment` | Mark an order as payment-started before Payment creates an intent. |
+
 Ticketing also hosts the Hangfire dashboard at `/hangfire`.
 
 ### Payment API
 
-Base URL when running locally: `http://localhost:8030`
+Direct local base URL: `http://localhost:8030`
 
 | Method | Route | Auth | Purpose |
 | --- | --- | --- | --- |
-| `POST` | `/api/payments/intents` | Bearer token or order access code | Create/reuse a payment intent. Supports `Idempotency-Key`. |
+| `POST` | `/api/payments/intents` | Bearer token or order access code | Start payment in Ticketing and create/reuse a payment intent. Supports `Idempotency-Key`. |
 | `POST` | `/api/payments/simulated-callbacks` | `X-Provider-Signature` header | Simulate a provider callback for `Succeeded` or `Failed` payment status. |
+
+### Notification API
+
+Direct local base URL in Docker Compose: `http://localhost:8040`
+
+Notification currently runs as a RabbitMQ subscriber. It consumes order confirmation events, renders email templates, generates QR content, and sends email through SMTP. In local Docker Compose it uses MailHog at `smtp://mailhog:1025`; the MailHog UI is available at `http://localhost:8025`.
 
 ## Event Flow
 
 1. Organizer registers through Auth API and receives a JWT with `account_type = Organizer`.
 2. Organizer creates an organization, creates an event, creates ticket types, adds capacity, and publishes the event.
-3. Event API publishes integration events via the outbox pattern (event creation/publication, ticket capacity changes).
-4. Ticketing service consumes those events and maintains ticket availability.
+3. Event API publishes integration events via the outbox pattern for event creation/publication and ticket inventory changes.
+4. Ticketing consumes those events and maintains event snapshots plus ticket type availability.
 5. Customer or guest creates an order through Ticketing API.
-6. Ticketing reserves seats, schedules order expiration via Hangfire, and exposes order/customer APIs.
-7. Payment API verifies order access with Ticketing API, creates a payment intent, and handles simulated provider callbacks.
-8. Successful payment publishes `PaymentConfirmedIntegrationEvent` via the outbox; Ticketing confirms the order.
-9. Hangfire periodically reconciles expired orders.
-10. Organizer checks in attendees at the door by scanning QR tokens through the check-in endpoint.
+6. Ticketing reserves seats, creates a self-service token, schedules order expiration, and exposes order/customer APIs.
+7. Payment API verifies order access with Ticketing API, calls the internal start-payment endpoint, creates a payment intent, and handles simulated provider callbacks.
+8. Successful payment publishes `PaymentConfirmedIntegrationEvent`; failed payment publishes `PaymentFailedIntegrationEvent`; Ticketing updates the order accordingly.
+9. Ticketing reconciles expired orders through Hangfire.
+10. Notification consumes confirmed-order events and sends email.
+11. Organizer checks in attendees by scanning QR tokens through the check-in endpoint.
 
 ## Local Development
 
@@ -186,25 +222,23 @@ Base URL when running locally: `http://localhost:8030`
 docker compose up --build
 ```
 
-Current compose configuration starts:
+Current local Compose configuration starts:
 
-- `auth.api` on host ports `8000` (HTTP) and `8001` (HTTPS)
-- `event.api` on host ports `8010` (HTTP) and `8011` (HTTPS)
-- `ticketing.api` on host ports `8020` (HTTP) and `8021` (HTTPS)
-- `payment.api` on host ports `8030` (HTTP) and `8031` (HTTPS)
-- `eventdb` PostgreSQL on `localhost:5432`
-- `rabbitmq` on `localhost:5672`, management UI on `http://localhost:15672`
+| Service | Host URL or port |
+| --- | --- |
+| YarpApiGateway | `http://localhost:8050` |
+| Auth API | `http://localhost:8000` and `https://localhost:8001` |
+| Event API | `http://localhost:8010` and `https://localhost:8011` |
+| Ticketing API | `http://localhost:8020` and `https://localhost:8021` |
+| Payment API | `http://localhost:8030` and `https://localhost:8031` |
+| Notification API | `http://localhost:8040` |
+| PostgreSQL | `localhost:5432` |
+| RabbitMQ | `localhost:5672`, management UI `http://localhost:15672` |
+| MailHog | SMTP `localhost:1025`, UI `http://localhost:8025` |
 
 Compose uses Docker service names for cross-container calls. For example, `payment.api` calls Ticketing through `http://ticketing.api:8080`, and API services connect to PostgreSQL and RabbitMQ through `eventdb` and `rabbitmq`.
 
-Default Docker HTTP endpoints:
-
-| Service | URL |
-| --- | --- |
-| Auth API | `http://localhost:8000` |
-| Event API | `http://localhost:8010` |
-| Ticketing API | `http://localhost:8020` |
-| Payment API | `http://localhost:8030` |
+PostgreSQL initializes `EventDb` from `POSTGRES_DB`; `AuthDb`, `TicketingDb`, and `PaymentDb` are created by `docker/postgres/initdb/01-create-service-databases.sql` on first volume initialization.
 
 ### AWS EC2 Staging With Docker Compose
 
@@ -223,8 +257,9 @@ docker compose --env-file .env.staging -f docker-compose.yml -f docker-compose.s
 The staging override:
 
 - runs APIs with `ASPNETCORE_ENVIRONMENT=Staging`
-- serves HTTP only inside the containers on port `8080`
+- serves HTTP inside containers on port `8080`
 - uses Docker service names for PostgreSQL, RabbitMQ, and internal API calls
+- needs `TicketingApi__InternalServiceToken` on Payment API and `InternalApi__ServiceToken` on Ticketing API to share the same secret for payment-start calls
 - stores PostgreSQL and RabbitMQ data in named Docker volumes
 - does not publish PostgreSQL or RabbitMQ ports to the EC2 host
 - creates `AuthDb`, `TicketingDb`, and `PaymentDb` on first PostgreSQL volume initialization; `EventDb` is created by `POSTGRES_DB`
@@ -233,29 +268,33 @@ For EC2, keep the instance security group limited to the API or reverse-proxy po
 
 ### Run Locally With Docker Infrastructure
 
-Start only PostgreSQL and RabbitMQ:
+Start only infrastructure services:
 
 ```bash
-docker compose up -d eventdb rabbitmq
+docker compose up -d eventdb rabbitmq mailhog
 ```
 
 Then run the APIs:
 
 ```bash
+dotnet run --project ApiGateway/YarpApiGateway
 dotnet run --project Auth/Auth.API
 dotnet run --project EventManagement/Event.API
 dotnet run --project Ticketing/Ticketing.API
 dotnet run --project Payment/Payment.API
+dotnet run --project Notification/Notification.API
 ```
 
-Default local HTTP ports from `launchSettings.json`:
+Default project launch URLs:
 
 | Service | URL |
 | --- | --- |
+| YarpApiGateway | `http://localhost:53884` |
 | Auth API | `http://localhost:8000` |
 | Event API | `http://localhost:8010` |
 | Ticketing API | `http://localhost:8020` |
 | Payment API | `http://localhost:8030` |
+| Notification API | `http://localhost:50062` |
 
 ## Configuration
 
@@ -283,15 +322,39 @@ Common settings:
 }
 ```
 
-Payment API also requires:
+Ticketing internal API settings:
+
+```json
+{
+  "InternalApi": {
+    "ServiceToken": "dev-internal-service-token"
+  }
+}
+```
+
+Payment API settings:
 
 ```json
 {
   "TicketingApi": {
-    "BaseUrl": "http://localhost:8020"
+    "BaseUrl": "http://localhost:8020",
+    "InternalServiceToken": "dev-internal-service-token"
   },
   "Payment": {
     "ProviderSignature": "your-development-signature"
+  }
+}
+```
+
+Notification SMTP settings:
+
+```json
+{
+  "Smtp": {
+    "Host": "localhost",
+    "Port": 1025,
+    "FromAddress": "noreply@eventbox.com",
+    "FromName": "Eventbox"
   }
 }
 ```
@@ -309,7 +372,7 @@ dotnet ef migrations add <MigrationName> --project Auth/Auth.API
 Event API:
 
 ```bash
-dotnet ef migrations add <MigrationName> --project EventManagement/Event.API --output-dir Migrations
+dotnet ef migrations add <MigrationName> --project EventManagement/Event.API --output-dir Infrastructure/Migrations
 ```
 
 Ticketing API:
@@ -324,7 +387,7 @@ Payment API:
 dotnet ef migrations add <MigrationName> --project Payment/Payment.Infrastructure --startup-project Payment/Payment.API
 ```
 
-All services apply migrations automatically on startup.
+All database-backed services apply migrations automatically on startup.
 
 ## Tests
 
@@ -336,13 +399,15 @@ dotnet test Eventbox.slnx
 
 Current unit test coverage focuses on:
 
-- Ticketing ticket availability behavior
-- Ticketing concurrency for event registration
+- Ticketing ticket availability and inventory integration events
+- Ticketing registration, order state, expiration, issuing, and concurrency behavior
+- Ticketing QR token check-in behavior
 - Payment callback behavior
+- Event Management domain behavior
 
 ## Postman
 
-The v2 API contract is tracked in `specs/event-ticketing-system/16-api-contract.md`. Product features such as attendee list APIs, manual attendee lookup/check-in, order lookup email requests, reporting/export, notification settings, and richer team roles are v3 backlog unless code is added.
+The API contract is tracked in `specs/event-ticketing-system/16-api-contract.md`. Product features such as attendee list APIs, manual attendee lookup/check-in, order lookup email requests, reporting/export, notification settings APIs, and richer team roles are backlog unless code is added.
 
 The `postman/` folder contains:
 
@@ -350,4 +415,4 @@ The `postman/` folder contains:
 - `Eventbox.Docker.postman_environment.json`
 - `Eventbox.Staging.postman_environment.json`
 
-Import both files into Postman and select the **Eventbox Docker** environment to test against the Docker Compose setup.
+Import the collection and select the **Eventbox Docker** environment to test against the Docker Compose setup.
