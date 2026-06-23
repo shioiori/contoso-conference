@@ -53,6 +53,7 @@ services:
       Jwt__Issuer: ${JWT_ISSUER}
       Jwt__Audience: ${JWT_AUDIENCE}
       Jwt__SigningKey: ${JWT_SIGNING_KEY}
+      InternalApi__ServiceToken: ${INTERNAL_SERVICE_TOKEN}
     ports:
       - "${TICKETING_API_PORT:-8020}:8080"
     depends_on:
@@ -69,6 +70,7 @@ services:
       ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
       ConnectionStrings__Database: Host=eventdb;Port=5432;Database=PaymentDb;Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}
       TicketingApi__BaseUrl: http://ticketing.api:8080
+      TicketingApi__InternalServiceToken: ${INTERNAL_SERVICE_TOKEN}
       Payment__ProviderSignature: ${PAYMENT_PROVIDER_SIGNATURE}
       RabbitMQ__Host: rabbitmq
       RabbitMQ__Port: 5672

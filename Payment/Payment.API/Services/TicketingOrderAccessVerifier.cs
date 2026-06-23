@@ -1,12 +1,18 @@
 using Eventbox.Payment.Api.Enums;
+using Eventbox.Payment.Api.Options;
+using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;
 
 namespace Eventbox.Payment.Api.Services;
 
-public class TicketingOrderAccessVerifier(HttpClient httpClient) : IOrderAccessVerifier, IOrderPaymentStarter
+public class TicketingOrderAccessVerifier(
+    HttpClient httpClient,
+    IOptions<TicketingOptions> ticketingOptions) : IOrderAccessVerifier, IOrderPaymentStarter
 {
+    public const string InternalServiceTokenHeaderName = "X-Internal-Service-Token";
+
     public async Task<OrderAccessVerificationResult> VerifyAsync(
         Guid orderId,
         string orderAccessCode,
@@ -115,13 +121,15 @@ public class TicketingOrderAccessVerifier(HttpClient httpClient) : IOrderAccessV
 
     public async Task<StartPaymentResult> StartPaymentAsync(Guid orderId, CancellationToken cancellationToken)
     {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"/api/internal/orders/{orderId}/start-payment");
+        request.Headers.Add(InternalServiceTokenHeaderName, ticketingOptions.Value.InternalServiceToken);
+
         HttpResponseMessage response;
         try
         {
-            response = await httpClient.PostAsync(
-                $"/api/public/orders/{orderId}/start-payment",
-                content: null,
-                cancellationToken);
+            response = await httpClient.SendAsync(request, cancellationToken);
         }
         catch (HttpRequestException)
         {

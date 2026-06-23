@@ -1,6 +1,7 @@
 using Eventbox.Ticketing.Api.Extensions;
 using Eventbox.Ticketing.Api.Endpoints;
 using Eventbox.Ticketing.Api.HostedServices;
+using Eventbox.Ticketing.Api.Options;
 using Eventbox.Ticketing.Application.Mappings;
 using Eventbox.Shared.Auditing;
 using Eventbox.Shared.Exceptions;
@@ -11,6 +12,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AddEventboxSerilog("Ticketing.Api");
 builder.Services.AddEventboxExceptionHandling();
 builder.Services.AddEventboxMediatRAuditLogging();
+builder.Services.Configure<InternalApiOptions>(
+    builder.Configuration.GetSection(InternalApiOptions.SectionName));
 
 TypeAdapterConfig.GlobalSettings.Apply(new TicketingMapping());
 

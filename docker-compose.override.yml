@@ -99,6 +99,7 @@ services:
       - ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings__Database=Host=eventdb;Port=5432;Database=PaymentDb;Username=postgres;Password=Eventbox123!
       - TicketingApi__BaseUrl=http://ticketing.api:8080
+      - TicketingApi__InternalServiceToken=qp0HZNvn6gwfObxh/lOEbq+nuTS1RjnByv9wvMuOSKWb2KDYok5PJaxIsJHPOjG7
       - Payment__ProviderSignature=4JEqxrjVAk9I8euMZA44kTkNxW6pPO7ZRfREeTupUiE=
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Port=5672
@@ -129,6 +130,7 @@ services:
       - RabbitMQ__VirtualHost=/
       - RabbitMQ__Username=guest
       - RabbitMQ__Password=guest
+      - InternalApi__ServiceToken=qp0HZNvn6gwfObxh/lOEbq+nuTS1RjnByv9wvMuOSKWb2KDYok5PJaxIsJHPOjG7
       - Jwt__Issuer=Eventbox.Auth
       - Jwt__Audience=Eventbox.Api
       - Jwt__SigningKey=U7Sknna8IkRyXFXqDrXK6ON+GPq39d0QWAK2gEX0mljWQUFkqiaVGL2Wn0nPIHiT

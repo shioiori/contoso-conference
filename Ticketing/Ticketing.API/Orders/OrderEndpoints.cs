@@ -7,6 +7,7 @@ using Eventbox.Ticketing.Application.Commands.Orders;
 using Eventbox.Ticketing.Application.Queries.Inventory;
 using Eventbox.Ticketing.Application.Queries.Orders;
 using Eventbox.Shared.Constants;
+using Eventbox.Ticketing.Api.Security;
 
 namespace Eventbox.Ticketing.Api.Endpoints
 {
@@ -18,7 +19,11 @@ namespace Eventbox.Ticketing.Api.Endpoints
 
             publicApi.MapPost("/events/{eventId:guid}/orders", RegisterToEvent);
             publicApi.MapGet("/self-service/orders", GetOrdersBySelfServiceToken);
-            publicApi.MapPost("/orders/{orderId:guid}/start-payment", StartPayment);
+
+            var internalApi = app.MapGroup("api/internal")
+                .AddEndpointFilter<InternalServiceTokenEndpointFilter>();
+
+            internalApi.MapPost("/orders/{orderId:guid}/start-payment", StartPayment);
 
             var customerApi = app.MapGroup("api/customer")
                 .RequireAuthorization(PolicyName.RequireCustomerAccount);
