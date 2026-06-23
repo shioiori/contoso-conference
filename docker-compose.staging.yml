@@ -1,4 +1,22 @@
 services:
+  yarp.api.gateway:
+    environment:
+      ASPNETCORE_ENVIRONMENT: Staging
+      ASPNETCORE_HTTP_PORTS: 8080
+      ASPNETCORE_FORWARDEDHEADERS_ENABLED: "true"
+    ports:
+      - "${GATEWAY_API_PORT:-8050}:8080"
+    depends_on:
+      auth.api:
+        condition: service_started
+      event.api:
+        condition: service_started
+      ticketing.api:
+        condition: service_started
+      payment.api:
+        condition: service_started
+    restart: unless-stopped
+
   auth.api:
     environment:
       ASPNETCORE_ENVIRONMENT: Staging

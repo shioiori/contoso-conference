@@ -1,4 +1,16 @@
 services:
+  yarp.api.gateway:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+    ports:
+      - "8050:8080"
+    depends_on:
+      - auth.api
+      - event.api
+      - ticketing.api
+      - payment.api
+
   auth.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
