@@ -14,5 +14,6 @@
     {
         public const string RequireOrganizerAccount = "RequireOrganizerAccount";
         public const string RequireCustomerAccount = "RequireCustomerAccount";
+        public const string RequireOrganizationMember = "RequireOrganizationMember";
     }
 }
