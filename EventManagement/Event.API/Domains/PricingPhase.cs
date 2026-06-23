@@ -4,6 +4,8 @@ namespace Eventbox.EventManagement.EventApi.Domains;
 
 public class PricingPhase : AuditableEntity<Guid>
 {
+    private PricingPhase() { }
+
     public PricingPhase(string name, decimal price, DateTimeOffset? startTime, DateTimeOffset? endTime) : base(Guid.NewGuid())
     {
         if (string.IsNullOrWhiteSpace(name))

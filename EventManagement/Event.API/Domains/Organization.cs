@@ -8,6 +8,8 @@ namespace Eventbox.EventManagement.EventApi.Domains
     {
         public string Name { get; set; }
 
+        private Organization() { }
+
         public Organization(Guid id, string name) : base(id)
         {
             Name = string.Empty;

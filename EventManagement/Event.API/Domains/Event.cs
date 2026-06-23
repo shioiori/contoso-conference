@@ -23,6 +23,8 @@ namespace Eventbox.EventManagement.EventApi.Domains
         private readonly List<TicketType> _ticketTypes = [];
         public IReadOnlyCollection<TicketType> TicketTypes => _ticketTypes.AsReadOnly();
 
+        private Event() { }
+
         public Event(Guid id, Guid organizationId, string name, string slug, DateTimeOffset from, DateTimeOffset to, string? description, string accessCode)
             : base(id)
         {

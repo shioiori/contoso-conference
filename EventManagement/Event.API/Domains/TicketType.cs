@@ -21,6 +21,8 @@ namespace Eventbox.EventManagement.EventApi.Domains
         public Event Event { get; set; } = default!;
         public IReadOnlyCollection<PricingPhase> PricingPhases => _pricingPhases.AsReadOnly();
 
+        private TicketType() { }
+
         public TicketType(
             string name,
             Guid eventId,

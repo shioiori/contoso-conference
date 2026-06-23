@@ -11,7 +11,9 @@ namespace Eventbox.EventManagement.EventApi.Api.Controllers
     [ApiController]
     [Authorize(Policy = PolicyName.RequireOrganizerAccount)]
     [Route("api/organizations")]
-    public class OrganizationController(IOrganizationService organizationService) : ControllerBase
+    public class OrganizationController(
+        IOrganizationService organizationService,
+        IAuthorizationService authorizationService) : ControllerBase
     {
         [HttpGet("me")]
         public async Task<ActionResult<IEnumerable<OrganizationDto>>> GetMyOrganizations(CancellationToken cancellationToken)
@@ -57,10 +59,13 @@ namespace Eventbox.EventManagement.EventApi.Api.Controllers
         [HttpPost("{id:guid}/organizers")]
         public async Task<IActionResult> AddOrganizer(
             Guid id,
-            Guid organizerId,
+            [FromBody] AddOrganizerRequest request,
             CancellationToken cancellationToken)
         {
-            await organizationService.AddOrganizerAsync(id, organizerId, cancellationToken);
+            var authResult = await authorizationService.AuthorizeAsync(User, id, PolicyName.RequireOrganizationMember);
+            if (!authResult.Succeeded) return Forbid();
+
+            await organizationService.AddOrganizerAsync(id, request.OrganizerId, cancellationToken);
             return NoContent();
         }
 
@@ -70,6 +75,9 @@ namespace Eventbox.EventManagement.EventApi.Api.Controllers
             Guid organizerId,
             CancellationToken cancellationToken)
         {
+            var authResult = await authorizationService.AuthorizeAsync(User, id, PolicyName.RequireOrganizationMember);
+            if (!authResult.Succeeded) return Forbid();
+
             await organizationService.RemoveOrganizerAsync(id, organizerId, cancellationToken);
             return NoContent();
         }

@@ -17,6 +17,7 @@ public static class ApplicationServicesExtensions
         services.AddScoped<ITicketTypeRepository, TicketTypeRepository>();
         services.AddScoped<IOrganizationRepository, OrganizationRepository>();
         services.AddScoped<IOrganizationMemberRepository, OrganizationMemberRepository>();
+        services.AddScoped<IOutbox, OutboxRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IOrganizerEventService, OrganizerEventService>();
         services.AddScoped<IOrganizationService, OrganizationService>();
