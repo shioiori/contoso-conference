@@ -29,10 +29,6 @@ namespace Eventbox.Ticketing.Application.Mappings
                         ? CheckInStatus.CheckedIn
                         : CheckInStatus.Active);
 
-            config.NewConfig<TicketAvailability, TicketAvailabilityDto>()
-                .Map(dest => dest.EventId, src => src.Id)
-                .Map(dest => dest.TicketTypes, src => src.TicketTypes.Adapt<IReadOnlyCollection<TicketTypeAvailabilityDto>>());
-
             config.NewConfig<TicketTypeAvailability, TicketTypeAvailabilityDto>()
                 .Map(dest => dest.Visibility, src => src.Visibility.ToString())
                 .Map(dest => dest.PricingPhases, src => src.PricingPhases.Adapt<IReadOnlyCollection<PricingPhaseAvailabilityDto>>());

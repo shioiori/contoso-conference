@@ -18,6 +18,7 @@ namespace Eventbox.Ticketing.Api.Endpoints
 
             publicApi.MapPost("/events/{eventId:guid}/orders", RegisterToEvent);
             publicApi.MapGet("/self-service/orders", GetOrdersBySelfServiceToken);
+            publicApi.MapPost("/orders/{orderId:guid}/start-payment", StartPayment);
 
             var customerApi = app.MapGroup("api/customer")
                 .RequireAuthorization(PolicyName.RequireCustomerAccount);
@@ -108,6 +109,12 @@ namespace Eventbox.Ticketing.Api.Endpoints
             var result = await mediator.Send(new GetOrdersByEmailQuery(email), cancellationToken);
             return Results.Ok(result);
 
+        }
+
+        public static async Task<IResult> StartPayment(Guid orderId, IMediator mediator, CancellationToken cancellationToken)
+        {
+            await mediator.Send(new StartPaymentCommand { OrderId = orderId }, cancellationToken);
+            return Results.NoContent();
         }
 
         public static async Task<IResult> GetOrdersBySelfServiceToken(string token, IMediator mediator, CancellationToken cancellationToken)

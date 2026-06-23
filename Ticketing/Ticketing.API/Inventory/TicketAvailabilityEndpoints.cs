@@ -15,10 +15,6 @@ namespace Eventbox.Ticketing.Api.Endpoints
         public static async Task<IResult> GetTicketAvailability(Guid eventId, IMediator mediator, CancellationToken cancellationToken)
         {
             var result = await mediator.Send(new GetTicketAvailabilityQuery(eventId), cancellationToken);
-            if (result is null)
-            {
-                return Results.NotFound();
-            }
             return Results.Ok(result);
         }
     }

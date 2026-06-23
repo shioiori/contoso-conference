@@ -20,7 +20,7 @@ public static class ApplicationServicesExtensions
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<RegisterToEventCommand>());
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
-        services.AddScoped<ITicketAvailabilityRepository, TicketAvailabilityRepository>();
+        services.AddScoped<ITicketTypeAvailabilityRepository, TicketTypeAvailabilityRepository>();
         services.AddScoped<IEventSnapshotRepository, EventSnapshotRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IOutboxProcessorJob, OutboxProcessorJob>();

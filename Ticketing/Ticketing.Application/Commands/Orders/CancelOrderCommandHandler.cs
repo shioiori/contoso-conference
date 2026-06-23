@@ -25,14 +25,9 @@ public class CancelOrderCommandHandler(
             foreach (var ticket in tickets)
                 ticket.Cancel();
 
-            var ticketAvailability = await unitOfWork.TicketAvailabilities.GetByEventIdAsync(order.EventId, cancellationToken);
-            if (ticketAvailability is not null)
-            {
-                foreach (var item in order.OrderItems)
-                    ticketAvailability.Release(item.TicketTypeId, item.Quantity);
-
-                unitOfWork.TicketAvailabilities.Update(ticketAvailability);
-            }
+            var ticketTypes = await unitOfWork.TicketTypeAvailabilities.GetByEventIdAsync(order.EventId, cancellationToken);
+            foreach (var item in order.OrderItems)
+                ticketTypes.FirstOrDefault(t => t.Id == item.TicketTypeId)?.Release(item.Quantity);
 
             unitOfWork.Orders.Update(order);
             await unitOfWork.SaveChangesAsync(cancellationToken);

@@ -6,7 +6,7 @@ namespace Eventbox.Ticketing.Application.Abstractions;
 public interface IUnitOfWork
 {
     IOrderRepository Orders { get; }
-    ITicketAvailabilityRepository TicketAvailabilities { get; }
+    ITicketTypeAvailabilityRepository TicketTypeAvailabilities { get; }
     IEventSnapshotRepository EventSnapshots { get; }
     ITicketRepository Tickets { get; }
     IOutbox Outbox { get; }

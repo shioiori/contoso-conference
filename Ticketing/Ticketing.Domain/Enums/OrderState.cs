@@ -6,6 +6,7 @@ namespace Eventbox.Ticketing.Domain.Enums
         Confirmed,
         Cancelled,
         Expired,
-        PaymentFailed
+        PaymentFailed,
+        PaymentInProgress
     }
 }

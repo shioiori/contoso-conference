@@ -1,19 +1,17 @@
+using Eventbox.Shared.SeedWorks;
 using Eventbox.Ticketing.Domain.Enums;
 
 namespace Eventbox.Ticketing.Domain.Inventory
 {
-    public class TicketTypeAvailability
+    public class TicketTypeAvailability : AuditableEntity<Guid>
     {
         private readonly List<PricingPhaseAvailability> _pricingPhases = new();
 
-        private TicketTypeAvailability()
-        {
-            Name = default!;
-            Currency = default!;
-        }
+        private TicketTypeAvailability() { }
 
-        public TicketTypeAvailability(Guid ticketTypeId, int quantity)
+        public TicketTypeAvailability(Guid eventId, Guid ticketTypeId, int quantity)
             : this(
+                eventId,
                 ticketTypeId,
                 $"Ticket type {ticketTypeId}",
                 quantity,
@@ -28,6 +26,7 @@ namespace Eventbox.Ticketing.Domain.Inventory
 
         public TicketTypeAvailability(
             Guid id,
+            Guid eventId,
             string name,
             int quantity,
             string currency,
@@ -35,7 +34,7 @@ namespace Eventbox.Ticketing.Domain.Inventory
             int? maxPerOrder,
             TicketVisibility visibility,
             string? accessCodeHash,
-            IEnumerable<PricingPhaseAvailability> pricingPhases)
+            IEnumerable<PricingPhaseAvailability> pricingPhases) : base(id)
         {
             if (id == Guid.Empty)
                 throw new ArgumentException("Ticket type id must not be empty.", nameof(id));
@@ -65,7 +64,7 @@ namespace Eventbox.Ticketing.Domain.Inventory
             if (phases.Count == 0)
                 throw new ArgumentException("At least one pricing phase is required.", nameof(pricingPhases));
 
-            Id = id;
+            EventId = eventId;
             Name = name.Trim();
             Quantity = quantity;
             Remaining = quantity;
@@ -77,7 +76,7 @@ namespace Eventbox.Ticketing.Domain.Inventory
             _pricingPhases.AddRange(phases);
         }
 
-        public Guid Id { get; private set; }
+        public Guid EventId { get; private set; }
         public string Name { get; private set; }
         public int Quantity { get; private set; }
         public int Remaining { get; private set; }

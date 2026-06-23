@@ -4,11 +4,12 @@ using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
 using Eventbox.Ticketing.Domain.Inventory;
 using Eventbox.Ticketing.Domain.Enums;
+using Eventbox.Shared.Exceptions;
 
 namespace Eventbox.Ticketing.Application.IntegrationEventHandlers.Inventory;
 
 public class TicketTypeCreatedEventHandler(
-    ITicketAvailabilityRepository ticketAvailabilityRepository,
+    ITicketTypeAvailabilityRepository ticketTypeAvailabilityRepository,
     IUnitOfWork unitOfWork) : IIntegrationEventHandler<TicketTypeCreatedEvent>
 {
     public async Task HandleAsync(TicketTypeCreatedEvent @event, CancellationToken cancellationToken = default)
@@ -19,6 +20,7 @@ public class TicketTypeCreatedEventHandler(
 
         var ticketType = new TicketTypeAvailability(
             @event.Id,
+            @event.EventId,
             @event.Name,
             @event.Quantity,
             @event.Currency,
@@ -33,17 +35,15 @@ public class TicketTypeCreatedEventHandler(
                 phase.StartTime,
                 phase.EndTime)));
 
-        var availability = await ticketAvailabilityRepository.GetByEventIdAsync(@event.EventId, cancellationToken);
-        if (availability is null)
+        var availability = await ticketTypeAvailabilityRepository.GetByIdAsync(@event.Id, cancellationToken);
+        if (availability == null)
         {
-            availability = new TicketAvailability(@event.EventId, [ticketType]);
-            await ticketAvailabilityRepository.AddAsync(availability, cancellationToken);
+            await ticketTypeAvailabilityRepository.AddAsync(ticketType, cancellationToken);
         }
-        else if (!availability.TicketTypes.Any(existing => existing.Id == @event.Id))
+        else
         {
-            availability.AddTicketType(ticketType);
+            throw new ConflictException($"Ticket type availability with id {@event.Id} is already exists.");
         }
-        unitOfWork.TicketAvailabilities.Update(availability);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

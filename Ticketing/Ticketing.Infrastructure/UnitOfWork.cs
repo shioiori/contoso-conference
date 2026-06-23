@@ -15,14 +15,14 @@ public class UnitOfWork : IUnitOfWork
         _dbContext = dbContext;
         Orders = new OrderRepository(dbContext);
         Tickets = new TicketRepository(dbContext);
-        TicketAvailabilities = new TicketAvailabilityRepository(dbContext);
+        TicketTypeAvailabilities = new TicketTypeAvailabilityRepository(dbContext);
         EventSnapshots = new EventSnapshotRepository(dbContext);
         Outbox = new OutboxRepository(dbContext);
     }
 
     public IOrderRepository Orders { get; }
     public ITicketRepository Tickets { get; }
-    public ITicketAvailabilityRepository TicketAvailabilities { get; }
+    public ITicketTypeAvailabilityRepository TicketTypeAvailabilities { get; }
     public IEventSnapshotRepository EventSnapshots { get; }
     public IOutbox Outbox { get; }
 

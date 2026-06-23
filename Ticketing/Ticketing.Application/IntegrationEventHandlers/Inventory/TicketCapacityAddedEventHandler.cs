@@ -7,15 +7,15 @@ using Eventbox.Shared.Exceptions;
 namespace Eventbox.Ticketing.Application.IntegrationEventHandlers.Inventory;
 
 public class TicketCapacityAddedEventHandler(
-    ITicketAvailabilityRepository ticketAvailabilityRepository,
+    ITicketTypeAvailabilityRepository ticketAvailabilityRepository,
     IUnitOfWork unitOfWork) : IIntegrationEventHandler<TicketCapacityAddedEvent>
 {
     public async Task HandleAsync(TicketCapacityAddedEvent @event, CancellationToken cancellationToken = default)
     {
-        var availability = await ticketAvailabilityRepository.GetByEventIdAsync(@event.EventId, cancellationToken)
+        var availability = await ticketAvailabilityRepository.GetByIdAsync(@event.Id, cancellationToken)
             ?? throw new NotFoundException($"Ticket availability for event '{@event.EventId}' was not found.");
 
-        availability.IncreaseTicketTypeQuantity(@event.Id, @event.AddedQuantity);
+        availability.IncreaseQuantity(@event.AddedQuantity);
         ticketAvailabilityRepository.Update(availability);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
