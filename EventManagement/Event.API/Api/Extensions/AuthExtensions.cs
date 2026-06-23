@@ -1,5 +1,7 @@
+using Eventbox.EventManagement.EventApi.Api.Authorization;
 using Eventbox.Shared.Constants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -34,7 +36,13 @@ public static class AuthExtensions
             options.AddPolicy(PolicyName.RequireOrganizerAccount, policy =>
                 policy.RequireAuthenticatedUser()
                     .RequireClaim(CustomClaimTypes.AccountType, AccountTypes.Organizer));
+
+            options.AddPolicy(PolicyName.RequireOrganizationMember, policy =>
+                policy.RequireAuthenticatedUser()
+                    .AddRequirements(new OrganizationMemberRequirement()));
         });
+
+        services.AddScoped<IAuthorizationHandler, OrganizationMemberHandler>();
 
         return services;
     }
