@@ -5,13 +5,11 @@ namespace Eventbox.UnitTests.Ticketing;
 public class TicketAvailabilityTests
 {
     [Fact]
-    public void Reserve_WhenQuantityExceedsRemaining_RejectsAndKeepsRemainingTicketTypes()
+    public void Reserve_WhenQuantityExceedsRemaining_ThrowsAndKeepsRemaining()
     {
-        var ticketTypeId = Guid.NewGuid();
-        var ticketType = new TicketTypeAvailability(ticketTypeId, quantity: 2);
-        var availability = new TicketAvailability(Guid.NewGuid(), [ticketType]);
+        var ticketType = new TicketTypeAvailability(Guid.NewGuid(), Guid.NewGuid(), quantity: 2);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => availability.Reserve(ticketTypeId, 3));
+        var exception = Assert.Throws<InvalidOperationException>(() => ticketType.Reserve(3));
 
         Assert.Equal("Not enough tickets remaining.", exception.Message);
         Assert.Equal(2, ticketType.Remaining);
@@ -20,12 +18,10 @@ public class TicketAvailabilityTests
     [Fact]
     public void Release_WhenQuantityWouldExceedCapacity_CapsRemainingAtOriginalQuantity()
     {
-        var ticketTypeId = Guid.NewGuid();
-        var ticketType = new TicketTypeAvailability(ticketTypeId, quantity: 2);
-        var availability = new TicketAvailability(Guid.NewGuid(), [ticketType]);
+        var ticketType = new TicketTypeAvailability(Guid.NewGuid(), Guid.NewGuid(), quantity: 2);
 
-        availability.Reserve(ticketTypeId, 1);
-        availability.Release(ticketTypeId, 10);
+        ticketType.Reserve(1);
+        ticketType.Release(10);
 
         Assert.Equal(2, ticketType.Remaining);
     }

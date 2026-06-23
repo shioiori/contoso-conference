@@ -177,64 +177,62 @@ public class EventSnapshotHandlerTests
 public class TicketTypeCreatedEventHandlerTests
 {
     [Fact]
-    public async Task HandleAsync_WhenNoAvailabilityExists_CreatesNewAvailabilityWithTicketType()
+    public async Task HandleAsync_WhenTicketTypeNotFound_AddsTicketType()
     {
-        var repo = new InMemoryTicketAvailabilityRepository();
-        var uow = new CountingUnitOfWork(ticketAvailabilities: repo);
+        var repo = new InMemoryTicketTypeAvailabilityRepository();
+        var uow = new CountingUnitOfWork(ticketTypeAvailabilities: repo);
         var handler = new TicketTypeCreatedEventHandler(repo, uow);
         var eventId = Guid.NewGuid();
         var ticketTypeId = Guid.NewGuid();
 
         await handler.HandleAsync(TicketTypeCreatedFor(eventId, ticketTypeId));
 
-        var availability = repo.Stored[eventId];
-        Assert.NotNull(availability);
-        Assert.Single(availability.TicketTypes, tt => tt.Id == ticketTypeId);
+        Assert.True(repo.Stored.ContainsKey(ticketTypeId));
         Assert.Equal(1, uow.SaveCount);
     }
 
     [Fact]
-    public async Task HandleAsync_WhenAvailabilityExistsAndTicketTypeIsNew_AddsTicketType()
+    public async Task HandleAsync_WhenOtherTicketTypesExistForEvent_AddsNewTicketType()
     {
         var eventId = Guid.NewGuid();
-        var existing = new TicketAvailability(eventId, [new TicketTypeAvailability(Guid.NewGuid(), 50)]);
-        var repo = new InMemoryTicketAvailabilityRepository(existing);
-        var uow = new CountingUnitOfWork(ticketAvailabilities: repo);
+        var existing = new TicketTypeAvailability(Guid.NewGuid(), eventId, 50);
+        var repo = new InMemoryTicketTypeAvailabilityRepository(existing);
+        var uow = new CountingUnitOfWork(ticketTypeAvailabilities: repo);
         var handler = new TicketTypeCreatedEventHandler(repo, uow);
 
         await handler.HandleAsync(TicketTypeCreatedFor(eventId, Guid.NewGuid()));
 
-        Assert.Equal(2, existing.TicketTypes.Count);
+        Assert.Equal(2, repo.Stored.Count);
     }
 
     [Fact]
-    public async Task HandleAsync_WhenTicketTypeAlreadyExists_DoesNotAddDuplicate()
+    public async Task HandleAsync_WhenTicketTypeAlreadyExists_ThrowsConflictException()
     {
         var eventId = Guid.NewGuid();
         var ticketTypeId = Guid.NewGuid();
-        var existing = new TicketAvailability(eventId, [new TicketTypeAvailability(ticketTypeId, 50)]);
-        var repo = new InMemoryTicketAvailabilityRepository(existing);
-        var uow = new CountingUnitOfWork(ticketAvailabilities: repo);
+        var existing = new TicketTypeAvailability(ticketTypeId, eventId, 50);
+        var repo = new InMemoryTicketTypeAvailabilityRepository(existing);
+        var uow = new CountingUnitOfWork(ticketTypeAvailabilities: repo);
         var handler = new TicketTypeCreatedEventHandler(repo, uow);
 
-        await handler.HandleAsync(TicketTypeCreatedFor(eventId, ticketTypeId));
-
-        Assert.Single(existing.TicketTypes);
+        await Assert.ThrowsAsync<ConflictException>(() =>
+            handler.HandleAsync(TicketTypeCreatedFor(eventId, ticketTypeId)));
     }
 
     [Fact]
     public async Task HandleAsync_WhenVisibilityIsInvalidString_DefaultsToPublic()
     {
-        var repo = new InMemoryTicketAvailabilityRepository();
-        var uow = new CountingUnitOfWork(ticketAvailabilities: repo);
+        var repo = new InMemoryTicketTypeAvailabilityRepository();
+        var uow = new CountingUnitOfWork(ticketTypeAvailabilities: repo);
         var handler = new TicketTypeCreatedEventHandler(repo, uow);
         var eventId = Guid.NewGuid();
-        var @event = TicketTypeCreatedFor(eventId, Guid.NewGuid());
+        var ticketTypeId = Guid.NewGuid();
+        var @event = TicketTypeCreatedFor(eventId, ticketTypeId);
         @event.Visibility = "nonexistent_visibility";
 
         await handler.HandleAsync(@event);
 
-        var tt = repo.Stored[eventId].TicketTypes.Single();
+        var tt = repo.Stored[ticketTypeId];
         Assert.Equal(TicketVisibility.Public, tt.Visibility);
     }
 
@@ -262,9 +260,8 @@ public class TicketCapacityAddedEventHandlerTests
     {
         var eventId = Guid.NewGuid();
         var ticketTypeId = Guid.NewGuid();
-        var ticketType = new TicketTypeAvailability(ticketTypeId, quantity: 50);
-        var availability = new TicketAvailability(eventId, [ticketType]);
-        var repo = new InMemoryTicketAvailabilityRepository(availability);
+        var ticketType = new TicketTypeAvailability(ticketTypeId, eventId, quantity: 50);
+        var repo = new InMemoryTicketTypeAvailabilityRepository(ticketType);
         var uow = new CountingUnitOfWork();
         var handler = new TicketCapacityAddedEventHandler(repo, uow);
 
@@ -283,7 +280,7 @@ public class TicketCapacityAddedEventHandlerTests
     [Fact]
     public async Task HandleAsync_WhenAvailabilityNotFound_ThrowsNotFoundException()
     {
-        var repo = new InMemoryTicketAvailabilityRepository();
+        var repo = new InMemoryTicketTypeAvailabilityRepository();
         var uow = new CountingUnitOfWork();
         var handler = new TicketCapacityAddedEventHandler(repo, uow);
 
@@ -308,42 +305,27 @@ public class TicketTypeDeletedEventHandlerTests
     {
         var eventId = Guid.NewGuid();
         var ticketTypeId = Guid.NewGuid();
-        var availability = new TicketAvailability(eventId, [new TicketTypeAvailability(ticketTypeId, 100)]);
-        var repo = new InMemoryTicketAvailabilityRepository(availability);
-        var uow = new CountingUnitOfWork();
-        var handler = new TicketTypeDeletedEventHandler(repo, uow);
+        var ticketType = new TicketTypeAvailability(ticketTypeId, eventId, 100);
+        var repo = new InMemoryTicketTypeAvailabilityRepository(ticketType);
+        var uow = new CountingUnitOfWork(ticketTypeAvailabilities: repo);
+        var handler = new TicketTypeDeletedEventHandler(uow);
 
         await handler.HandleAsync(new TicketTypeDeletedEvent { Id = ticketTypeId, EventId = eventId });
 
-        Assert.Empty(availability.TicketTypes);
+        Assert.Empty(repo.Stored);
         Assert.Equal(1, uow.SaveCount);
     }
 
     [Fact]
     public async Task HandleAsync_WhenAvailabilityNotFound_DoesNothing()
     {
-        var repo = new InMemoryTicketAvailabilityRepository();
-        var uow = new CountingUnitOfWork();
-        var handler = new TicketTypeDeletedEventHandler(repo, uow);
+        var repo = new InMemoryTicketTypeAvailabilityRepository();
+        var uow = new CountingUnitOfWork(ticketTypeAvailabilities: repo);
+        var handler = new TicketTypeDeletedEventHandler(uow);
 
         await handler.HandleAsync(new TicketTypeDeletedEvent { Id = Guid.NewGuid(), EventId = Guid.NewGuid() });
 
         Assert.Equal(0, uow.SaveCount);
-    }
-
-    [Fact]
-    public async Task HandleAsync_WhenTicketTypeIdNotInAvailability_SavesWithoutRemoving()
-    {
-        var eventId = Guid.NewGuid();
-        var availability = new TicketAvailability(eventId, [new TicketTypeAvailability(Guid.NewGuid(), 50)]);
-        var repo = new InMemoryTicketAvailabilityRepository(availability);
-        var uow = new CountingUnitOfWork();
-        var handler = new TicketTypeDeletedEventHandler(repo, uow);
-
-        await handler.HandleAsync(new TicketTypeDeletedEvent { Id = Guid.NewGuid(), EventId = eventId });
-
-        Assert.Single(availability.TicketTypes); // unchanged
-        Assert.Equal(1, uow.SaveCount);
     }
 }
 
@@ -351,12 +333,12 @@ public class TicketTypeDeletedEventHandlerTests
 // Shared test doubles
 // ════════════════════════════════════════════════════════════════════════
 
-file sealed class CountingUnitOfWork(IOrderRepository? orders = null, ITicketAvailabilityRepository? ticketAvailabilities = null) : IUnitOfWork
+file sealed class CountingUnitOfWork(IOrderRepository? orders = null, ITicketTypeAvailabilityRepository? ticketTypeAvailabilities = null) : IUnitOfWork
 {
     public int SaveCount { get; set; }
 
     public IOrderRepository Orders => orders ?? throw new NotSupportedException();
-    public ITicketAvailabilityRepository TicketAvailabilities => ticketAvailabilities ?? throw new NotSupportedException();
+    public ITicketTypeAvailabilityRepository TicketTypeAvailabilities => ticketTypeAvailabilities ?? throw new NotSupportedException();
     public IEventSnapshotRepository EventSnapshots => throw new NotSupportedException();
     public ITicketRepository Tickets => throw new NotSupportedException();
     public IOutbox Outbox => throw new NotSupportedException();
@@ -414,39 +396,44 @@ file sealed class SpyEventSnapshotRepository : IEventSnapshotRepository
     public IQueryable<EventSnapshot> Get(Expression<Func<EventSnapshot, bool>> filter = null!, Func<IQueryable<EventSnapshot>, IOrderedQueryable<EventSnapshot>> orderBy = null!, string includeProperties = null!, bool needAsNoTracking = true) => Enumerable.Empty<EventSnapshot>().AsQueryable();
 }
 
-file sealed class InMemoryTicketAvailabilityRepository : ITicketAvailabilityRepository
+file sealed class InMemoryTicketTypeAvailabilityRepository : ITicketTypeAvailabilityRepository
 {
-    public Dictionary<Guid, TicketAvailability> Stored { get; } = new();
+    public Dictionary<Guid, TicketTypeAvailability> Stored { get; } = new();
 
-    public InMemoryTicketAvailabilityRepository() { }
+    public InMemoryTicketTypeAvailabilityRepository() { }
 
-    public InMemoryTicketAvailabilityRepository(TicketAvailability seed)
+    public InMemoryTicketTypeAvailabilityRepository(TicketTypeAvailability seed)
         => Stored[seed.Id] = seed;
 
-    public Task<TicketAvailability?> GetByEventIdAsync(Guid eventId, CancellationToken ct = default)
-        => Task.FromResult(Stored.GetValueOrDefault(eventId));
+    public Task<TicketTypeAvailability?> GetByIdAsync(Guid id, CancellationToken ct = default)
+        => Task.FromResult(Stored.GetValueOrDefault(id));
 
-    public Task AddAsync(TicketAvailability entity, CancellationToken ct = default)
+    public Task<TicketTypeAvailability?> GetByIdWithPricingAsync(Guid ticketTypeId, CancellationToken ct = default)
+        => Task.FromResult(Stored.GetValueOrDefault(ticketTypeId));
+
+    public Task<IReadOnlyList<TicketTypeAvailability>> GetByEventIdAsync(Guid eventId, CancellationToken ct = default)
+        => Task.FromResult<IReadOnlyList<TicketTypeAvailability>>(
+            Stored.Values.Where(t => t.EventId == eventId).ToList());
+
+    public Task<bool> TryReserveAsync(Guid ticketTypeId, int quantity, CancellationToken ct = default)
+        => Task.FromResult(false);
+
+    public Task AddAsync(TicketTypeAvailability entity, CancellationToken ct = default)
     {
         Stored[entity.Id] = entity;
         return Task.CompletedTask;
     }
 
-    public Task AddRangeAsync(IEnumerable<TicketAvailability> entities, CancellationToken ct = default)
+    public Task AddRangeAsync(IEnumerable<TicketTypeAvailability> entities, CancellationToken ct = default)
     {
         foreach (var entity in entities)
             Stored[entity.Id] = entity;
-
         return Task.CompletedTask;
     }
 
-    public void Update(TicketAvailability entity) { }
-
-    // ── unused stubs ──
-    public Task<TicketAvailability?> GetByIdAsync(Guid id, CancellationToken ct = default) => Task.FromResult(Stored.GetValueOrDefault(id));
-    public void Delete(TicketAvailability entity) => Stored.Remove(entity.Id);
-    public IQueryable<TicketAvailability> Get(Expression<Func<TicketAvailability, bool>> f = null!, Func<IQueryable<TicketAvailability>, IOrderedQueryable<TicketAvailability>> o = null!, string i = null!, bool n = true) => Stored.Values.AsQueryable();
-    public Task<bool> TryReserveAsync(Guid eid, Guid tid, int qty, CancellationToken ct = default) => Task.FromResult(false);
+    public void Update(TicketTypeAvailability entity) { }
+    public void Delete(TicketTypeAvailability entity) => Stored.Remove(entity.Id);
+    public IQueryable<TicketTypeAvailability> Get(Expression<Func<TicketTypeAvailability, bool>> f = null!, Func<IQueryable<TicketTypeAvailability>, IOrderedQueryable<TicketTypeAvailability>> o = null!, string i = null!, bool n = true) => Stored.Values.AsQueryable();
 }
 
 file sealed class RecordingMediator : IMediator
