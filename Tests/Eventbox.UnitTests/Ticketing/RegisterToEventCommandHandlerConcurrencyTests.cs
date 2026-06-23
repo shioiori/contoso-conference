@@ -20,13 +20,12 @@ public class RegisterToEventCommandHandlerConcurrencyTests
     {
         var eventId = Guid.NewGuid();
         var ticketTypeId = Guid.NewGuid();
-        var ticketType = new TicketTypeAvailability(ticketTypeId, quantity: 1);
-        var availability = new TicketAvailability(eventId, [ticketType]);
+        var ticketType = new TicketTypeAvailability(ticketTypeId, eventId, quantity: 1);
         var orderRepository = new InMemoryOrderRepository();
-        var ticketAvailabilityRepository = new InMemoryTicketAvailabilityRepository(availability);
+        var ticketTypeAvailabilityRepository = new InMemoryTicketTypeAvailabilityRepository(ticketType);
         var eventSnapshotRepository = new InMemoryEventSnapshotRepository(
             new EventSnapshot(eventId, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1), isPublished: true));
-        var unitOfWork = new InMemoryRegistrationUnitOfWork(orderRepository, ticketAvailabilityRepository, eventSnapshotRepository);
+        var unitOfWork = new InMemoryRegistrationUnitOfWork(orderRepository, ticketTypeAvailabilityRepository, eventSnapshotRepository);
         var handler = new RegisterToEventCommandHandler(unitOfWork);
 
         var firstRequest = CreateRequest(eventId, ticketTypeId, "first@example.com");
@@ -66,23 +65,30 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         }
     }
 
-    private sealed class InMemoryTicketAvailabilityRepository(TicketAvailability availability) : ITicketAvailabilityRepository
+    private sealed class InMemoryTicketTypeAvailabilityRepository(TicketTypeAvailability ticketType) : ITicketTypeAvailabilityRepository
     {
         private readonly object _gate = new();
 
-        public Task<TicketAvailability?> GetByEventIdAsync(Guid EventId, CancellationToken cancellationToken = default)
-            => Task.FromResult(EventId == availability.Id ? availability : null);
+        public Task<TicketTypeAvailability?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+            => Task.FromResult(id == ticketType.Id ? ticketType : null);
 
-        public Task<bool> TryReserveAsync(Guid eventId, Guid ticketTypeId, int quantity, CancellationToken cancellationToken = default)
+        public Task<TicketTypeAvailability?> GetByIdWithPricingAsync(Guid ticketTypeId, CancellationToken cancellationToken = default)
+            => Task.FromResult(ticketTypeId == ticketType.Id ? ticketType : null);
+
+        public Task<IReadOnlyList<TicketTypeAvailability>> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default)
+            => Task.FromResult<IReadOnlyList<TicketTypeAvailability>>(
+                ticketType.EventId == eventId ? [ticketType] : []);
+
+        public Task<bool> TryReserveAsync(Guid ticketTypeId, int quantity, CancellationToken cancellationToken = default)
         {
             lock (_gate)
             {
-                if (eventId != availability.Id)
+                if (ticketTypeId != ticketType.Id)
                     return Task.FromResult(false);
 
                 try
                 {
-                    availability.Reserve(ticketTypeId, quantity);
+                    ticketType.Reserve(quantity);
                     return Task.FromResult(true);
                 }
                 catch (InvalidOperationException)
@@ -92,32 +98,11 @@ public class RegisterToEventCommandHandlerConcurrencyTests
             }
         }
 
-        public Task<TicketAvailability?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
-            => GetByEventIdAsync(id, cancellationToken);
-
-        public Task AddAsync(TicketAvailability entity, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-
-        public Task AddRangeAsync(IEnumerable<TicketAvailability> entities, CancellationToken cancellationToken = default)
-            => Task.CompletedTask;
-
-        public void Update(TicketAvailability entity)
-        {
-        }
-
-        public void Delete(TicketAvailability entity)
-        {
-        }
-
-        public IQueryable<TicketAvailability> Get(
-            Expression<Func<TicketAvailability, bool>> filter = null!,
-            Func<IQueryable<TicketAvailability>, IOrderedQueryable<TicketAvailability>> orderBy = null!,
-            string includeProperties = null!,
-            bool needAsNoTracking = true)
-        {
-            var query = new[] { availability }.AsQueryable();
-            return filter is null ? query : query.Where(filter);
-        }
+        public Task AddAsync(TicketTypeAvailability entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task AddRangeAsync(IEnumerable<TicketTypeAvailability> entities, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public void Update(TicketTypeAvailability entity) { }
+        public void Delete(TicketTypeAvailability entity) { }
+        public IQueryable<TicketTypeAvailability> Get(Expression<Func<TicketTypeAvailability, bool>> filter = null!, Func<IQueryable<TicketTypeAvailability>, IOrderedQueryable<TicketTypeAvailability>> orderBy = null!, string includeProperties = null!, bool needAsNoTracking = true) => Enumerable.Empty<TicketTypeAvailability>().AsQueryable();
     }
 
     private sealed class InMemoryOrderRepository : IOrderRepository
@@ -141,12 +126,8 @@ public class RegisterToEventCommandHandlerConcurrencyTests
             return Task.CompletedTask;
         }
 
-        public void Update(Order entity)
-        {
-        }
-
-        public void Delete(Order entity)
-            => _orders.Remove(entity);
+        public void Update(Order entity) { }
+        public void Delete(Order entity) => _orders.Remove(entity);
 
         public IQueryable<Order> Get(
             Expression<Func<Order, bool>> filter = null!,
@@ -158,8 +139,8 @@ public class RegisterToEventCommandHandlerConcurrencyTests
             return filter is null ? query : query.Where(filter);
         }
 
-        public Task<IEnumerable<Order>> GetByEventIdAsync(Guid EventId, CancellationToken cancellationToken = default)
-            => Task.FromResult(_orders.Where(order => order.EventId == EventId));
+        public Task<IEnumerable<Order>> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default)
+            => Task.FromResult(_orders.Where(order => order.EventId == eventId));
 
         public Task<IEnumerable<Order>> GetByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
             => Task.FromResult(_orders.Where(order => order.UserId == userId));
@@ -190,7 +171,6 @@ public class RegisterToEventCommandHandlerConcurrencyTests
 
             return Task.FromResult(hasOrder);
         }
-
     }
 
     private sealed class InMemoryEventSnapshotRepository(EventSnapshot eventSnapshot) : IEventSnapshotRepository
@@ -211,13 +191,13 @@ public class RegisterToEventCommandHandlerConcurrencyTests
 
     private sealed class InMemoryRegistrationUnitOfWork(
         IOrderRepository orderRepository,
-        ITicketAvailabilityRepository ticketAvailabilityRepository,
+        ITicketTypeAvailabilityRepository ticketTypeAvailabilityRepository,
         IEventSnapshotRepository eventSnapshotRepository) : IUnitOfWork
     {
         private readonly InMemoryOutbox _outbox = new();
 
         public IOrderRepository Orders { get; } = orderRepository;
-        public ITicketAvailabilityRepository TicketAvailabilities { get; } = ticketAvailabilityRepository;
+        public ITicketTypeAvailabilityRepository TicketTypeAvailabilities { get; } = ticketTypeAvailabilityRepository;
         public IEventSnapshotRepository EventSnapshots { get; } = eventSnapshotRepository;
         public ITicketRepository Tickets { get; } = new NullTicketRepository();
         public IOutbox Outbox => _outbox;
@@ -262,12 +242,9 @@ public class RegisterToEventCommandHandlerConcurrencyTests
             return Task.CompletedTask;
         }
 
-        public void Update(OutboxMessage outboxMessage)
-        {
-        }
+        public void Update(OutboxMessage outboxMessage) { }
 
         public Task<List<OutboxMessage>> GetPendingAsync(int batchSize, CancellationToken cancellationToken)
             => Task.FromResult(_messages.Take(batchSize).ToList());
     }
-
 }
