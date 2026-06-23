@@ -46,6 +46,9 @@ public static class AuthEndpoints
             return Results.Ok(new { id, email, accountType });
         }).RequireAuthorization();
 
+        app.MapPost("/api/auth/logout", () => Results.NoContent())
+            .RequireAuthorization();
+
         return app;
     }
 
