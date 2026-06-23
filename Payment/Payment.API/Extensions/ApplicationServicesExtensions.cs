@@ -28,10 +28,12 @@ public static class ApplicationServicesExtensions
         if (string.IsNullOrWhiteSpace(ticketingApiOptions.BaseUrl))
             throw new InvalidOperationException("TicketingApi:BaseUrl must be configured.");
 
-        services.AddHttpClient<IOrderAccessVerifier, TicketingOrderAccessVerifier>(client =>
+        services.AddHttpClient<TicketingOrderAccessVerifier>(client =>
         {
             client.BaseAddress = new Uri(ticketingApiOptions.BaseUrl);
         });
+        services.AddScoped<IOrderAccessVerifier>(sp => sp.GetRequiredService<TicketingOrderAccessVerifier>());
+        services.AddScoped<IOrderPaymentStarter>(sp => sp.GetRequiredService<TicketingOrderAccessVerifier>());
 
         return services;
     }

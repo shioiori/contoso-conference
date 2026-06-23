@@ -15,7 +15,8 @@ namespace Eventbox.Payment.Api.Controllers
     public class PaymentController(
         IMediator mediator,
         IOptions<PaymentOptions> paymentOptions,
-        IOrderAccessVerifier orderAccessVerifier) : ControllerBase
+        IOrderAccessVerifier orderAccessVerifier,
+        IOrderPaymentStarter orderPaymentStarter) : ControllerBase
     {
         [HttpPost("intents")]
         public async Task<IActionResult> CreatePaymentIntent(
@@ -30,6 +31,9 @@ namespace Eventbox.Payment.Api.Controllers
                 cancellationToken);
 
             EnsureAccess(accessResult);
+
+            var startResult = await orderPaymentStarter.StartPaymentAsync(request.OrderId, cancellationToken);
+            EnsureStartPayment(startResult);
 
             var result = await mediator.Send(
                 new CreatePaymentIntentCommand(
@@ -88,6 +92,21 @@ namespace Eventbox.Payment.Api.Controllers
             }
 
             return Ok(result);
+        }
+
+        private static void EnsureStartPayment(StartPaymentResult result)
+        {
+            switch (result)
+            {
+                case StartPaymentResult.Started:
+                    return;
+                case StartPaymentResult.OrderNotFound:
+                    throw new NotFoundException("Order was not found.");
+                case StartPaymentResult.OrderNotPayable:
+                    throw new ConflictException("Order is not in a payable state (expired or cancelled).");
+                default:
+                    throw new ServiceUnavailableException("Registration service is unavailable.");
+            }
         }
 
         private static void EnsureAccess(OrderAccessVerificationResult accessResult)

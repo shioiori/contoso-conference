@@ -5,7 +5,7 @@ using System.Text.Json;
 
 namespace Eventbox.Payment.Api.Services;
 
-public class TicketingOrderAccessVerifier(HttpClient httpClient) : IOrderAccessVerifier
+public class TicketingOrderAccessVerifier(HttpClient httpClient) : IOrderAccessVerifier, IOrderPaymentStarter
 {
     public async Task<OrderAccessVerificationResult> VerifyAsync(
         Guid orderId,
@@ -109,6 +109,33 @@ public class TicketingOrderAccessVerifier(HttpClient httpClient) : IOrderAccessV
                 HttpStatusCode.Forbidden => OrderAccessVerificationResult.Forbidden,
                 HttpStatusCode.NotFound => OrderAccessVerificationResult.NotFound,
                 _ => OrderAccessVerificationResult.RegistrationUnavailable
+            };
+        }
+    }
+
+    public async Task<StartPaymentResult> StartPaymentAsync(Guid orderId, CancellationToken cancellationToken)
+    {
+        HttpResponseMessage response;
+        try
+        {
+            response = await httpClient.PostAsync(
+                $"/api/public/orders/{orderId}/start-payment",
+                content: null,
+                cancellationToken);
+        }
+        catch (HttpRequestException)
+        {
+            return StartPaymentResult.ServiceUnavailable;
+        }
+
+        using (response)
+        {
+            return response.StatusCode switch
+            {
+                HttpStatusCode.NoContent => StartPaymentResult.Started,
+                HttpStatusCode.NotFound => StartPaymentResult.OrderNotFound,
+                HttpStatusCode.Conflict => StartPaymentResult.OrderNotPayable,
+                _ => StartPaymentResult.ServiceUnavailable
             };
         }
     }
