@@ -112,13 +112,13 @@ namespace Eventbox.Ticketing.Domain.Inventory
             Remaining = Math.Min(Quantity, Remaining + quantity);
         }
 
-        public void IncreaseQuantity(int quantity)
+        public void UpdateQuantity(int quantity)
         {
             if (quantity <= 0)
-                throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity to add must be positive.");
-
-            Quantity += quantity;
-            Remaining += quantity;
+                throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be positive.");
+            int add = quantity - Quantity;
+            Quantity = quantity;
+            Remaining += add;
         }
 
         public void EnsureCanAccess(string? accessCodeHash)

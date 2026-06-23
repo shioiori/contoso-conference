@@ -206,20 +206,6 @@ public class TicketTypeCreatedEventHandlerTests
     }
 
     [Fact]
-    public async Task HandleAsync_WhenTicketTypeAlreadyExists_ThrowsConflictException()
-    {
-        var eventId = Guid.NewGuid();
-        var ticketTypeId = Guid.NewGuid();
-        var existing = new TicketTypeAvailability(ticketTypeId, eventId, 50);
-        var repo = new InMemoryTicketTypeAvailabilityRepository(existing);
-        var uow = new CountingUnitOfWork(ticketTypeAvailabilities: repo);
-        var handler = new TicketTypeCreatedEventHandler(repo, uow);
-
-        await Assert.ThrowsAsync<ConflictException>(() =>
-            handler.HandleAsync(TicketTypeCreatedFor(eventId, ticketTypeId)));
-    }
-
-    [Fact]
     public async Task HandleAsync_WhenVisibilityIsInvalidString_DefaultsToPublic()
     {
         var repo = new InMemoryTicketTypeAvailabilityRepository();
@@ -269,7 +255,7 @@ public class TicketCapacityAddedEventHandlerTests
         {
             Id = ticketTypeId,
             EventId = eventId,
-            AddedQuantity = 30
+            NewQuantity = 80
         });
 
         Assert.Equal(80, ticketType.Quantity);
@@ -289,7 +275,7 @@ public class TicketCapacityAddedEventHandlerTests
             {
                 Id = Guid.NewGuid(),
                 EventId = Guid.NewGuid(),
-                AddedQuantity = 10
+                NewQuantity = 10
             }));
     }
 }

@@ -15,7 +15,7 @@ public class TicketCapacityAddedEventHandler(
         var availability = await ticketAvailabilityRepository.GetByIdAsync(@event.Id, cancellationToken)
             ?? throw new NotFoundException($"Ticket availability for event '{@event.EventId}' was not found.");
 
-        availability.IncreaseQuantity(@event.AddedQuantity);
+        availability.UpdateQuantity(@event.NewQuantity);
         ticketAvailabilityRepository.Update(availability);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
