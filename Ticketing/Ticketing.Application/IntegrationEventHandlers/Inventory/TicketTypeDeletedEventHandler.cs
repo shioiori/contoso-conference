@@ -6,16 +6,14 @@ using Eventbox.Ticketing.Application.Abstractions.Repositories;
 namespace Eventbox.Ticketing.Application.IntegrationEventHandlers.Inventory;
 
 public class TicketTypeDeletedEventHandler(
-    ITicketAvailabilityRepository ticketAvailabilityRepository,
     IUnitOfWork unitOfWork) : IIntegrationEventHandler<TicketTypeDeletedEvent>
 {
     public async Task HandleAsync(TicketTypeDeletedEvent @event, CancellationToken cancellationToken = default)
     {
-        var availability = await ticketAvailabilityRepository.GetByEventIdAsync(@event.EventId, cancellationToken);
-        if (availability is null)
+        var availability = await unitOfWork.TicketTypeAvailabilities.GetByIdAsync(@event.Id, cancellationToken);
+        if (availability == null)
             return;
-
-        availability.RemoveTicketType(@event.Id);
+        unitOfWork.TicketTypeAvailabilities.Delete(availability);
         await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

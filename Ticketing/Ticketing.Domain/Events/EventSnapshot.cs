@@ -4,6 +4,7 @@ namespace Eventbox.Ticketing.Domain.Events;
 
 public class EventSnapshot : AuditableEntity<Guid>
 {
+    private EventSnapshot() { }
     public EventSnapshot(Guid eventId, DateTimeOffset from, DateTimeOffset to, bool isPublished) : base(eventId)
     {
         if (eventId == Guid.Empty)

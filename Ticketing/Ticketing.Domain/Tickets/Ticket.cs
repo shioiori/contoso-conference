@@ -5,6 +5,8 @@ namespace Eventbox.Ticketing.Domain.Tickets;
 
 public class Ticket : AuditableEntity<Guid>
 {
+    private Ticket() { }
+
     public Ticket(Guid orderId, Guid eventId, Guid ticketTypeId, int sequenceNumber) : base(Guid.NewGuid())
     {
         if (orderId == Guid.Empty)

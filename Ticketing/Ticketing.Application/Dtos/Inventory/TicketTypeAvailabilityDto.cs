@@ -1,14 +1,9 @@
 namespace Eventbox.Ticketing.Application.Dtos.Inventory
 {
-    public class TicketAvailabilityDto
-    {
-        public Guid EventId { get; set; }
-        public IReadOnlyCollection<TicketTypeAvailabilityDto> TicketTypes { get; set; }
-    }
-
     public class TicketTypeAvailabilityDto
     {
         public Guid Id { get; set; }
+        public Guid EventId { get; set; }
         public string Name { get; set; }
         public int Quantity { get; set; }
         public int Remaining { get; set; }

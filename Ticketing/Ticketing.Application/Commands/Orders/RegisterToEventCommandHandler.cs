@@ -32,10 +32,8 @@ namespace Eventbox.Ticketing.Application.Commands.Orders
             var utcNow = DateTimeOffset.UtcNow;
             var reservationExpiresAt = utcNow.AddMinutes(TicketingConstants.ReservationExpirationMinutes);
 
-            var ticketAvailability = await unitOfWork.TicketAvailabilities.GetByEventIdAsync(request.EventId, cancellationToken)
-                ?? throw new NotFoundException($"Ticket availability for event '{request.EventId}' was not found.");
-
-            var ticketType = ticketAvailability.GetTicketType(request.TicketTypeId);
+            var ticketType = await unitOfWork.TicketTypeAvailabilities.GetByIdWithPricingAsync(request.TicketTypeId, cancellationToken)
+                ?? throw new NotFoundException($"Ticket type '{request.TicketTypeId}' was not found.");
             var accessCodeHash = string.IsNullOrWhiteSpace(request.AccessCode) ? null : HashAccessCode(request.AccessCode);
             ticketType.EnsureCanAccess(accessCodeHash);
             ticketType.EnsureOrderQuantityAllowed(request.Quantity);
@@ -70,8 +68,7 @@ namespace Eventbox.Ticketing.Application.Commands.Orders
 
             await unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                var reserved = await unitOfWork.TicketAvailabilities.TryReserveAsync(
-                    request.EventId,
+                var reserved = await unitOfWork.TicketTypeAvailabilities.TryReserveAsync(
                     request.TicketTypeId,
                     request.Quantity,
                     cancellationToken);

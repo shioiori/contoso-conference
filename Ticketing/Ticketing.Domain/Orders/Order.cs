@@ -7,7 +7,9 @@ namespace Eventbox.Ticketing.Domain.Orders
     {
         private readonly List<OrderItem> _orderItems = new();
 
-        public Order(Guid eventId, Guid? userId, PersonalInfo personalInfo, 
+        private Order() { }
+
+        public Order(Guid eventId, Guid? userId, PersonalInfo personalInfo,
             IEnumerable<OrderItem> orderItems, string accessCode, DateTimeOffset reservationExpiresAt) : base(Guid.NewGuid())
         {
             var items = orderItems.ToList();
@@ -43,6 +45,21 @@ namespace Eventbox.Ticketing.Domain.Orders
             return OrderState;
         }
 
+        public bool StartPayment()
+        {
+            if (OrderState == OrderState.PaymentInProgress)
+                return false;
+
+            if (OrderState is not OrderState.Pending)
+                throw new InvalidOperationException($"Cannot start payment for an order in '{OrderState}' state.");
+
+            if (ReservationExpiresAt <= DateTimeOffset.UtcNow)
+                throw new InvalidOperationException("Reservation has expired.");
+
+            OrderState = OrderState.PaymentInProgress;
+            return true;
+        }
+
         public bool Confirm()
         {
             if (OrderState == OrderState.Confirmed)
@@ -51,7 +68,7 @@ namespace Eventbox.Ticketing.Domain.Orders
             if (OrderState is OrderState.Cancelled or OrderState.Expired)
                 throw new InvalidOperationException("Cancelled or expired orders cannot be confirmed.");
 
-            if (ReservationExpiresAt <= DateTimeOffset.UtcNow)
+            if (OrderState != OrderState.PaymentInProgress && ReservationExpiresAt <= DateTimeOffset.UtcNow)
                 throw new InvalidOperationException("Expired reservations cannot be confirmed.");
 
             OrderState = OrderState.Confirmed;
@@ -74,7 +91,7 @@ namespace Eventbox.Ticketing.Domain.Orders
 
         public bool MarkPaymentFailed()
         {
-            if (OrderState is not (OrderState.Pending or OrderState.PaymentFailed))
+            if (OrderState is not (OrderState.Pending or OrderState.PaymentFailed or OrderState.PaymentInProgress))
                 return false;
 
             OrderState = OrderState.PaymentFailed;

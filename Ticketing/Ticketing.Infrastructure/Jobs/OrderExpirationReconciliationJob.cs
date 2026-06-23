@@ -23,15 +23,9 @@ namespace Eventbox.Ticketing.Infrastructure.Jobs
                 var stateChanged = order.Expire(utcNow);
                 if (stateChanged)
                 {
-                    var ticketAvailability = await unitOfWork.TicketAvailabilities.GetByEventIdAsync(order.EventId, cancellationToken);
-                    if (ticketAvailability is not null)
-                    {
-                        foreach (var item in order.OrderItems)
-                        {
-                            ticketAvailability.Release(item.TicketTypeId, item.Quantity);
-                        }
-
-                        }
+                    var ticketTypes = await unitOfWork.TicketTypeAvailabilities.GetByEventIdAsync(order.EventId, cancellationToken);
+                    foreach (var item in order.OrderItems)
+                        ticketTypes.FirstOrDefault(t => t.Id == item.TicketTypeId)?.Release(item.Quantity);
 
                 }
             }

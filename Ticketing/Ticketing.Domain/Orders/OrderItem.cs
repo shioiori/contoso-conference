@@ -4,6 +4,8 @@ namespace Eventbox.Ticketing.Domain.Orders
 {
     public class OrderItem : AuditableEntity<Guid>
     {
+        private OrderItem() { }
+
         public OrderItem(Guid ticketTypeId, int quantity)
             : this(ticketTypeId, Guid.NewGuid(), $"Ticket type {ticketTypeId}", "Default", 0, "VND", quantity)
         {

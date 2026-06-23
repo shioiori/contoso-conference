@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Eventbox.Ticketing.Application.Queries.Inventory;
 
-public class GetTicketAvailabilityQuery : IRequest<TicketAvailabilityDto?>
+public class GetTicketAvailabilityQuery : IRequest<IReadOnlyList<TicketTypeAvailabilityDto>>
 {
     public GetTicketAvailabilityQuery(Guid eventId)
     {
