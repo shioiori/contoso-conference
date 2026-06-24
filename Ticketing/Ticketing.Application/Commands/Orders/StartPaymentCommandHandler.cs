@@ -1,14 +1,15 @@
 using Eventbox.Shared.Exceptions;
 using Eventbox.Ticketing.Application.Abstractions;
+using Eventbox.Ticketing.Application.Dtos.Orders;
 using MediatR;
 
 namespace Eventbox.Ticketing.Application.Commands.Orders;
 
-public class StartPaymentCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<StartPaymentCommand>
+public class StartPaymentCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<StartPaymentCommand, OrderAmountDto>
 {
-    public async Task Handle(StartPaymentCommand request, CancellationToken cancellationToken)
+    public async Task<OrderAmountDto> Handle(StartPaymentCommand request, CancellationToken cancellationToken)
     {
-        var order = await unitOfWork.Orders.GetByIdAsync(request.OrderId, cancellationToken)
+        var order = await unitOfWork.Orders.GetByIdWithDetailsAsync(request.OrderId, cancellationToken)
             ?? throw new NotFoundException("Order", request.OrderId);
 
         try
@@ -24,5 +25,10 @@ public class StartPaymentCommandHandler(IUnitOfWork unitOfWork) : IRequestHandle
         {
             throw new ConflictException(ex.Message);
         }
+
+        var totalAmount = order.OrderItems.Sum(i => i.UnitPrice * i.Quantity);
+        var currency = order.OrderItems.FirstOrDefault()?.Currency ?? "VND";
+
+        return new OrderAmountDto { TotalAmount = totalAmount, Currency = currency };
     }
 }

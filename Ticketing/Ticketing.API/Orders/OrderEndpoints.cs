@@ -118,8 +118,8 @@ namespace Eventbox.Ticketing.Api.Endpoints
 
         public static async Task<IResult> StartPayment(Guid orderId, IMediator mediator, CancellationToken cancellationToken)
         {
-            await mediator.Send(new StartPaymentCommand { OrderId = orderId }, cancellationToken);
-            return Results.NoContent();
+            var result = await mediator.Send(new StartPaymentCommand { OrderId = orderId }, cancellationToken);
+            return Results.Ok(result);
         }
 
         public static async Task<IResult> GetOrdersBySelfServiceToken(string token, IMediator mediator, CancellationToken cancellationToken)

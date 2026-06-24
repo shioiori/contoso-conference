@@ -32,14 +32,14 @@ namespace Eventbox.Payment.Api.Controllers
 
             EnsureAccess(accessResult);
 
-            var startResult = await orderPaymentStarter.StartPaymentAsync(request.OrderId, cancellationToken);
-            EnsureStartPayment(startResult);
+            var startOutcome = await orderPaymentStarter.StartPaymentAsync(request.OrderId, cancellationToken);
+            EnsureStartPayment(startOutcome.Result);
 
             var result = await mediator.Send(
                 new CreatePaymentIntentCommand(
                     request.OrderId,
-                    request.Amount,
-                    request.Currency ?? "USD",
+                    startOutcome.Amount,
+                    startOutcome.Currency,
                     request.ReturnUrl,
                     request.CancelUrl,
                     idempotencyKey),
@@ -67,7 +67,6 @@ namespace Eventbox.Payment.Api.Controllers
                     new SimulatePaymentSucceededCommand(
                         request.PaymentIntentId,
                         request.ProviderEventId,
-                        request.OrderId,
                         request.Amount,
                         request.Currency,
                         request.PaidAt ?? DateTimeOffset.UtcNow),
@@ -79,7 +78,6 @@ namespace Eventbox.Payment.Api.Controllers
                     new SimulatePaymentFailedCommand(
                         request.PaymentIntentId,
                         request.ProviderEventId,
-                        request.OrderId,
                         request.Amount,
                         request.Currency,
                         request.FailedAt ?? DateTimeOffset.UtcNow,

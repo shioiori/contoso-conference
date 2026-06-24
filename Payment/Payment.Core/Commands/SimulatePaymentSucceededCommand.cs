@@ -11,7 +11,6 @@ namespace Eventbox.Payment.Core.Commands
     public record SimulatePaymentSucceededCommand(
         Guid PaymentIntentId,
         string ProviderEventId,
-        Guid OrderId,
         decimal Amount,
         string Currency,
         DateTimeOffset PaidAt) : IRequest<PaymentCallbackResponse>;
@@ -45,7 +44,7 @@ namespace Eventbox.Payment.Core.Commands
 
             var processed = payment.MarkSucceeded(
                 request.ProviderEventId,
-                request.OrderId,
+                payment.OrderId,
                 request.Amount,
                 request.Currency,
                 request.PaidAt);

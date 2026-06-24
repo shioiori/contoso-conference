@@ -966,7 +966,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"returnUrl\": \"https://eventbox.test/checkout/return\",\n  \"cancelUrl\": \"https://eventbox.test/checkout/cancel\",\n  \"amount\": 199,\n  \"currency\": \"USD\",\n  \"orderAccessCode\": \"{{orderAccessCode}}\"\n}",
+              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"returnUrl\": \"https://eventbox.test/checkout/return\",\n  \"cancelUrl\": \"https://eventbox.test/checkout/cancel\",\n  \"orderAccessCode\": \"{{orderAccessCode}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -996,7 +996,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"providerEventId\": \"evt_{{$guid}}\",\n  \"paymentIntentId\": \"{{paymentIntentId}}\",\n  \"orderId\": \"{{orderId}}\",\n  \"status\": \"Succeeded\",\n  \"amount\": 199,\n  \"currency\": \"USD\",\n  \"paidAt\": \"2026-09-15T09:05:00Z\",\n  \"failedAt\": null,\n  \"failureReason\": null\n}",
+              "raw": "{\n  \"providerEventId\": \"evt_{{$guid}}\",\n  \"paymentIntentId\": \"{{paymentIntentId}}\",\n  \"status\": \"Succeeded\",\n  \"amount\": 199000,\n  \"currency\": \"VND\",\n  \"paidAt\": \"2026-09-15T09:05:00Z\",\n  \"failedAt\": null,\n  \"failureReason\": null\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1026,7 +1026,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"providerEventId\": \"evt_{{$guid}}\",\n  \"paymentIntentId\": \"{{paymentIntentId}}\",\n  \"orderId\": \"{{orderId}}\",\n  \"status\": \"Failed\",\n  \"amount\": 199,\n  \"currency\": \"USD\",\n  \"paidAt\": null,\n  \"failedAt\": \"2026-09-15T09:05:00Z\",\n  \"failureReason\": \"Simulated provider failure\"\n}",
+              "raw": "{\n  \"providerEventId\": \"evt_{{$guid}}\",\n  \"paymentIntentId\": \"{{paymentIntentId}}\",\n  \"status\": \"Failed\",\n  \"amount\": 199000,\n  \"currency\": \"VND\",\n  \"paidAt\": null,\n  \"failedAt\": \"2026-09-15T09:05:00Z\",\n  \"failureReason\": \"Simulated provider failure\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

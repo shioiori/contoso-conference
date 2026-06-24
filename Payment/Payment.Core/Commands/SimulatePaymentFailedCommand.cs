@@ -11,7 +11,6 @@ namespace Eventbox.Payment.Core.Commands
     public record SimulatePaymentFailedCommand(
         Guid PaymentIntentId,
         string ProviderEventId,
-        Guid OrderId,
         decimal Amount,
         string Currency,
         DateTimeOffset FailedAt,
@@ -44,7 +43,7 @@ namespace Eventbox.Payment.Core.Commands
 
             var processed = payment.MarkFailed(
                 request.ProviderEventId,
-                request.OrderId,
+                payment.OrderId,
                 request.Amount,
                 request.Currency,
                 request.FailedAt,

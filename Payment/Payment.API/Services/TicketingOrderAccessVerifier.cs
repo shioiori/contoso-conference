@@ -119,7 +119,7 @@ public class TicketingOrderAccessVerifier(
         }
     }
 
-    public async Task<StartPaymentResult> StartPaymentAsync(Guid orderId, CancellationToken cancellationToken)
+    public async Task<StartPaymentOutcome> StartPaymentAsync(Guid orderId, CancellationToken cancellationToken)
     {
         using var request = new HttpRequestMessage(
             HttpMethod.Post,
@@ -133,23 +133,44 @@ public class TicketingOrderAccessVerifier(
         }
         catch (HttpRequestException)
         {
-            return StartPaymentResult.ServiceUnavailable;
+            return new StartPaymentOutcome(StartPaymentResult.ServiceUnavailable);
         }
 
         using (response)
         {
-            return response.StatusCode switch
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return new StartPaymentOutcome(StartPaymentResult.OrderNotFound);
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+                return new StartPaymentOutcome(StartPaymentResult.OrderNotPayable);
+
+            if (!response.IsSuccessStatusCode)
+                return new StartPaymentOutcome(StartPaymentResult.ServiceUnavailable);
+
+            TicketingOrderAmountDto? amount;
+            try
             {
-                HttpStatusCode.NoContent => StartPaymentResult.Started,
-                HttpStatusCode.NotFound => StartPaymentResult.OrderNotFound,
-                HttpStatusCode.Conflict => StartPaymentResult.OrderNotPayable,
-                _ => StartPaymentResult.ServiceUnavailable
-            };
+                amount = await response.Content.ReadFromJsonAsync<TicketingOrderAmountDto>(cancellationToken);
+            }
+            catch (JsonException)
+            {
+                return new StartPaymentOutcome(StartPaymentResult.ServiceUnavailable);
+            }
+
+            return amount is not null
+                ? new StartPaymentOutcome(StartPaymentResult.Started, amount.TotalAmount, amount.Currency)
+                : new StartPaymentOutcome(StartPaymentResult.ServiceUnavailable);
         }
     }
 
     private sealed class TicketingOrderDto
     {
         public Guid Id { get; init; }
+    }
+
+    private sealed class TicketingOrderAmountDto
+    {
+        public decimal TotalAmount { get; init; }
+        public string? Currency { get; init; }
     }
 }
