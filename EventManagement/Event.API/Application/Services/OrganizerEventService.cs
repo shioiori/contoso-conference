@@ -2,13 +2,13 @@ using Eventbox.EventManagement.EventApi.Application.Abstractions;
 using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.Shared.Exceptions;
 using Mapster;
-using System.Security.Cryptography;
 using Eventbox.Shared.Outbox;
 using System.Text.Json;
 using Eventbox.EventManagement.EventApi.Api.Requests;
 using Eventbox.EventManagement.EventApi.Application.Dtos.OrganizerEvents;
 using Eventbox.EventManagement.EventApi.Application.Abstractions.Services;
 using Eventbox.EventManagement.EventApi.Domains;
+using Eventbox.EventManagement.EventApi.Application.Extensions;
 
 namespace Eventbox.EventManagement.EventApi.Application.Services
 {
@@ -43,10 +43,10 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
             if (await unitOfWork.Events.SlugExistsAsync(dto.Slug, cancellationToken))
                 throw new ConflictException($"An event with slug '{dto.Slug}' already exists.");
 
-            var accessCode = GenerateAccessCode();
+            var accessCode = AccessCodeExtension.Generate();
             var eventEntity = new Event(Guid.NewGuid(), organizationId, dto.Name, dto.Slug, dto.From, dto.To, dto.Description, accessCode);
             await unitOfWork.Events.AddAsync(eventEntity, cancellationToken);
-            var eventCreatedEvent = new EventCreatedEvent
+            var eventCreatedEvent = new EventCreatedIntegrationEvent
             {
                 EventId = eventEntity.Id,
                 Name = eventEntity.Name,
@@ -60,7 +60,7 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
             await unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                IntegrationEventType = nameof(EventCreatedEvent),
+                IntegrationEventType = nameof(EventCreatedIntegrationEvent),
                 Content = JsonSerializer.Serialize(eventCreatedEvent),
                 OccurredOnUtc = DateTime.UtcNow,
                 Status = ProcessStatus.Pending
@@ -76,7 +76,7 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
 
             eventEntity.Update(dto.Name, dto.From, dto.To, dto.Description);
 
-            var eventUpdatedEvent = new EventUpdatedEvent
+            var eventUpdatedEvent = new EventUpdatedIntegrationEvent
             {
                 EventId = eventEntity.Id,
                 Name = eventEntity.Name,
@@ -88,7 +88,7 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
             await unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                IntegrationEventType = nameof(EventUpdatedEvent),
+                IntegrationEventType = nameof(EventUpdatedIntegrationEvent),
                 Content = JsonSerializer.Serialize(eventUpdatedEvent),
                 OccurredOnUtc = DateTime.UtcNow,
                 Status = ProcessStatus.Pending
@@ -99,49 +99,41 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
 
         public async Task DeleteAsync(Guid organizationId, Guid id, CancellationToken cancellationToken = default)
         {
-            var Event = await unitOfWork.Events.GetByOrganizationAsync(organizationId, id, asNoTracking: false, cancellationToken: cancellationToken)
+            var eventEntity = await unitOfWork.Events.GetByOrganizationAsync(organizationId, id, asNoTracking: false, cancellationToken: cancellationToken)
                 ?? throw new NotFoundException("Event", id);
 
-            if (Event.IsPublished)
+            if (eventEntity.IsPublished)
                 throw new ConflictException("Cannot delete a published event. Unpublish it first.");
 
-            unitOfWork.Events.Delete(Event);
+            unitOfWork.Events.Delete(eventEntity);
             await unitOfWork.SaveChangesAsync(cancellationToken);
-        }
-
-        private static string GenerateAccessCode()
-        {
-            const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            return new string(Enumerable.Range(0, 5)
-                .Select(_ => chars[RandomNumberGenerator.GetInt32(chars.Length)])
-                .ToArray());
         }
 
         public async Task<OrganizerEventDto?> GetPublicReadiness(Guid organizationId, Guid id, CancellationToken cancellationToken = default)
         {
-            var Event = await unitOfWork.Events.GetByOrganizationAsync(organizationId, id, includeTicketTypes: true, asNoTracking: true, cancellationToken: cancellationToken)
+            var eventEntity = await unitOfWork.Events.GetByOrganizationAsync(organizationId, id, includeTicketTypes: true, asNoTracking: true, cancellationToken: cancellationToken)
                 ?? throw new NotFoundException("Event", id);
 
-            return Event.IsReadyToPublish ? Event.Adapt<OrganizerEventDto>() : null;
+            return eventEntity.IsReadyToPublish ? eventEntity.Adapt<OrganizerEventDto>() : null;
         }
 
         public async Task PublishedAsync(Guid organizationId, Guid id, CancellationToken cancellationToken = default)
         {
-            var Event = await unitOfWork.Events.GetByOrganizationAsync(organizationId, id, includeTicketTypes: true, asNoTracking: false, cancellationToken: cancellationToken)
+            var eventEntity = await unitOfWork.Events.GetByOrganizationAsync(organizationId, id, includeTicketTypes: true, asNoTracking: false, cancellationToken: cancellationToken)
                 ?? throw new NotFoundException("Event", id);
 
-            var wasPublished = Event.IsPublished;
-            Event.Publish();
+            var wasPublished = eventEntity.IsPublished;
+            eventEntity.Publish();
             if (wasPublished) return;
 
-            var eventPublishedEvent = new EventPublishedEvent
+            var eventPublishedEvent = new EventPublishedIntegrationEvent
             {
-                EventId = Event.Id,
+                EventId = eventEntity.Id,
             };
             await unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                IntegrationEventType = nameof(EventPublishedEvent),
+                IntegrationEventType = nameof(EventPublishedIntegrationEvent),
                 Content = JsonSerializer.Serialize(eventPublishedEvent),
                 OccurredOnUtc = DateTime.UtcNow,
                 Status = ProcessStatus.Pending
@@ -152,21 +144,21 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
 
         public async Task UnpublishedAsync(Guid organizationId, Guid id, CancellationToken cancellationToken = default)
         {
-            var Event = await unitOfWork.Events.GetByOrganizationAsync(organizationId, id, asNoTracking: false, cancellationToken: cancellationToken)
+            var eventEntity = await unitOfWork.Events.GetByOrganizationAsync(organizationId, id, asNoTracking: false, cancellationToken: cancellationToken)
                 ?? throw new NotFoundException("Event", id);
 
-            var wasPublished = Event.IsPublished;
-            Event.Unpublish();
+            var wasPublished = eventEntity.IsPublished;
+            eventEntity.Unpublish();
             if (!wasPublished) return;
 
-            var eventUnpublishedEvent = new EventUnpublishedEvent
+            var eventUnpublishedEvent = new EventUnpublishedIntegrationEvent
             {
-                EventId = Event.Id,
+                EventId = eventEntity.Id,
             };
             await unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                IntegrationEventType = nameof(EventUnpublishedEvent),
+                IntegrationEventType = nameof(EventUnpublishedIntegrationEvent),
                 Content = JsonSerializer.Serialize(eventUnpublishedEvent),
                 OccurredOnUtc = DateTime.UtcNow,
                 Status = ProcessStatus.Pending

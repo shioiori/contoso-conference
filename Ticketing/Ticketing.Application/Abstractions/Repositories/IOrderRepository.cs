@@ -1,6 +1,6 @@
 using Eventbox.Ticketing.Domain.Orders;
 using Eventbox.Ticketing.Domain.Enums;
-using Eventbox.Shared.Abstractions;
+using Eventbox.Shared.Repositories;
 
 namespace Eventbox.Ticketing.Application.Abstractions.Repositories;
 

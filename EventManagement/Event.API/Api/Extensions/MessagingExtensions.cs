@@ -11,13 +11,13 @@ public static class MessagingExtensions
         services.Configure<RabbitMQOptions>(options =>
         {
             configuration.GetSection("RabbitMQ").Bind(options);
-            options.Publish<EventCreatedEvent>("eventbox.events");
-            options.Publish<EventUpdatedEvent>("eventbox.events");
-            options.Publish<EventPublishedEvent>("eventbox.events");
-            options.Publish<EventUnpublishedEvent>("eventbox.events");
-            options.Publish<TicketTypeCreatedEvent>("eventbox.ticketing");
-            options.Publish<TicketCapacityAddedEvent>("eventbox.ticketing");
-            options.Publish<TicketTypeDeletedEvent>("eventbox.ticketing");
+            options.Publish<EventCreatedIntegrationEvent>("eventbox.events");
+            options.Publish<EventUpdatedIntegrationEvent>("eventbox.events");
+            options.Publish<EventPublishedIntegrationEvent>("eventbox.events");
+            options.Publish<EventUnpublishedIntegrationEvent>("eventbox.events");
+            options.Publish<TicketTypeCreatedIntegrationEvent>("eventbox.ticketing");
+            options.Publish<TicketCapacityAddedIntegrationEvent>("eventbox.ticketing");
+            options.Publish<TicketTypeDeletedIntegrationEvent>("eventbox.ticketing");
         });
 
         services.AddSingleton<RabbitMQEventBus>();

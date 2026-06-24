@@ -1,4 +1,3 @@
-using Eventbox.Shared.Exceptions.Handlers;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +24,7 @@ public static class ExceptionHandlingExtensions
             {
                 var problemDetails = new ValidationProblemDetails(context.ModelState)
                 {
-                    Type = "https://eventbox.dev/problems/validation",
+                    Type = "/problems/validation",
                     Title = "Validation failed",
                     Status = StatusCodes.Status400BadRequest,
                     Detail = "One or more validation errors occurred.",

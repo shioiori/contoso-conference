@@ -26,31 +26,31 @@ public sealed class RabbitMqSubscriptionHostedService(IEventBus eventBus, ILogge
             PaymentFailedIntegrationEventHandler>(stoppingToken);
 
         await eventBus.SubscribeAsync<
-            EventCreatedEvent,
+            EventCreatedIntegrationEvent,
             EventCreatedEventHandler>(stoppingToken);
 
         await eventBus.SubscribeAsync<
-            EventUpdatedEvent,
+            EventUpdatedIntegrationEvent,
             EventUpdatedEventHandler>(stoppingToken);
 
         await eventBus.SubscribeAsync<
-            EventPublishedEvent,
+            EventPublishedIntegrationEvent,
             EventPublishedEventHandler>(stoppingToken);
 
         await eventBus.SubscribeAsync<
-            EventUnpublishedEvent,
+            EventUnpublishedIntegrationEvent,
             EventUnpublishedEventHandler>(stoppingToken);
 
         await eventBus.SubscribeAsync<
-            TicketTypeCreatedEvent,
+            TicketTypeCreatedIntegrationEvent,
             TicketTypeCreatedEventHandler>(stoppingToken);
 
         await eventBus.SubscribeAsync<
-            TicketCapacityAddedEvent,
+            TicketCapacityAddedIntegrationEvent,
             TicketCapacityAddedEventHandler>(stoppingToken);
 
         await eventBus.SubscribeAsync<
-            TicketTypeDeletedEvent,
+            TicketTypeDeletedIntegrationEvent,
             TicketTypeDeletedEventHandler>(stoppingToken);
 
 

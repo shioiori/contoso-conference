@@ -2,7 +2,7 @@ using Eventbox.EventBus.Events;
 
 namespace Eventbox.Contracts.IntegrationEvents;
 
-public class TicketCapacityAddedEvent : IntegrationEvent
+public class TicketCapacityAddedIntegrationEvent : IntegrationEvent
 {
     public Guid Id { get; set; }
     public Guid EventId { get; set; }

@@ -5,10 +5,9 @@ using Eventbox.EventManagement.EventApi.Application.Abstractions;
 using Eventbox.EventManagement.EventApi.Application.Dtos;
 using Eventbox.Shared.Outbox;
 using Mapster;
-using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
 using Eventbox.EventManagement.EventApi.Application.Abstractions.Services;
+using Eventbox.EventManagement.EventApi.Application.Extensions;
 
 namespace Eventbox.EventManagement.EventApi.Application.Services
 {
@@ -41,7 +40,7 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
                 dto.MinPerOrder,
                 dto.MaxPerOrder,
                 dto.Visibility,
-                HashAccessCode(dto.AccessCode),
+                dto.AccessCode.Hash(),
                 dto.PricingPhases.Select(p => new PricingPhase(p.Name, p.Price, p.StartTime, p.EndTime)));
 
             ticketType.ValidatePricingPhasesAgainstEvent(eventEntity.From, eventEntity.To);
@@ -49,8 +48,8 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
             await unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                IntegrationEventType = nameof(TicketTypeCreatedEvent),
-                Content = JsonSerializer.Serialize(new TicketTypeCreatedEvent
+                IntegrationEventType = nameof(TicketTypeCreatedIntegrationEvent),
+                Content = JsonSerializer.Serialize(new TicketTypeCreatedIntegrationEvent
                 {
                     Id = ticketType.Id,
                     EventId = ticketType.EventId,
@@ -98,7 +97,7 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
                 dto.MinPerOrder,
                 dto.MaxPerOrder,
                 dto.Visibility,
-                HashAccessCode(dto.AccessCode),
+                dto.AccessCode.Hash(),
                 dto.PricingPhases.Select(p => new PricingPhase(p.Name, p.Price, p.StartTime, p.EndTime)));
 
             ticketType.ValidatePricingPhasesAgainstEvent(eventEntity.From, eventEntity.To);
@@ -122,8 +121,8 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
             await unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                IntegrationEventType = nameof(TicketCapacityAddedEvent),
-                Content = JsonSerializer.Serialize(new TicketCapacityAddedEvent
+                IntegrationEventType = nameof(TicketCapacityAddedIntegrationEvent),
+                Content = JsonSerializer.Serialize(new TicketCapacityAddedIntegrationEvent
                 {
                     Id = ticketType.Id,
                     EventId = ticketType.EventId,
@@ -146,8 +145,8 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
             await unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
-                IntegrationEventType = nameof(TicketTypeDeletedEvent),
-                Content = JsonSerializer.Serialize(new TicketTypeDeletedEvent
+                IntegrationEventType = nameof(TicketTypeDeletedIntegrationEvent),
+                Content = JsonSerializer.Serialize(new TicketTypeDeletedIntegrationEvent
                 {
                     Id = ticketType.Id,
                     EventId = ticketType.EventId,
@@ -163,13 +162,6 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
             return await unitOfWork.Events.GetByOrganizationAsync(
                     organizationId, eventId, includeTicketTypes: false, asNoTracking: true, cancellationToken)
                 ?? throw new NotFoundException($"Event '{eventId}' was not found in organization '{organizationId}'.");
-        }
-
-        private static string? HashAccessCode(string? accessCode)
-        {
-            if (string.IsNullOrWhiteSpace(accessCode)) return null;
-            var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(accessCode.Trim()));
-            return Convert.ToHexString(bytes).ToLowerInvariant();
         }
     }
 }

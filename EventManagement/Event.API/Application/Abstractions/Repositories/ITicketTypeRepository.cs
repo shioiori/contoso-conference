@@ -1,5 +1,5 @@
 using Eventbox.EventManagement.EventApi.Domains;
-using Eventbox.Shared.Abstractions;
+using Eventbox.Shared.Repositories;
 
 namespace Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories
 {

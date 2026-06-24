@@ -1,8 +1,9 @@
-namespace Eventbox.EventManagement.EventApi.Domains.Enums;
-
-public enum TicketVisibility
+namespace Eventbox.EventManagement.EventApi.Domains.Enums
 {
-    Public = 0,
-    Hidden = 1,
-    AccessCode = 2
+    public enum TicketVisibility
+    {
+        Public = 0,
+        Hidden = 1,
+        AccessCode = 2
+    }
 }

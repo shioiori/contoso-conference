@@ -8,9 +8,9 @@ namespace Eventbox.Ticketing.Application.IntegrationEventHandlers.Inventory;
 
 public class TicketCapacityAddedEventHandler(
     ITicketTypeAvailabilityRepository ticketAvailabilityRepository,
-    IUnitOfWork unitOfWork) : IIntegrationEventHandler<TicketCapacityAddedEvent>
+    IUnitOfWork unitOfWork) : IIntegrationEventHandler<TicketCapacityAddedIntegrationEvent>
 {
-    public async Task HandleAsync(TicketCapacityAddedEvent @event, CancellationToken cancellationToken = default)
+    public async Task HandleAsync(TicketCapacityAddedIntegrationEvent @event, CancellationToken cancellationToken = default)
     {
         var availability = await ticketAvailabilityRepository.GetByIdAsync(@event.Id, cancellationToken)
             ?? throw new NotFoundException($"Ticket availability for event '{@event.EventId}' was not found.");

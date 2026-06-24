@@ -45,26 +45,26 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Jobs
         private static IIntegrationEvent Deserialize(OutboxMessage message) =>
             message.IntegrationEventType switch
             {
-                nameof(TicketTypeCreatedEvent) =>
-                    JsonSerializer.Deserialize<TicketTypeCreatedEvent>(message.Content)
+                nameof(TicketTypeCreatedIntegrationEvent) or "TicketTypeCreatedEvent" =>
+                    JsonSerializer.Deserialize<TicketTypeCreatedIntegrationEvent>(message.Content)
                     ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}"),
-                nameof(TicketCapacityAddedEvent) =>
-                    JsonSerializer.Deserialize<TicketCapacityAddedEvent>(message.Content)
+                nameof(TicketCapacityAddedIntegrationEvent) or "TicketCapacityAddedEvent" =>
+                    JsonSerializer.Deserialize<TicketCapacityAddedIntegrationEvent>(message.Content)
                     ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}"),
-                nameof(EventCreatedEvent) =>
-                    JsonSerializer.Deserialize<EventCreatedEvent>(message.Content)
+                nameof(EventCreatedIntegrationEvent) or "EventCreatedEvent" =>
+                    JsonSerializer.Deserialize<EventCreatedIntegrationEvent>(message.Content)
                     ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}"),
-                nameof(EventUpdatedEvent) =>
-                    JsonSerializer.Deserialize<EventUpdatedEvent>(message.Content)
+                nameof(EventUpdatedIntegrationEvent) or "EventUpdatedEvent" =>
+                    JsonSerializer.Deserialize<EventUpdatedIntegrationEvent>(message.Content)
                     ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}"),
-                nameof(EventPublishedEvent) =>
-                    JsonSerializer.Deserialize<EventPublishedEvent>(message.Content)
+                nameof(EventPublishedIntegrationEvent) or "EventPublishedEvent" =>
+                    JsonSerializer.Deserialize<EventPublishedIntegrationEvent>(message.Content)
                     ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}"),
-                nameof(EventUnpublishedEvent) =>
-                    JsonSerializer.Deserialize<EventUnpublishedEvent>(message.Content)
+                nameof(EventUnpublishedIntegrationEvent) or "EventUnpublishedEvent" =>
+                    JsonSerializer.Deserialize<EventUnpublishedIntegrationEvent>(message.Content)
                     ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}"),
-                nameof(TicketTypeDeletedEvent) =>
-                    JsonSerializer.Deserialize<TicketTypeDeletedEvent>(message.Content)
+                nameof(TicketTypeDeletedIntegrationEvent) or "TicketTypeDeletedEvent" =>
+                    JsonSerializer.Deserialize<TicketTypeDeletedIntegrationEvent>(message.Content)
                     ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}"),
                 _ => throw new InvalidOperationException($"Unknown integration event type: {message.IntegrationEventType}")
             };
