@@ -39,11 +39,7 @@ public class TicketTypeCreatedEventHandler(
         if (availability == null)
         {
             await ticketTypeAvailabilityRepository.AddAsync(ticketType, cancellationToken);
+            await unitOfWork.SaveChangesAsync(cancellationToken);
         }
-        else
-        {
-            throw new ConflictException($"Ticket type availability with id {@event.Id} is already exists.");
-        }
-        await unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

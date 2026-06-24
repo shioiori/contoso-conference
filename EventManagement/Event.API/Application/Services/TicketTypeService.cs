@@ -46,8 +46,6 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
 
             ticketType.ValidatePricingPhasesAgainstEvent(eventEntity.From, eventEntity.To);
             await unitOfWork.TicketTypes.AddAsync(ticketType, cancellationToken);
-            await unitOfWork.SaveChangesAsync(cancellationToken);
-
             await unitOfWork.Outbox.AddAsync(new OutboxMessage
             {
                 Id = Guid.NewGuid(),
@@ -129,9 +127,7 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
                 {
                     Id = ticketType.Id,
                     EventId = ticketType.EventId,
-                    PreviousQuantity = previousQuota,
-                    NewQuantity = ticketType.Quota,
-                    AddedQuantity = quantity,
+                    NewQuantity = ticketType.Quota
                 }),
                 OccurredOnUtc = DateTime.UtcNow,
                 Status = ProcessStatus.Pending

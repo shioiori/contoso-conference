@@ -5,7 +5,6 @@ using Eventbox.Payment.Infrastructure.Persistence;
 using Eventbox.Shared.Outbox;
 using Eventbox.Payment.Api.Options;
 using Eventbox.Payment.Api.Services;
-using Microsoft.Extensions.Options;
 
 namespace Eventbox.Payment.Api.Extensions;
 
@@ -15,6 +14,8 @@ public static class ApplicationServicesExtensions
     {
         services.AddOptions<PaymentOptions>()
             .Bind(configuration.GetSection(PaymentOptions.SectionName));
+        services.AddOptions<TicketingOptions>()
+            .Bind(configuration.GetSection(TicketingOptions.SectionName));
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<CreatePaymentIntentCommand>());
         services.AddScoped<IPaymentRepository, PaymentRepository>();

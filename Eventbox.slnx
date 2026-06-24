@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/ApiGateway/">
+    <Project Path="ApiGateway/YarpApiGateway/YarpApiGateway.csproj" />
+  </Folder>
   <Folder Name="/Auth/">
     <Project Path="Auth/Auth.API/Auth.API.csproj" />
   </Folder>

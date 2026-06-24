@@ -1,4 +1,10 @@
 services:
+  yarp.api.gateway:
+    image: ${DOCKER_REGISTRY-}yarpapigateway
+    build:
+      context: .
+      dockerfile: ApiGateway/YarpApiGateway/Dockerfile
+
   auth.api:
     image: ${DOCKER_REGISTRY-}authapi
     build:

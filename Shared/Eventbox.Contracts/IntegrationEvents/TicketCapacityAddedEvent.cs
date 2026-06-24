@@ -6,7 +6,5 @@ public class TicketCapacityAddedEvent : IntegrationEvent
 {
     public Guid Id { get; set; }
     public Guid EventId { get; set; }
-    public int PreviousQuantity { get; set; }
     public int NewQuantity { get; set; }
-    public int AddedQuantity { get; set; }
 }
