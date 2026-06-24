@@ -9,6 +9,9 @@
 !.env.example
 !.env.*.example
 
+# Postman environments with real server info
+postman/*.Staging.postman_environment.json
+
 # Local app settings with machine-specific secrets
 appsettings.Local.json
 appsettings.*.local.json
