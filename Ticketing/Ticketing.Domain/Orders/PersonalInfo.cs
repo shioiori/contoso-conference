@@ -23,8 +23,8 @@ namespace Eventbox.Ticketing.Domain.Orders
             Email = normalizedEmail;
         }
 
-        public string Name { get; private set; }
-        public string Email { get; private set; }
+        public string Name { get; set; }
+        public string Email { get; set; }
 
         private static bool IsValidEmail(string email)
         {

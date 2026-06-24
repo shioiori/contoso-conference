@@ -1,4 +1,16 @@
 services:
+  yarp.api.gateway:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+    ports:
+      - "8050:8080"
+    depends_on:
+      - auth.api
+      - event.api
+      - ticketing.api
+      - payment.api
+
   auth.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -40,6 +52,32 @@ services:
       - "15672:15672"
     restart: always
 
+  mailhog:
+    container_name: mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    restart: always
+
+  notification.api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=8080
+      - RabbitMQ__Host=rabbitmq
+      - RabbitMQ__Port=5672
+      - RabbitMQ__VirtualHost=/
+      - RabbitMQ__Username=guest
+      - RabbitMQ__Password=guest
+      - Smtp__Host=mailhog
+      - Smtp__Port=1025
+      - Smtp__FromAddress=noreply@eventbox.com
+      - Smtp__FromName=Eventbox
+    ports:
+      - "8040:8080"
+    depends_on:
+      - rabbitmq
+      - mailhog
+
   event.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
@@ -73,6 +111,7 @@ services:
       - ASPNETCORE_HTTPS_PORTS=8081
       - ConnectionStrings__Database=Host=eventdb;Port=5432;Database=PaymentDb;Username=postgres;Password=Eventbox123!
       - TicketingApi__BaseUrl=http://ticketing.api:8080
+      - TicketingApi__InternalServiceToken=qp0HZNvn6gwfObxh/lOEbq+nuTS1RjnByv9wvMuOSKWb2KDYok5PJaxIsJHPOjG7
       - Payment__ProviderSignature=4JEqxrjVAk9I8euMZA44kTkNxW6pPO7ZRfREeTupUiE=
       - RabbitMQ__Host=rabbitmq
       - RabbitMQ__Port=5672
@@ -103,6 +142,7 @@ services:
       - RabbitMQ__VirtualHost=/
       - RabbitMQ__Username=guest
       - RabbitMQ__Password=guest
+      - InternalApi__ServiceToken=qp0HZNvn6gwfObxh/lOEbq+nuTS1RjnByv9wvMuOSKWb2KDYok5PJaxIsJHPOjG7
       - Jwt__Issuer=Eventbox.Auth
       - Jwt__Audience=Eventbox.Api
       - Jwt__SigningKey=U7Sknna8IkRyXFXqDrXK6ON+GPq39d0QWAK2gEX0mljWQUFkqiaVGL2Wn0nPIHiT

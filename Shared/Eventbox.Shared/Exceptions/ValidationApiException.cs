@@ -1,11 +1,8 @@
-using Microsoft.AspNetCore.Http;
-
 namespace Eventbox.Shared.Exceptions;
 
 public sealed class ValidationApiException : ApiException
 {
-    public ValidationApiException(string message)
-        : base(message, StatusCodes.Status400BadRequest, "Validation failed", "validation")
+    public ValidationApiException(string message) : base(message)
     {
     }
 

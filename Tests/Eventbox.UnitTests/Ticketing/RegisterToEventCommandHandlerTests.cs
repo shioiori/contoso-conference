@@ -3,7 +3,7 @@ using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
-using Eventbox.Ticketing.Application.Commands;
+using Eventbox.Ticketing.Application.Commands.Orders;
 using Eventbox.Ticketing.Domain.Events;
 using Eventbox.Ticketing.Domain.Orders;
 using Eventbox.Ticketing.Domain.Inventory;
@@ -43,7 +43,7 @@ public class RegisterToEventCommandHandlerTests
     private sealed class StubUnitOfWork(EventSnapshot snapshot) : IUnitOfWork
     {
         public IOrderRepository Orders => new NullOrderRepository();
-        public ITicketAvailabilityRepository TicketAvailabilities => new NullTicketAvailabilityRepository();
+        public ITicketTypeAvailabilityRepository TicketTypeAvailabilities => new NullTicketTypeAvailabilityRepository();
         public IEventSnapshotRepository EventSnapshots => new StubEventSnapshotRepository(snapshot);
         public ITicketRepository Tickets => new NullTicketRepository();
         public IOutbox Outbox => new NullOutbox();
@@ -62,6 +62,13 @@ public class RegisterToEventCommandHandlerTests
 
         public Task UpsertAsync(Guid eventId, DateTimeOffset? from, DateTimeOffset? to, bool? isPublished, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
+
+        public Task<EventSnapshot?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<EventSnapshot?>(null);
+        public Task AddAsync(EventSnapshot entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task AddRangeAsync(IEnumerable<EventSnapshot> entities, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public void Update(EventSnapshot entity) { }
+        public void Delete(EventSnapshot entity) { }
+        public IQueryable<EventSnapshot> Get(Expression<Func<EventSnapshot, bool>> filter = null!, Func<IQueryable<EventSnapshot>, IOrderedQueryable<EventSnapshot>> orderBy = null!, string includeProperties = null!, bool needAsNoTracking = true) => Enumerable.Empty<EventSnapshot>().AsQueryable();
     }
 
     private sealed class NullOrderRepository : IOrderRepository
@@ -81,16 +88,17 @@ public class RegisterToEventCommandHandlerTests
         public Task<bool> HasActivePendingOrderAsync(Guid eventId, Guid? userId, string email, DateTimeOffset utcNow, CancellationToken cancellationToken = default) => Task.FromResult(false);
     }
 
-    private sealed class NullTicketAvailabilityRepository : ITicketAvailabilityRepository
+    private sealed class NullTicketTypeAvailabilityRepository : ITicketTypeAvailabilityRepository
     {
-        public Task<TicketAvailability?> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default) => Task.FromResult<TicketAvailability?>(null);
-        public Task<bool> TryReserveAsync(Guid eventId, Guid ticketTypeId, int quantity, CancellationToken cancellationToken = default) => Task.FromResult(false);
-        public Task<TicketAvailability?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<TicketAvailability?>(null);
-        public Task AddAsync(TicketAvailability entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public Task AddRangeAsync(IEnumerable<TicketAvailability> entities, CancellationToken cancellationToken = default) => Task.CompletedTask;
-        public void Update(TicketAvailability entity) { }
-        public void Delete(TicketAvailability entity) { }
-        public IQueryable<TicketAvailability> Get(Expression<Func<TicketAvailability, bool>> filter = null!, Func<IQueryable<TicketAvailability>, IOrderedQueryable<TicketAvailability>> orderBy = null!, string includeProperties = null!, bool needAsNoTracking = true) => Enumerable.Empty<TicketAvailability>().AsQueryable();
+        public Task<TicketTypeAvailability?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<TicketTypeAvailability?>(null);
+        public Task<TicketTypeAvailability?> GetByIdWithPricingAsync(Guid ticketTypeId, CancellationToken cancellationToken = default) => Task.FromResult<TicketTypeAvailability?>(null);
+        public Task<IReadOnlyList<TicketTypeAvailability>> GetByEventIdAsync(Guid eventId, CancellationToken cancellationToken = default) => Task.FromResult<IReadOnlyList<TicketTypeAvailability>>([]);
+        public Task<bool> TryReserveAsync(Guid ticketTypeId, int quantity, CancellationToken cancellationToken = default) => Task.FromResult(false);
+        public Task AddAsync(TicketTypeAvailability entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task AddRangeAsync(IEnumerable<TicketTypeAvailability> entities, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public void Update(TicketTypeAvailability entity) { }
+        public void Delete(TicketTypeAvailability entity) { }
+        public IQueryable<TicketTypeAvailability> Get(Expression<Func<TicketTypeAvailability, bool>> filter = null!, Func<IQueryable<TicketTypeAvailability>, IOrderedQueryable<TicketTypeAvailability>> orderBy = null!, string includeProperties = null!, bool needAsNoTracking = true) => Enumerable.Empty<TicketTypeAvailability>().AsQueryable();
     }
 
     private sealed class NullTicketRepository : ITicketRepository

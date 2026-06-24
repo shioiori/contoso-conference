@@ -1,7 +1,8 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Eventbox.Shared.Constants;
 using Eventbox.Ticketing.Api.Requests;
-using Eventbox.Ticketing.Application.Commands;
+using Eventbox.Ticketing.Application.Commands.CheckIn;
 using Eventbox.Ticketing.Domain.Enums;
 using MediatR;
 
@@ -12,7 +13,7 @@ public static class CheckInEndpoints
     public static IEndpointRouteBuilder MapCheckInEndpoints(this IEndpointRouteBuilder app)
     {
         var organizerApi = app.MapGroup("api/events/{eventId:guid}/check-ins")
-            .RequireAuthorization("RequireOrganizerAccount");
+            .RequireAuthorization(PolicyName.RequireOrganizerAccount);
 
         organizerApi.MapPost("/", CheckInQr);
 

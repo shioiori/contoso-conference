@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Text;
-
 namespace Eventbox.Ticketing.Domain.Enums
 {
     public enum OrderState
@@ -10,6 +6,7 @@ namespace Eventbox.Ticketing.Domain.Enums
         Confirmed,
         Cancelled,
         Expired,
-        PaymentFailed
+        PaymentFailed,
+        PaymentInProgress
     }
 }

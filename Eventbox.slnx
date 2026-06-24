@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/ApiGateway/">
+    <Project Path="ApiGateway/YarpApiGateway/YarpApiGateway.csproj" />
+  </Folder>
   <Folder Name="/Auth/">
     <Project Path="Auth/Auth.API/Auth.API.csproj" />
   </Folder>
@@ -16,7 +19,11 @@
   </Folder>
   <Folder Name="/Shared/">
     <Project Path="Shared/Eventbox.Contracts/Eventbox.Contracts.csproj" Id="e719e98a-e986-48fd-bb0b-01682facfb92" />
+    <Project Path="Shared/Eventbox.Shared.Infrastructure/Eventbox.Shared.Infrastructure.csproj" />
     <Project Path="Shared/Eventbox.Shared/Eventbox.Shared.csproj" />
+  </Folder>
+  <Folder Name="/Notification/">
+    <Project Path="Notification/Notification.API/Notification.API.csproj" />
   </Folder>
   <Folder Name="/Tests/">
     <Project Path="Tests/Eventbox.UnitTests/Eventbox.UnitTests.csproj" />

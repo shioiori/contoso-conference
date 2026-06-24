@@ -8,6 +8,7 @@ namespace Eventbox.Ticketing.Infrastructure.Jobs
 {
     public class OutboxProcessorJob(
         IUnitOfWork unitOfWork,
+        IEventBus eventBus,
         IDelayedEventScheduler delayedEventScheduler) : IOutboxProcessorJob
     {
         private const int BatchSize = 20;
@@ -23,8 +24,7 @@ namespace Eventbox.Ticketing.Infrastructure.Jobs
                 await unitOfWork.SaveChangesAsync(cancellationToken);
                 try
                 {
-                    var @event = Deserialize(message) as OrderExpirationDueMessageIntergrationEvent;
-                    await delayedEventScheduler.ScheduleAsync(@event, @event.ExpiresAt, cancellationToken);
+                    await ProcessAsync(message, cancellationToken);
                     message.Status = ProcessStatus.Processed;
                     message.ProcessedOnUtc = DateTime.UtcNow;
                 }
@@ -40,13 +40,25 @@ namespace Eventbox.Ticketing.Infrastructure.Jobs
             }
         }
 
-        private static IIntegrationEvent Deserialize(OutboxMessage message) =>
-            message.IntegrationEventType switch
+        private async Task ProcessAsync(OutboxMessage message, CancellationToken cancellationToken)
+        {
+            switch (message.IntegrationEventType)
             {
-                nameof(OrderExpirationDueMessageIntergrationEvent) =>
-                    JsonSerializer.Deserialize<OrderExpirationDueMessageIntergrationEvent>(message.Content)
-                    ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}"),
-                _ => throw new InvalidOperationException($"Unknown integration event type: {message.IntegrationEventType}")
-            };
+                case nameof(OrderExpirationDueMessageIntegrationEvent):
+                    var expirationEvent = JsonSerializer.Deserialize<OrderExpirationDueMessageIntegrationEvent>(message.Content)
+                        ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}");
+                    await delayedEventScheduler.ScheduleAsync(expirationEvent, expirationEvent.ExpiresAt, cancellationToken);
+                    break;
+
+                case nameof(OrderConfirmedIntegrationEvent):
+                    var confirmedEvent = JsonSerializer.Deserialize<OrderConfirmedIntegrationEvent>(message.Content)
+                        ?? throw new InvalidOperationException($"Failed to deserialize {message.IntegrationEventType}");
+                    await eventBus.PublishAsync(confirmedEvent, cancellationToken);
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"Unknown integration event type: {message.IntegrationEventType}");
+            }
+        }
     }
 }

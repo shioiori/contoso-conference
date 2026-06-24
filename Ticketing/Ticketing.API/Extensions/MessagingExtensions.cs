@@ -20,10 +20,11 @@ public static class MessagingExtensions
             options.Subscribe<TicketTypeCreatedEvent>("eventbox.ticketing");
             options.Subscribe<TicketCapacityAddedEvent>("eventbox.ticketing");
             options.Subscribe<TicketTypeDeletedEvent>("eventbox.ticketing");
-            options.Subscribe<OrderExpirationDueMessageIntergrationEvent>(
+            options.Subscribe<OrderExpirationDueMessageIntegrationEvent>(
                 "eventbox.ticketing",
                 routingKey: "ticketing.expire",
                 queue: "eventbox.ticketing.expire");
+            options.Publish<OrderConfirmedIntegrationEvent>("eventbox.ticketing");
         });
 
         services.AddSingleton<RabbitMQEventBus>();

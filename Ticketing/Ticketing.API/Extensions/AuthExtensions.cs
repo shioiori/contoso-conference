@@ -1,3 +1,4 @@
+using Eventbox.Shared.Constants;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -29,12 +30,12 @@ public static class AuthExtensions
             });
 
         services.AddAuthorizationBuilder()
-            .AddPolicy("RequireCustomerAccount", policy =>
+            .AddPolicy(PolicyName.RequireCustomerAccount, policy =>
                 policy.RequireAuthenticatedUser()
-                    .RequireClaim("account_type", "Customer"))
-            .AddPolicy("RequireOrganizerAccount", policy =>
+                    .RequireClaim(CustomClaimTypes.AccountType, AccountTypes.Customer))
+            .AddPolicy(PolicyName.RequireOrganizerAccount, policy =>
                 policy.RequireAuthenticatedUser()
-                    .RequireClaim("account_type", "Organizer"));
+                    .RequireClaim(CustomClaimTypes.AccountType, AccountTypes.Organizer));
 
         return services;
     }

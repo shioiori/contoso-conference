@@ -1,6 +1,10 @@
 namespace Eventbox.Shared.Auditing;
 
-public sealed record AuditContext(
-    string? OrganizationId,
-    string? UserId,
-    string? TraceId);
+public sealed class AuditContext()
+{
+    public string OrganizationId { get; set; }
+    public string UserId { get; set; }
+    public string TraceId { get; set; }
+
+}
+

@@ -4,7 +4,7 @@ using Eventbox.EventManagement.EventApi.Application.Abstractions;
 using Eventbox.Shared.Outbox;
 using System.Text.Json;
 
-namespace Eventbox.EventManagement.Infrastructure.Jobs
+namespace Eventbox.EventManagement.EventApi.Infrastructure.Jobs
 {
     public class OutboxProcessorJob(
         IUnitOfWork unitOfWork,

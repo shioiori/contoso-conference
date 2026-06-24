@@ -7,17 +7,13 @@ using Eventbox.Shared.Outbox;
 
 namespace Eventbox.Ticketing.Infrastructure
 {
-    public class TicketingDbContext : DbContext
+    public class TicketingDbContext(DbContextOptions<TicketingDbContext> options) : DbContext(options)
     {
-        public TicketingDbContext(DbContextOptions<TicketingDbContext> options) : base(options)
-        {
-        }
-
         public DbSet<Order> Orders => Set<Order>();
         public DbSet<OrderItem> OrderItems => Set<OrderItem>();
         public DbSet<Ticket> Tickets => Set<Ticket>();
         public DbSet<EventSnapshot> EventSnapshots => Set<EventSnapshot>();
-        public DbSet<TicketAvailability> TicketAvailabilities => Set<TicketAvailability>();
+        public DbSet<TicketTypeAvailability> TicketTypeAvailabilities => Set<TicketTypeAvailability>();
         public DbSet<OutboxMessage> Outboxes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -71,28 +67,22 @@ namespace Eventbox.Ticketing.Infrastructure
                 snapshot.Property(e => e.To).IsRequired();
             });
 
-            modelBuilder.Entity<TicketAvailability>(ticketAvailability =>
+            modelBuilder.Entity<TicketTypeAvailability>(ticketType =>
             {
-                ticketAvailability.HasKey(s => s.Id);
-                ticketAvailability.OwnsMany(s => s.TicketTypes, ticketType =>
+                ticketType.HasKey(t => t.Id);
+                ticketType.HasIndex(t => t.EventId);
+                ticketType.Property(t => t.Name).HasMaxLength(200).IsRequired();
+                ticketType.Property(t => t.Currency).HasMaxLength(3).IsRequired();
+                ticketType.Property(t => t.Visibility).HasConversion<string>().HasMaxLength(50).IsRequired();
+                ticketType.Property(t => t.AccessCodeHash).HasMaxLength(256);
+                ticketType.OwnsMany(t => t.PricingPhases, phase =>
                 {
-                    ticketType.WithOwner().HasForeignKey("TicketAvailabilityId");
-                    ticketType.HasKey(t => t.Id);
-                    ticketType.Property(t => t.Name).HasMaxLength(200).IsRequired();
-                    ticketType.Property(t => t.Currency).HasMaxLength(3).IsRequired();
-                    ticketType.Property(t => t.Visibility).HasConversion<string>().HasMaxLength(50).IsRequired();
-                    ticketType.Property(t => t.AccessCodeHash).HasMaxLength(256);
-                    ticketType.OwnsMany(t => t.PricingPhases, phase =>
-                    {
-                        phase.WithOwner().HasForeignKey("TicketTypeAvailabilityId");
-                        phase.HasKey(p => p.Id);
-                        phase.Property(p => p.Name).HasMaxLength(120).IsRequired();
-                        phase.Property(p => p.Price).HasPrecision(18, 2).IsRequired();
-                    });
-                    ticketType.Navigation(t => t.PricingPhases)
-                        .UsePropertyAccessMode(PropertyAccessMode.Field);
+                    phase.WithOwner().HasForeignKey("TicketTypeAvailabilityId");
+                    phase.HasKey(p => p.Id);
+                    phase.Property(p => p.Name).HasMaxLength(120).IsRequired();
+                    phase.Property(p => p.Price).HasPrecision(18, 2).IsRequired();
                 });
-                ticketAvailability.Navigation(s => s.TicketTypes)
+                ticketType.Navigation(t => t.PricingPhases)
                     .UsePropertyAccessMode(PropertyAccessMode.Field);
             });
         }

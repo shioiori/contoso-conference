@@ -1,4 +1,10 @@
 services:
+  yarp.api.gateway:
+    image: ${DOCKER_REGISTRY-}yarpapigateway
+    build:
+      context: .
+      dockerfile: ApiGateway/YarpApiGateway/Dockerfile
+
   auth.api:
     image: ${DOCKER_REGISTRY-}authapi
     build:
@@ -26,5 +32,14 @@ services:
   eventdb:
     image: postgres:16
 
+  notification.api:
+    image: ${DOCKER_REGISTRY-}notificationapi
+    build:
+      context: .
+      dockerfile: Notification/Notification.API/Dockerfile
+
   rabbitmq:
     image: rabbitmq:3-management
+
+  mailhog:
+    image: mailhog/mailhog

@@ -1,17 +1,13 @@
+using Eventbox.Shared.SeedWorks;
 using Eventbox.Ticketing.Domain.Enums;
-using Eventbox.Ticketing.Domain.SeedWork;
 
 namespace Eventbox.Ticketing.Domain.Tickets;
 
-public class Ticket : Entity<Guid>
+public class Ticket : AuditableEntity<Guid>
 {
-    private Ticket()
-    {
-        QrToken = null!;
-        QrTokenHash = null!;
-    }
+    private Ticket() { }
 
-    public Ticket(Guid orderId, Guid eventId, Guid ticketTypeId, int sequenceNumber)
+    public Ticket(Guid orderId, Guid eventId, Guid ticketTypeId, int sequenceNumber) : base(Guid.NewGuid())
     {
         if (orderId == Guid.Empty)
             throw new ArgumentException("Order id is required.", nameof(orderId));
@@ -25,7 +21,6 @@ public class Ticket : Entity<Guid>
         if (sequenceNumber <= 0)
             throw new ArgumentOutOfRangeException(nameof(sequenceNumber), "Sequence number must be greater than zero.");
 
-        Id = Guid.NewGuid();
         OrderId = orderId;
         EventId = eventId;
         TicketTypeId = ticketTypeId;

@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace Eventbox.Shared.Auditing;
 
-internal static class AuditRedactor
+public static class AuditRedactor
 {
     private static readonly string[] SensitiveNameParts =
     [

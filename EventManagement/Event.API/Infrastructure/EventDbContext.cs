@@ -4,12 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Event = Eventbox.EventManagement.EventApi.Domains.Event;
 namespace Eventbox.EventManagement.EventApi.Infrastructure
 {
-    public class EventDbContext : DbContext
+    public class EventDbContext(DbContextOptions<EventDbContext> options) : DbContext(options)
     {
-        public EventDbContext(DbContextOptions<EventDbContext> options) : base(options)
-        {
-        }
-
         public DbSet<Event> Events => Set<Event>();
         public DbSet<Organization> Organizations => Set<Organization>();
         public DbSet<OrganizationMember> OrganizationMembers => Set<OrganizationMember>();

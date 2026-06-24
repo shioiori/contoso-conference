@@ -214,6 +214,25 @@
             "url": "{{authApiUrl}}/api/auth/me"
           },
           "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{organizerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "url": "{{authApiUrl}}/api/auth/logout"
+          },
+          "response": []
         }
       ]
     },
@@ -295,7 +314,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"id\": \"{{organizationId}}\",\n  \"name\": \"Eventbox Events Updated\"\n}",
+              "raw": "{\n  \"name\": \"Eventbox Events Updated\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -452,21 +471,7 @@
           "name": "Publish Event",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"isPublished\": true\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
+            "header": [],
             "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/publish"
           },
           "response": []
@@ -475,21 +480,7 @@
           "name": "Unpublish Event",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"isPublished\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            },
+            "header": [],
             "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/unpublish"
           },
           "response": []
@@ -721,7 +712,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Linh Nguyen\",\n  \"email\": \"linh@example.com\",\n  \"ticketTypeId\": {{ticketTypeId}},\n  \"quantity\": 1,\n  \"accessCode\": \"{{accessCode}}\"\n}",
+              "raw": "{\n  \"name\": \"Linh Nguyen\",\n  \"email\": \"linh@example.com\",\n  \"ticketTypeId\": \"{{ticketTypeId}}\",\n  \"quantity\": 1,\n  \"accessCode\": \"{{accessCode}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -766,7 +757,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Customer User\",\n  \"ticketTypeId\": {{ticketTypeId}},\n  \"quantity\": 1,\n  \"accessCode\": \"{{accessCode}}\"\n}",
+              "raw": "{\n  \"name\": \"Customer User\",\n  \"ticketTypeId\": \"{{ticketTypeId}}\",\n  \"quantity\": 1,\n  \"accessCode\": \"{{accessCode}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -774,18 +765,6 @@
               }
             },
             "url": "{{ticketingApiUrl}}/api/public/events/{{eventId}}/orders"
-          },
-          "response": []
-        },
-        {
-          "name": "Request Order Lookup",
-          "request": {
-            "auth": {
-              "type": "noauth"
-            },
-            "method": "POST",
-            "header": [],
-            "url": "{{ticketingApiUrl}}/api/public/order-lookup-requests"
           },
           "response": []
         },
@@ -854,7 +833,7 @@
             },
             "method": "GET",
             "header": [],
-            "url": "{{ticketingApiUrl}}/api/customer/orders/{{orderId}}"
+            "url": "{{ticketingApiUrl}}/api/customer/orders/{{customerOrderId}}"
           },
           "response": []
         },
@@ -873,7 +852,7 @@
             },
             "method": "POST",
             "header": [],
-            "url": "{{ticketingApiUrl}}/api/customer/orders/{{orderId}}/confirm-free"
+            "url": "{{ticketingApiUrl}}/api/customer/orders/{{customerOrderId}}/confirm-free"
           },
           "response": []
         },
@@ -892,7 +871,7 @@
             },
             "method": "POST",
             "header": [],
-            "url": "{{ticketingApiUrl}}/api/customer/orders/{{orderId}}/cancel"
+            "url": "{{ticketingApiUrl}}/api/customer/orders/{{customerOrderId}}/cancel"
           },
           "response": []
         }
@@ -987,7 +966,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"returnUrl\": \"https://eventbox.test/checkout/return\",\n  \"cancelUrl\": \"https://eventbox.test/checkout/cancel\",\n  \"amount\": 199,\n  \"currency\": \"USD\",\n  \"orderAccessCode\": \"{{orderAccessCode}}\"\n}",
+              "raw": "{\n  \"orderId\": \"{{orderId}}\",\n  \"returnUrl\": \"https://eventbox.test/checkout/return\",\n  \"cancelUrl\": \"https://eventbox.test/checkout/cancel\",\n  \"orderAccessCode\": \"{{orderAccessCode}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1017,7 +996,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"providerEventId\": \"evt_{{$guid}}\",\n  \"paymentIntentId\": \"{{paymentIntentId}}\",\n  \"orderId\": \"{{orderId}}\",\n  \"status\": \"Succeeded\",\n  \"amount\": 199,\n  \"currency\": \"USD\",\n  \"paidAt\": \"2026-09-15T09:05:00Z\",\n  \"failedAt\": null,\n  \"failureReason\": null\n}",
+              "raw": "{\n  \"providerEventId\": \"evt_{{$guid}}\",\n  \"paymentIntentId\": \"{{paymentIntentId}}\",\n  \"status\": \"Succeeded\",\n  \"amount\": 199000,\n  \"currency\": \"VND\",\n  \"paidAt\": \"2026-09-15T09:05:00Z\",\n  \"failedAt\": null,\n  \"failureReason\": null\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1047,7 +1026,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"providerEventId\": \"evt_{{$guid}}\",\n  \"paymentIntentId\": \"{{paymentIntentId}}\",\n  \"orderId\": \"{{orderId}}\",\n  \"status\": \"Failed\",\n  \"amount\": 199,\n  \"currency\": \"USD\",\n  \"paidAt\": null,\n  \"failedAt\": \"2026-09-15T09:05:00Z\",\n  \"failureReason\": \"Simulated provider failure\"\n}",
+              "raw": "{\n  \"providerEventId\": \"evt_{{$guid}}\",\n  \"paymentIntentId\": \"{{paymentIntentId}}\",\n  \"status\": \"Failed\",\n  \"amount\": 199000,\n  \"currency\": \"VND\",\n  \"paidAt\": null,\n  \"failedAt\": \"2026-09-15T09:05:00Z\",\n  \"failureReason\": \"Simulated provider failure\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1116,11 +1095,11 @@
     },
     {
       "key": "ticketTypeId",
-      "value": "1"
+      "value": ""
     },
     {
       "key": "freeTicketTypeId",
-      "value": "2"
+      "value": ""
     },
     {
       "key": "orderId",

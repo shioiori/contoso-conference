@@ -1,16 +1,22 @@
+using Eventbox.Payment.Api.Enums;
+using Eventbox.Payment.Api.Options;
+using Microsoft.Extensions.Options;
 using System.Net;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Text.Json;
 
 namespace Eventbox.Payment.Api.Services;
 
-public class TicketingOrderAccessVerifier(HttpClient httpClient) : IOrderAccessVerifier
+public class TicketingOrderAccessVerifier(
+    HttpClient httpClient,
+    IOptions<TicketingOptions> ticketingOptions) : IOrderAccessVerifier, IOrderPaymentStarter
 {
+    public const string InternalServiceTokenHeaderName = "X-Internal-Service-Token";
+
     public async Task<OrderAccessVerificationResult> VerifyAsync(
         Guid orderId,
-        string? orderAccessCode,
-        string? authorizationHeader,
+        string orderAccessCode,
+        string authorizationHeader,
         CancellationToken cancellationToken)
     {
         OrderAccessVerificationResult? guestResult = null;
@@ -113,8 +119,58 @@ public class TicketingOrderAccessVerifier(HttpClient httpClient) : IOrderAccessV
         }
     }
 
+    public async Task<StartPaymentOutcome> StartPaymentAsync(Guid orderId, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(
+            HttpMethod.Post,
+            $"/api/internal/orders/{orderId}/start-payment");
+        request.Headers.Add(InternalServiceTokenHeaderName, ticketingOptions.Value.InternalServiceToken);
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await httpClient.SendAsync(request, cancellationToken);
+        }
+        catch (HttpRequestException)
+        {
+            return new StartPaymentOutcome(StartPaymentResult.ServiceUnavailable);
+        }
+
+        using (response)
+        {
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return new StartPaymentOutcome(StartPaymentResult.OrderNotFound);
+
+            if (response.StatusCode == HttpStatusCode.Conflict)
+                return new StartPaymentOutcome(StartPaymentResult.OrderNotPayable);
+
+            if (!response.IsSuccessStatusCode)
+                return new StartPaymentOutcome(StartPaymentResult.ServiceUnavailable);
+
+            TicketingOrderAmountDto? amount;
+            try
+            {
+                amount = await response.Content.ReadFromJsonAsync<TicketingOrderAmountDto>(cancellationToken);
+            }
+            catch (JsonException)
+            {
+                return new StartPaymentOutcome(StartPaymentResult.ServiceUnavailable);
+            }
+
+            return amount is not null
+                ? new StartPaymentOutcome(StartPaymentResult.Started, amount.TotalAmount, amount.Currency)
+                : new StartPaymentOutcome(StartPaymentResult.ServiceUnavailable);
+        }
+    }
+
     private sealed class TicketingOrderDto
     {
         public Guid Id { get; init; }
+    }
+
+    private sealed class TicketingOrderAmountDto
+    {
+        public decimal TotalAmount { get; init; }
+        public string? Currency { get; init; }
     }
 }

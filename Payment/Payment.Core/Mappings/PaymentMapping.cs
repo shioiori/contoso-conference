@@ -1,4 +1,4 @@
-using Eventbox.Payment.Core.Dtos;
+using Eventbox.Payment.Core.Responses;
 using Mapster;
 using PaymentEntity = Eventbox.Payment.Core.Entities.Payment;
 
@@ -8,7 +8,7 @@ public class PaymentMapping : IRegister
 {
     public void Register(TypeAdapterConfig config)
     {
-        config.NewConfig<PaymentEntity, PaymentIntentDto>()
+        config.NewConfig<PaymentEntity, PaymentIntentResponse>()
             .Map(dest => dest.PaymentIntentId, src => src.Id);
     }
 }

@@ -1,5 +1,5 @@
 using Eventbox.EventManagement.EventApi.Domains;
-using Eventbox.EventManagement.EventApi.Enums;
+using Eventbox.EventManagement.EventApi.Domains.Enums;
 using Eventbox.Shared.Exceptions;
 using System.Reflection;
 

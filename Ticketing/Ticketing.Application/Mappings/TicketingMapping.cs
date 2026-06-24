@@ -1,8 +1,11 @@
-using Eventbox.Ticketing.Application.Dtos;
 using Eventbox.Ticketing.Domain.Orders;
 using Eventbox.Ticketing.Domain.Inventory;
 using Eventbox.Ticketing.Domain.Tickets;
 using Mapster;
+using Eventbox.Ticketing.Application.Dtos.Inventory;
+using Eventbox.Ticketing.Application.Dtos.Orders;
+using Eventbox.Ticketing.Application.Dtos.Tickets;
+using Eventbox.Ticketing.Domain.Enums;
 
 namespace Eventbox.Ticketing.Application.Mappings
 {
@@ -20,15 +23,11 @@ namespace Eventbox.Ticketing.Application.Mappings
             config.NewConfig<OrderItem, OrderItemDto>();
 
             config.NewConfig<Ticket, TicketDto>()
-                .Map(dest => dest.CheckInStatus, src => src.TicketState == Eventbox.Ticketing.Domain.Enums.TicketState.Cancelled
-                    ? Eventbox.Ticketing.Domain.Enums.CheckInStatus.Cancelled
+                .Map(dest => dest.CheckInStatus, src => src.TicketState == TicketState.Cancelled
+                    ? CheckInStatus.Cancelled
                     : src.CheckedInAt.HasValue
-                        ? Eventbox.Ticketing.Domain.Enums.CheckInStatus.CheckedIn
-                        : Eventbox.Ticketing.Domain.Enums.CheckInStatus.Active);
-
-            config.NewConfig<TicketAvailability, TicketAvailabilityDto>()
-                .Map(dest => dest.EventId, src => src.Id)
-                .Map(dest => dest.TicketTypes, src => src.TicketTypes.Adapt<IReadOnlyCollection<TicketTypeAvailabilityDto>>());
+                        ? CheckInStatus.CheckedIn
+                        : CheckInStatus.Active);
 
             config.NewConfig<TicketTypeAvailability, TicketTypeAvailabilityDto>()
                 .Map(dest => dest.Visibility, src => src.Visibility.ToString())

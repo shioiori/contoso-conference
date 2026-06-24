@@ -1,12 +1,13 @@
 using Eventbox.EventManagement.EventApi.Domains;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Event = Eventbox.EventManagement.EventApi.Domains.Event;
 
 namespace Eventbox.EventManagement.EventApi.Infrastructure.Configurations
 {
-    public class EventConfiguration : IEntityTypeConfiguration<Eventbox.EventManagement.EventApi.Domains.Event>
+    public class EventConfiguration : IEntityTypeConfiguration<Event>
     {
-        public void Configure(EntityTypeBuilder<Eventbox.EventManagement.EventApi.Domains.Event> builder)
+        public void Configure(EntityTypeBuilder<Event> builder)
         {
             builder.HasKey(c => c.Id);
 

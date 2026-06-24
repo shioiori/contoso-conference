@@ -1,19 +1,15 @@
-using Eventbox.Ticketing.Domain.SeedWork;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Eventbox.Shared.SeedWorks;
 
 namespace Eventbox.Ticketing.Domain.Orders
 {
-    public class OrderItem : Entity<Guid>
+    public class OrderItem : AuditableEntity<Guid>
     {
-        private OrderItem()
-        {
-        }
+        private OrderItem() { }
 
         public OrderItem(Guid ticketTypeId, int quantity)
             : this(ticketTypeId, Guid.NewGuid(), $"Ticket type {ticketTypeId}", "Default", 0, "VND", quantity)
         {
+
         }
 
         public OrderItem(
@@ -23,7 +19,7 @@ namespace Eventbox.Ticketing.Domain.Orders
             string pricingPhaseName,
             decimal unitPrice,
             string currency,
-            int quantity)
+            int quantity) : base(Guid.NewGuid())
         {
             if (ticketTypeId == Guid.Empty)
                 throw new ArgumentException("Ticket type id must not be empty.", nameof(ticketTypeId));
@@ -46,7 +42,6 @@ namespace Eventbox.Ticketing.Domain.Orders
             if (quantity <= 0)
                 throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity must be greater than zero.");
 
-            Id = Guid.NewGuid();
             TicketTypeId = ticketTypeId;
             PricingPhaseId = pricingPhaseId;
             TicketTypeName = ticketTypeName.Trim();

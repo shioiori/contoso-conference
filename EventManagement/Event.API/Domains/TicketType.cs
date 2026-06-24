@@ -1,32 +1,27 @@
-using Eventbox.EventManagement.EventApi.Domains.Common;
-using Eventbox.EventManagement.EventApi.Enums;
+using Eventbox.EventManagement.EventApi.Domains.Enums;
 using Eventbox.Shared.Exceptions;
+using Eventbox.Shared.SeedWorks;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Eventbox.EventManagement.EventApi.Domains
 {
     [Table("TicketType")]
-    public class TicketType : Entity<Guid>
+    public class TicketType : AuditableEntity<Guid>
     {
         private readonly List<PricingPhase> _pricingPhases = [];
-
-        private TicketType()
-        {
-            Name = default!;
-            Currency = default!;
-        }
-
-        public string Name { get; private set; } = default!;
-        public string? Description { get; private set; }
-        public Guid EventId { get; private set; }
-        public int Quota { get; private set; }
-        public string Currency { get; private set; } = "VND";
-        public int MinPerOrder { get; private set; } = 1;
-        public int? MaxPerOrder { get; private set; }
-        public TicketVisibility Visibility { get; private set; } = TicketVisibility.Public;
-        public string? AccessCodeHash { get; private set; }
-        public Event Event { get; private set; } = default!;
+        public string Name { get; set; } = default!;
+        public string? Description { get; set; }
+        public Guid EventId { get; set; }
+        public int Quota { get; set; }
+        public string Currency { get; set; } = "VND";
+        public int MinPerOrder { get; set; } = 1;
+        public int? MaxPerOrder { get; set; }
+        public TicketVisibility Visibility { get; set; } = TicketVisibility.Public;
+        public string? AccessCodeHash { get; set; }
+        public Event Event { get; set; } = default!;
         public IReadOnlyCollection<PricingPhase> PricingPhases => _pricingPhases.AsReadOnly();
+
+        private TicketType() { }
 
         public TicketType(
             string name,
@@ -38,7 +33,7 @@ namespace Eventbox.EventManagement.EventApi.Domains
             int? maxPerOrder,
             TicketVisibility visibility,
             string? accessCodeHash,
-            IEnumerable<PricingPhase> pricingPhases)
+            IEnumerable<PricingPhase> pricingPhases) : base(Guid.NewGuid())
         {
             if (string.IsNullOrWhiteSpace(name))
                 throw new ArgumentException("Ticket type name is required.", nameof(name));

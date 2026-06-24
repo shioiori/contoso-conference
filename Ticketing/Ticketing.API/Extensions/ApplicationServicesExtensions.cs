@@ -1,14 +1,15 @@
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Jobs;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
-using Eventbox.Ticketing.Application.Commands;
-using Eventbox.Ticketing.Application.IntegrationEventHandlers;
 using Eventbox.Ticketing.Infrastructure;
 using Eventbox.Ticketing.Infrastructure.Jobs;
 using Eventbox.Ticketing.Infrastructure.Repositories;
 using Eventbox.Ticketing.Infrastructure.Security;
-using Eventbox.Ticketing.Infrastructure.Tickets;
 using Eventbox.Shared.Outbox;
+using Eventbox.Ticketing.Application.Commands.Orders;
+using Eventbox.Ticketing.Application.IntegrationEventHandlers.Orders;
+using Eventbox.Ticketing.Application.IntegrationEventHandlers.Events;
+using Eventbox.Ticketing.Application.IntegrationEventHandlers.Inventory;
 
 namespace Eventbox.Ticketing.Api.Extensions;
 
@@ -19,7 +20,7 @@ public static class ApplicationServicesExtensions
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblyContaining<RegisterToEventCommand>());
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<ITicketRepository, TicketRepository>();
-        services.AddScoped<ITicketAvailabilityRepository, TicketAvailabilityRepository>();
+        services.AddScoped<ITicketTypeAvailabilityRepository, TicketTypeAvailabilityRepository>();
         services.AddScoped<IEventSnapshotRepository, EventSnapshotRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IOutboxProcessorJob, OutboxProcessorJob>();

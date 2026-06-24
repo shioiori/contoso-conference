@@ -1,7 +1,7 @@
 using System.Linq.Expressions;
 using Eventbox.Ticketing.Application.Abstractions;
 using Eventbox.Ticketing.Application.Abstractions.Repositories;
-using Eventbox.Ticketing.Application.Commands;
+using Eventbox.Ticketing.Application.Commands.CheckIn;
 using Eventbox.Ticketing.Domain.Events;
 using Eventbox.Ticketing.Domain.Enums;
 using Eventbox.Ticketing.Domain.Tickets;
@@ -51,6 +51,13 @@ public class CheckInByQrTokenCommandHandlerTests
 
         public Task UpsertAsync(Guid eventId, DateTimeOffset? from, DateTimeOffset? to, bool? isPublished, CancellationToken cancellationToken = default)
             => Task.CompletedTask;
+
+        public Task<EventSnapshot?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => Task.FromResult<EventSnapshot?>(null);
+        public Task AddAsync(EventSnapshot entity, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task AddRangeAsync(IEnumerable<EventSnapshot> entities, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public void Update(EventSnapshot entity) { }
+        public void Delete(EventSnapshot entity) { }
+        public IQueryable<EventSnapshot> Get(Expression<Func<EventSnapshot, bool>> filter = null!, Func<IQueryable<EventSnapshot>, IOrderedQueryable<EventSnapshot>> orderBy = null!, string includeProperties = null!, bool needAsNoTracking = true) => Enumerable.Empty<EventSnapshot>().AsQueryable();
     }
 
     private sealed class InMemoryTicketRepository(Ticket ticket) : ITicketRepository

@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\Eventbox.Shared\Eventbox.Shared.csproj" />
+    <ProjectReference Include="..\..\Shared\Eventbox.Shared.Infrastructure\Eventbox.Shared.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

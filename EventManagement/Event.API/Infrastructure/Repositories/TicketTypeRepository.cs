@@ -1,12 +1,12 @@
 using Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories;
 using Eventbox.EventManagement.EventApi.Domains;
-using Eventbox.EventManagement.EventApi.Infrastructure;
-using Eventbox.EventManagement.EventApi.Infrastructure.Repositories.Common;
+using Eventbox.Shared.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
 {
-    public class TicketTypeRepository(EventDbContext dbContext) : BaseRepository<EventDbContext, TicketType, Guid>(dbContext), ITicketTypeRepository
+    public class TicketTypeRepository(EventDbContext dbContext) 
+        : BaseRepository<EventDbContext, TicketType, Guid>(dbContext), ITicketTypeRepository
     {
         public new async Task<TicketType?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
             => await dbContext.TicketTypes

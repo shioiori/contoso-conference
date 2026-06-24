@@ -1,9 +1,12 @@
+using Eventbox.Payment.Api.Enums;
+using Eventbox.Payment.Api.Options;
 using Eventbox.Payment.Api.Requests;
 using Eventbox.Payment.Api.Services;
 using Eventbox.Payment.Core.Commands;
 using Eventbox.Shared.Exceptions;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace Eventbox.Payment.Api.Controllers
 {
@@ -11,8 +14,9 @@ namespace Eventbox.Payment.Api.Controllers
     [Route("api/payments")]
     public class PaymentController(
         IMediator mediator,
-        IConfiguration configuration,
-        IOrderAccessVerifier orderAccessVerifier) : ControllerBase
+        IOptions<PaymentOptions> paymentOptions,
+        IOrderAccessVerifier orderAccessVerifier,
+        IOrderPaymentStarter orderPaymentStarter) : ControllerBase
     {
         [HttpPost("intents")]
         public async Task<IActionResult> CreatePaymentIntent(
@@ -28,11 +32,14 @@ namespace Eventbox.Payment.Api.Controllers
 
             EnsureAccess(accessResult);
 
+            var startOutcome = await orderPaymentStarter.StartPaymentAsync(request.OrderId, cancellationToken);
+            EnsureStartPayment(startOutcome.Result);
+
             var result = await mediator.Send(
                 new CreatePaymentIntentCommand(
                     request.OrderId,
-                    request.Amount,
-                    request.Currency ?? "USD",
+                    startOutcome.Amount,
+                    startOutcome.Currency,
                     request.ReturnUrl,
                     request.CancelUrl,
                     idempotencyKey),
@@ -47,7 +54,7 @@ namespace Eventbox.Payment.Api.Controllers
             [FromBody] SimulatedPaymentCallbackRequest request,
             CancellationToken cancellationToken)
         {
-            var expectedSignature = configuration["Payment:ProviderSignature"];
+            var expectedSignature = paymentOptions.Value.ProviderSignature;
             if (string.IsNullOrWhiteSpace(expectedSignature) || providerSignature != expectedSignature)
             {
                 throw new UnauthorizedApiException("Invalid payment provider signature.");
@@ -60,7 +67,6 @@ namespace Eventbox.Payment.Api.Controllers
                     new SimulatePaymentSucceededCommand(
                         request.PaymentIntentId,
                         request.ProviderEventId,
-                        request.OrderId,
                         request.Amount,
                         request.Currency,
                         request.PaidAt ?? DateTimeOffset.UtcNow),
@@ -72,7 +78,6 @@ namespace Eventbox.Payment.Api.Controllers
                     new SimulatePaymentFailedCommand(
                         request.PaymentIntentId,
                         request.ProviderEventId,
-                        request.OrderId,
                         request.Amount,
                         request.Currency,
                         request.FailedAt ?? DateTimeOffset.UtcNow,
@@ -85,6 +90,21 @@ namespace Eventbox.Payment.Api.Controllers
             }
 
             return Ok(result);
+        }
+
+        private static void EnsureStartPayment(StartPaymentResult result)
+        {
+            switch (result)
+            {
+                case StartPaymentResult.Started:
+                    return;
+                case StartPaymentResult.OrderNotFound:
+                    throw new NotFoundException("Order was not found.");
+                case StartPaymentResult.OrderNotPayable:
+                    throw new ConflictException("Order is not in a payable state (expired or cancelled).");
+                default:
+                    throw new ServiceUnavailableException("Registration service is unavailable.");
+            }
         }
 
         private static void EnsureAccess(OrderAccessVerificationResult accessResult)

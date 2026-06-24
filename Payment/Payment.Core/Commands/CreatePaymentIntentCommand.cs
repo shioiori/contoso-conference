@@ -1,9 +1,8 @@
 using Eventbox.Payment.Core.Abstractions;
-using Eventbox.Payment.Core.Dtos;
+using Eventbox.Payment.Core.Responses;
 using Eventbox.Shared.Exceptions;
 using Mapster;
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using PaymentEntity = Eventbox.Payment.Core.Entities.Payment;
 
 namespace Eventbox.Payment.Core.Commands
@@ -14,12 +13,12 @@ namespace Eventbox.Payment.Core.Commands
         string Currency,
         string? ReturnUrl,
         string? CancelUrl,
-        string? IdempotencyKey) : IRequest<PaymentIntentDto>;
+        string? IdempotencyKey) : IRequest<PaymentIntentResponse>;
 
     public class CreatePaymentIntentCommandHandler(IUnitOfWork unitOfWork)
-        : IRequestHandler<CreatePaymentIntentCommand, PaymentIntentDto>
+        : IRequestHandler<CreatePaymentIntentCommand, PaymentIntentResponse>
     {
-        public async Task<PaymentIntentDto> Handle(
+        public async Task<PaymentIntentResponse> Handle(
             CreatePaymentIntentCommand request,
             CancellationToken cancellationToken)
         {
@@ -30,7 +29,7 @@ namespace Eventbox.Payment.Core.Commands
                     cancellationToken);
 
                 if (existing is not null)
-                    return existing.Adapt<PaymentIntentDto>();
+                    return existing.Adapt<PaymentIntentResponse>();
             }
 
             var payment = PaymentEntity.CreateIntent(
@@ -46,12 +45,12 @@ namespace Eventbox.Payment.Core.Commands
                 await unitOfWork.Payments.AddAsync(payment, cancellationToken);
                 await unitOfWork.SaveChangesAsync(cancellationToken);
             }
-            catch (DbUpdateException ex) when (ex.InnerException?.Message.Contains("IX_Payments_OrderId_Pending") == true)
+            catch (Exception ex) when (ex.InnerException?.Message.Contains("IX_Payments_OrderId_Pending") == true)
             {
                 throw new ConflictException("A pending payment already exists for this order.");
             }
 
-            return payment.Adapt<PaymentIntentDto>();
+            return payment.Adapt<PaymentIntentResponse>();
         }
     }
 }

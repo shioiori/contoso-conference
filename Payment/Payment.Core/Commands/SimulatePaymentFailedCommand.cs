@@ -1,6 +1,6 @@
 using Eventbox.Contracts.IntegrationEvents;
 using Eventbox.Payment.Core.Abstractions;
-using Eventbox.Payment.Core.Dtos;
+using Eventbox.Payment.Core.Responses;
 using Eventbox.Shared.Exceptions;
 using Eventbox.Shared.Outbox;
 using MediatR;
@@ -11,7 +11,6 @@ namespace Eventbox.Payment.Core.Commands
     public record SimulatePaymentFailedCommand(
         Guid PaymentIntentId,
         string ProviderEventId,
-        Guid OrderId,
         decimal Amount,
         string Currency,
         DateTimeOffset FailedAt,
@@ -44,7 +43,7 @@ namespace Eventbox.Payment.Core.Commands
 
             var processed = payment.MarkFailed(
                 request.ProviderEventId,
-                request.OrderId,
+                payment.OrderId,
                 request.Amount,
                 request.Currency,
                 request.FailedAt,

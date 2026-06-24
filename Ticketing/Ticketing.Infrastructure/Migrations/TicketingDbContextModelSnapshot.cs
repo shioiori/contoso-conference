@@ -56,7 +56,7 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
                     b.ToTable("Outboxes");
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Entities.EventSnapshot", b =>
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Events.EventSnapshot", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -86,6 +86,65 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("EventSnapshots", (string)null);
+                });
+
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Inventory.TicketTypeAvailability", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AccessCodeHash")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)");
+
+                    b.Property<Guid>("EventId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("MaxPerOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("MinPerOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Remaining")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTimeOffset?>("UpdatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Visibility")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventId");
+
+                    b.ToTable("TicketTypeAvailabilities");
                 });
 
             modelBuilder.Entity("Eventbox.Ticketing.Domain.Orders.Order", b =>
@@ -182,7 +241,7 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
                     b.ToTable("OrderItems");
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Orders.Ticket", b =>
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Tickets.Ticket", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -244,27 +303,43 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
                     b.ToTable("Tickets");
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Inventory.TicketAvailability", b =>
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Inventory.TicketTypeAvailability", b =>
                 {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
+                    b.OwnsMany("Eventbox.Ticketing.Domain.Inventory.PricingPhaseAvailability", "PricingPhases", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("uuid");
 
-                    b.Property<string>("CreatedBy")
-                        .HasColumnType("text");
+                            b1.Property<DateTimeOffset?>("EndTime")
+                                .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTimeOffset>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(120)
+                                .HasColumnType("character varying(120)");
 
-                    b.Property<string>("UpdatedBy")
-                        .HasColumnType("text");
+                            b1.Property<decimal>("Price")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
 
-                    b.Property<DateTimeOffset?>("UpdatedDate")
-                        .HasColumnType("timestamp with time zone");
+                            b1.Property<DateTimeOffset?>("StartTime")
+                                .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id");
+                            b1.Property<Guid>("TicketTypeAvailabilityId")
+                                .HasColumnType("uuid");
 
-                    b.ToTable("TicketAvailabilities");
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("TicketTypeAvailabilityId");
+
+                            b1.ToTable("PricingPhaseAvailability");
+
+                            b1.WithOwner()
+                                .HasForeignKey("TicketTypeAvailabilityId");
+                        });
+
+                    b.Navigation("PricingPhases");
                 });
 
             modelBuilder.Entity("Eventbox.Ticketing.Domain.Orders.Order", b =>
@@ -303,111 +378,18 @@ namespace Eventbox.Ticketing.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Orders.Ticket", b =>
+            modelBuilder.Entity("Eventbox.Ticketing.Domain.Tickets.Ticket", b =>
                 {
                     b.HasOne("Eventbox.Ticketing.Domain.Orders.Order", null)
-                        .WithMany("Tickets")
+                        .WithMany()
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Eventbox.Ticketing.Domain.Inventory.TicketAvailability", b =>
-                {
-                    b.OwnsMany("Eventbox.Ticketing.Domain.Inventory.TicketTypeAvailability", "TicketTypes", b1 =>
-                        {
-                            b1.Property<Guid>("Id")
-                                .ValueGeneratedOnAdd()
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("AccessCodeHash")
-                                .HasMaxLength(256)
-                                .HasColumnType("character varying(256)");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasMaxLength(3)
-                                .HasColumnType("character varying(3)");
-
-                            b1.Property<int?>("MaxPerOrder")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("MinPerOrder")
-                                .HasColumnType("integer");
-
-                            b1.Property<string>("Name")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)");
-
-                            b1.Property<int>("Quantity")
-                                .HasColumnType("integer");
-
-                            b1.Property<int>("Remaining")
-                                .HasColumnType("integer");
-
-                            b1.Property<Guid>("TicketAvailabilityId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Visibility")
-                                .IsRequired()
-                                .HasMaxLength(50)
-                                .HasColumnType("character varying(50)");
-
-                            b1.HasKey("Id");
-
-                            b1.HasIndex("TicketAvailabilityId");
-
-                            b1.ToTable("TicketTypeAvailability");
-
-                            b1.WithOwner()
-                                .HasForeignKey("TicketAvailabilityId");
-
-                            b1.OwnsMany("Eventbox.Ticketing.Domain.Inventory.PricingPhaseAvailability", "PricingPhases", b2 =>
-                                {
-                                    b2.Property<Guid>("Id")
-                                        .ValueGeneratedOnAdd()
-                                        .HasColumnType("uuid");
-
-                                    b2.Property<DateTimeOffset?>("EndTime")
-                                        .HasColumnType("timestamp with time zone");
-
-                                    b2.Property<string>("Name")
-                                        .IsRequired()
-                                        .HasMaxLength(120)
-                                        .HasColumnType("character varying(120)");
-
-                                    b2.Property<decimal>("Price")
-                                        .HasPrecision(18, 2)
-                                        .HasColumnType("numeric(18,2)");
-
-                                    b2.Property<DateTimeOffset?>("StartTime")
-                                        .HasColumnType("timestamp with time zone");
-
-                                    b2.Property<Guid>("TicketTypeAvailabilityId")
-                                        .HasColumnType("uuid");
-
-                                    b2.HasKey("Id");
-
-                                    b2.HasIndex("TicketTypeAvailabilityId");
-
-                                    b2.ToTable("PricingPhaseAvailability");
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("TicketTypeAvailabilityId");
-                                });
-
-                            b1.Navigation("PricingPhases");
-                        });
-
-                    b.Navigation("TicketTypes");
-                });
-
             modelBuilder.Entity("Eventbox.Ticketing.Domain.Orders.Order", b =>
                 {
                     b.Navigation("OrderItems");
-
-                    b.Navigation("Tickets");
                 });
 #pragma warning restore 612, 618
         }

@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\EventBus\EventBus.Core\EventBus.Core.csproj" />
+    <ProjectReference Include="..\..\Shared\Eventbox.Shared.Infrastructure\Eventbox.Shared.Infrastructure.csproj" />
     <ProjectReference Include="..\Ticketing.Application\Ticketing.Application.csproj" />
     <ProjectReference Include="..\Ticketing.Domain\Ticketing.Domain.csproj" />
   </ItemGroup>

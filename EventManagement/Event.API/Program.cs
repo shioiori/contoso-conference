@@ -1,5 +1,5 @@
-using Eventbox.EventManagement.EventApi.Extensions;
-using Eventbox.EventManagement.EventApi.Mappings;
+using Eventbox.EventManagement.EventApi.Api.Extensions;
+using Eventbox.EventManagement.EventApi.Api.Mappings;
 using Eventbox.Shared.Auditing;
 using Eventbox.Shared.Exceptions;
 using Mapster;

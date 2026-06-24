@@ -1,6 +1,7 @@
 using Eventbox.Auth.Api.Domain;
 using Eventbox.Auth.Api.Requests;
 using Eventbox.Auth.Api.Services;
+using Eventbox.Shared.Constants;
 using Eventbox.Shared.Exceptions;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Claims;
@@ -40,10 +41,13 @@ public static class AuthEndpoints
 
             var id = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var email = httpContext.User.FindFirst(ClaimTypes.Email)?.Value;
-            var accountType = httpContext.User.FindFirst("account_type")?.Value;
+            var accountType = httpContext.User.FindFirst(CustomClaimTypes.AccountType)?.Value;
 
             return Results.Ok(new { id, email, accountType });
         }).RequireAuthorization();
+
+        app.MapPost("/api/auth/logout", () => Results.NoContent())
+            .RequireAuthorization();
 
         return app;
     }
