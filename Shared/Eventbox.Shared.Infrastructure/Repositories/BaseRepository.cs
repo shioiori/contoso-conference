@@ -1,4 +1,4 @@
-using Eventbox.Shared.Abstractions;
+using Eventbox.Shared.Repositories;
 using Eventbox.Shared.SeedWorks;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
@@ -57,7 +57,7 @@ namespace Eventbox.Shared.Infrastructure.Repositories
 
         public async Task<TEntity?> GetByIdAsync(TPrimarykey id, CancellationToken cancellationToken = default)
         {
-            return await _dbSet.FindAsync(new object[] { id }, cancellationToken);
+            return await _dbSet.FindAsync([id], cancellationToken);
         }
 
         public void Update(TEntity entity)

@@ -6,9 +6,9 @@ using Eventbox.Ticketing.Application.Abstractions.Repositories;
 namespace Eventbox.Ticketing.Application.IntegrationEventHandlers.Inventory;
 
 public class TicketTypeDeletedEventHandler(
-    IUnitOfWork unitOfWork) : IIntegrationEventHandler<TicketTypeDeletedEvent>
+    IUnitOfWork unitOfWork) : IIntegrationEventHandler<TicketTypeDeletedIntegrationEvent>
 {
-    public async Task HandleAsync(TicketTypeDeletedEvent @event, CancellationToken cancellationToken = default)
+    public async Task HandleAsync(TicketTypeDeletedIntegrationEvent @event, CancellationToken cancellationToken = default)
     {
         var availability = await unitOfWork.TicketTypeAvailabilities.GetByIdAsync(@event.Id, cancellationToken);
         if (availability == null)

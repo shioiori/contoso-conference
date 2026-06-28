@@ -7,9 +7,9 @@ namespace Eventbox.Ticketing.Application.IntegrationEventHandlers.Events;
 
 public class EventUnpublishedEventHandler(
     IEventSnapshotRepository eventSnapshotRepository,
-    IUnitOfWork unitOfWork) : IIntegrationEventHandler<EventUnpublishedEvent>
+    IUnitOfWork unitOfWork) : IIntegrationEventHandler<EventUnpublishedIntegrationEvent>
 {
-    public async Task HandleAsync(EventUnpublishedEvent @event, CancellationToken cancellationToken = default)
+    public async Task HandleAsync(EventUnpublishedIntegrationEvent @event, CancellationToken cancellationToken = default)
     {
         await eventSnapshotRepository.UpsertAsync(@event.EventId, null, null, false, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);

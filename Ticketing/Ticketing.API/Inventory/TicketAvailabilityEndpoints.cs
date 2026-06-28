@@ -7,8 +7,8 @@ namespace Eventbox.Ticketing.Api.Endpoints
     {
         public static RouteGroupBuilder MapTicketAvailabilityEndpoints(this IEndpointRouteBuilder app)
         {
-            var api = app.MapGroup("api/public/events");
-            api.MapGet("/{eventId:guid}/ticket-availability", GetTicketAvailability);
+            var api = app.MapGroup("api/public/tickets");
+            api.MapGet("/{eventId:guid}/availability", GetTicketAvailability);
             return api;
         }
 

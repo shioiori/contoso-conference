@@ -13,13 +13,13 @@ public static class MessagingExtensions
             configuration.GetSection("RabbitMQ").Bind(options);
             options.Subscribe<PaymentConfirmedIntegrationEvent>("eventbox.payment");
             options.Subscribe<PaymentFailedIntegrationEvent>("eventbox.payment");
-            options.Subscribe<EventCreatedEvent>("eventbox.events");
-            options.Subscribe<EventUpdatedEvent>("eventbox.events");
-            options.Subscribe<EventPublishedEvent>("eventbox.events");
-            options.Subscribe<EventUnpublishedEvent>("eventbox.events");
-            options.Subscribe<TicketTypeCreatedEvent>("eventbox.ticketing");
-            options.Subscribe<TicketCapacityAddedEvent>("eventbox.ticketing");
-            options.Subscribe<TicketTypeDeletedEvent>("eventbox.ticketing");
+            options.Subscribe<EventCreatedIntegrationEvent>("eventbox.events");
+            options.Subscribe<EventUpdatedIntegrationEvent>("eventbox.events");
+            options.Subscribe<EventPublishedIntegrationEvent>("eventbox.events");
+            options.Subscribe<EventUnpublishedIntegrationEvent>("eventbox.events");
+            options.Subscribe<TicketTypeCreatedIntegrationEvent>("eventbox.ticketing");
+            options.Subscribe<TicketCapacityAddedIntegrationEvent>("eventbox.ticketing");
+            options.Subscribe<TicketTypeDeletedIntegrationEvent>("eventbox.ticketing");
             options.Subscribe<OrderExpirationDueMessageIntegrationEvent>(
                 "eventbox.ticketing",
                 routingKey: "ticketing.expire",

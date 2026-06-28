@@ -106,7 +106,7 @@ public class EventSnapshotHandlerTests
         var uow = new CountingUnitOfWork();
         var handler = new EventCreatedEventHandler(repo, uow);
 
-        await handler.HandleAsync(new EventCreatedEvent { EventId = EventId, From = From, To = To });
+        await handler.HandleAsync(new EventCreatedIntegrationEvent { EventId = EventId, From = From, To = To });
 
         Assert.Single(repo.UpsertCalls, c => c.EventId == EventId && c.From == From && c.To == To && c.IsPublished == false);
         Assert.Equal(1, uow.SaveCount);
@@ -121,7 +121,7 @@ public class EventSnapshotHandlerTests
         var newFrom = From.AddDays(7);
         var newTo   = To.AddDays(7);
 
-        await handler.HandleAsync(new EventUpdatedEvent { EventId = EventId, From = newFrom, To = newTo });
+        await handler.HandleAsync(new EventUpdatedIntegrationEvent { EventId = EventId, From = newFrom, To = newTo });
 
         Assert.Single(repo.UpsertCalls, c => c.EventId == EventId && c.From == newFrom && c.To == newTo && c.IsPublished == false);
         Assert.Equal(1, uow.SaveCount);
@@ -134,7 +134,7 @@ public class EventSnapshotHandlerTests
         var uow = new CountingUnitOfWork();
         var handler = new EventPublishedEventHandler(repo, uow);
 
-        await handler.HandleAsync(new EventPublishedEvent { EventId = EventId });
+        await handler.HandleAsync(new EventPublishedIntegrationEvent { EventId = EventId });
 
         Assert.Single(repo.UpsertCalls, c => c.EventId == EventId && c.From is null && c.To is null && c.IsPublished == true);
         Assert.Equal(1, uow.SaveCount);
@@ -147,7 +147,7 @@ public class EventSnapshotHandlerTests
         var uow = new CountingUnitOfWork();
         var handler = new EventUnpublishedEventHandler(repo, uow);
 
-        await handler.HandleAsync(new EventUnpublishedEvent { EventId = EventId });
+        await handler.HandleAsync(new EventUnpublishedIntegrationEvent { EventId = EventId });
 
         Assert.Single(repo.UpsertCalls, c => c.EventId == EventId && c.From is null && c.To is null && c.IsPublished == false);
         Assert.Equal(1, uow.SaveCount);
@@ -160,7 +160,7 @@ public class EventSnapshotHandlerTests
         var repo = new SpyEventSnapshotRepository();
         var uow = new CountingUnitOfWork();
         var handler = new EventCreatedEventHandler(repo, uow);
-        var @event = new EventCreatedEvent { EventId = EventId, From = From, To = To };
+        var @event = new EventCreatedIntegrationEvent { EventId = EventId, From = From, To = To };
 
         await handler.HandleAsync(@event);
         await handler.HandleAsync(@event);
@@ -222,7 +222,7 @@ public class TicketTypeCreatedEventHandlerTests
         Assert.Equal(TicketVisibility.Public, tt.Visibility);
     }
 
-    private static TicketTypeCreatedEvent TicketTypeCreatedFor(Guid eventId, Guid ticketTypeId) => new()
+    private static TicketTypeCreatedIntegrationEvent TicketTypeCreatedFor(Guid eventId, Guid ticketTypeId) => new()
     {
         Id = ticketTypeId,
         EventId = eventId,
@@ -251,7 +251,7 @@ public class TicketCapacityAddedEventHandlerTests
         var uow = new CountingUnitOfWork();
         var handler = new TicketCapacityAddedEventHandler(repo, uow);
 
-        await handler.HandleAsync(new TicketCapacityAddedEvent
+        await handler.HandleAsync(new TicketCapacityAddedIntegrationEvent
         {
             Id = ticketTypeId,
             EventId = eventId,
@@ -271,7 +271,7 @@ public class TicketCapacityAddedEventHandlerTests
         var handler = new TicketCapacityAddedEventHandler(repo, uow);
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
-            handler.HandleAsync(new TicketCapacityAddedEvent
+            handler.HandleAsync(new TicketCapacityAddedIntegrationEvent
             {
                 Id = Guid.NewGuid(),
                 EventId = Guid.NewGuid(),
@@ -296,7 +296,7 @@ public class TicketTypeDeletedEventHandlerTests
         var uow = new CountingUnitOfWork(ticketTypeAvailabilities: repo);
         var handler = new TicketTypeDeletedEventHandler(uow);
 
-        await handler.HandleAsync(new TicketTypeDeletedEvent { Id = ticketTypeId, EventId = eventId });
+        await handler.HandleAsync(new TicketTypeDeletedIntegrationEvent { Id = ticketTypeId, EventId = eventId });
 
         Assert.Empty(repo.Stored);
         Assert.Equal(1, uow.SaveCount);
@@ -309,7 +309,7 @@ public class TicketTypeDeletedEventHandlerTests
         var uow = new CountingUnitOfWork(ticketTypeAvailabilities: repo);
         var handler = new TicketTypeDeletedEventHandler(uow);
 
-        await handler.HandleAsync(new TicketTypeDeletedEvent { Id = Guid.NewGuid(), EventId = Guid.NewGuid() });
+        await handler.HandleAsync(new TicketTypeDeletedIntegrationEvent { Id = Guid.NewGuid(), EventId = Guid.NewGuid() });
 
         Assert.Equal(0, uow.SaveCount);
     }

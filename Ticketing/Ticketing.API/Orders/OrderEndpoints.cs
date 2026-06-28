@@ -16,8 +16,8 @@ namespace Eventbox.Ticketing.Api.Endpoints
         {
             var publicApi = app.MapGroup("api/public");
 
-            publicApi.MapPost("/events/{eventId:guid}/orders", RegisterToEvent);
-            publicApi.MapGet("/self-service/orders", GetOrdersBySelfServiceToken);
+            publicApi.MapPost("/orders/{eventId:guid}", RegisterToEvent);
+            publicApi.MapGet("/orders/lookup", GetOrdersBySelfServiceToken);
             publicApi.MapPost("/orders/{orderId:guid}/start-payment", StartPayment);
 
             var internalApi = app.MapGroup("api/internal")
@@ -58,7 +58,7 @@ namespace Eventbox.Ticketing.Api.Endpoints
             };
 
             var result = await mediator.Send(command, cancellationToken);
-            return Results.Created($"/api/public/orders/{result.Id}", result);
+            return Results.Created($"/orders/{result.Id}", result);
         }
 
         public static async Task<IResult> ConfirmFreeOrder(Guid orderId, HttpContext httpContext, IMediator mediator, CancellationToken cancellationToken)

@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "b99a92f4-cc6e-4ccd-97b0-1c6783fd5474",
     "name": "Eventbox API - Current Code Contract",
-    "description": "Synchronized with implemented routes in the current codebase. Planned routes without controllers/endpoints are intentionally excluded.",
+    "description": "Synchronized with implemented routes in the current codebase. All requests go through the API Gateway (baseUrl). Planned routes without controllers/endpoints are intentionally excluded.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -67,7 +67,7 @@
                 }
               }
             },
-            "url": "{{authApiUrl}}/api/auth/organizers/register"
+            "url": "{{baseUrl}}/api/auth/organizers/register"
           },
           "response": []
         },
@@ -105,7 +105,7 @@
                 }
               }
             },
-            "url": "{{authApiUrl}}/api/auth/customers/register"
+            "url": "{{baseUrl}}/api/auth/customers/register"
           },
           "response": []
         },
@@ -143,7 +143,7 @@
                 }
               }
             },
-            "url": "{{authApiUrl}}/api/auth/organizers/login"
+            "url": "{{baseUrl}}/api/auth/organizers/login"
           },
           "response": []
         },
@@ -181,7 +181,7 @@
                 }
               }
             },
-            "url": "{{authApiUrl}}/api/auth/customers/login"
+            "url": "{{baseUrl}}/api/auth/customers/login"
           },
           "response": []
         },
@@ -211,7 +211,7 @@
             },
             "method": "GET",
             "header": [],
-            "url": "{{authApiUrl}}/api/auth/me"
+            "url": "{{baseUrl}}/api/auth/me"
           },
           "response": []
         },
@@ -230,7 +230,7 @@
             },
             "method": "POST",
             "header": [],
-            "url": "{{authApiUrl}}/api/auth/logout"
+            "url": "{{baseUrl}}/api/auth/logout"
           },
           "response": []
         }
@@ -254,7 +254,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{eventApiUrl}}/api/organizations/me"
+            "url": "{{baseUrl}}/api/organizations/me"
           },
           "response": []
         },
@@ -289,7 +289,7 @@
                 }
               }
             },
-            "url": "{{eventApiUrl}}/api/organizations"
+            "url": "{{baseUrl}}/api/organizations"
           },
           "response": []
         },
@@ -298,7 +298,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}"
           },
           "response": []
         },
@@ -321,7 +321,7 @@
                 }
               }
             },
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}"
           },
           "response": []
         },
@@ -330,7 +330,7 @@
           "request": {
             "method": "DELETE",
             "header": [],
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}"
           },
           "response": []
         },
@@ -353,7 +353,7 @@
                 }
               }
             },
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/organizers"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/organizers"
           },
           "response": []
         },
@@ -362,7 +362,7 @@
           "request": {
             "method": "DELETE",
             "header": [],
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/organizers/{{organizerId}}"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/organizers/{{organizerId}}"
           },
           "response": []
         }
@@ -386,7 +386,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events?q=&dateFrom=&dateTo=&page=1&pageSize=20"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/events?q=&dateFrom=&dateTo=&page=1&pageSize=20"
           },
           "response": []
         },
@@ -422,7 +422,7 @@
                 }
               }
             },
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/events"
           },
           "response": []
         },
@@ -431,7 +431,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}"
           },
           "response": []
         },
@@ -454,7 +454,7 @@
                 }
               }
             },
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}"
           },
           "response": []
         },
@@ -463,7 +463,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/publish-readiness"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/publish-readiness"
           },
           "response": []
         },
@@ -472,7 +472,7 @@
           "request": {
             "method": "POST",
             "header": [],
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/publish"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/publish"
           },
           "response": []
         },
@@ -481,7 +481,7 @@
           "request": {
             "method": "POST",
             "header": [],
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/unpublish"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/unpublish"
           },
           "response": []
         }
@@ -505,7 +505,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types"
           },
           "response": []
         },
@@ -540,7 +540,7 @@
                 }
               }
             },
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types"
           },
           "response": []
         },
@@ -575,7 +575,7 @@
                 }
               }
             },
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types"
           },
           "response": []
         },
@@ -598,7 +598,7 @@
                 }
               }
             },
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types/{{ticketTypeId}}"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types/{{ticketTypeId}}"
           },
           "response": []
         },
@@ -621,7 +621,7 @@
                 }
               }
             },
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types/{{ticketTypeId}}/capacity"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types/{{ticketTypeId}}/capacity"
           },
           "response": []
         },
@@ -630,7 +630,7 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{eventApiUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types/{{ticketTypeId}}/availability"
+            "url": "{{baseUrl}}/api/organizations/{{organizationId}}/events/{{eventId}}/ticket-types/{{ticketTypeId}}/availability"
           },
           "response": []
         }
@@ -650,7 +650,7 @@
             },
             "method": "GET",
             "header": [],
-            "url": "{{eventApiUrl}}/api/public/events?q=tech&dateFrom=2026-01-01&dateTo=2026-12-31&page=1&pageSize=20"
+            "url": "{{baseUrl}}/api/events?q=tech&dateFrom=2026-01-01&dateTo=2026-12-31&page=1&pageSize=20"
           },
           "response": []
         },
@@ -662,7 +662,7 @@
             },
             "method": "GET",
             "header": [],
-            "url": "{{eventApiUrl}}/api/public/events/{{eventSlug}}?accessCode={{accessCode}}"
+            "url": "{{baseUrl}}/api/events/{{eventSlug}}?accessCode={{accessCode}}"
           },
           "response": []
         },
@@ -674,7 +674,7 @@
             },
             "method": "GET",
             "header": [],
-            "url": "{{ticketingApiUrl}}/api/public/events/{{eventId}}/ticket-availability"
+            "url": "{{baseUrl}}/api/tickets/{{eventId}}/availability"
           },
           "response": []
         }
@@ -719,7 +719,7 @@
                 }
               }
             },
-            "url": "{{ticketingApiUrl}}/api/public/events/{{eventId}}/orders"
+            "url": "{{baseUrl}}/api/orders/{{eventId}}"
           },
           "response": []
         },
@@ -764,7 +764,7 @@
                 }
               }
             },
-            "url": "{{ticketingApiUrl}}/api/public/events/{{eventId}}/orders"
+            "url": "{{baseUrl}}/api/orders/{{eventId}}"
           },
           "response": []
         },
@@ -776,7 +776,7 @@
             },
             "method": "GET",
             "header": [],
-            "url": "{{ticketingApiUrl}}/api/public/self-service/orders?token={{selfServiceToken}}"
+            "url": "{{baseUrl}}/api/orders/lookup?token={{selfServiceToken}}"
           },
           "response": []
         },
@@ -795,7 +795,7 @@
             },
             "method": "GET",
             "header": [],
-            "url": "{{ticketingApiUrl}}/api/customer/orders"
+            "url": "{{baseUrl}}/api/orders"
           },
           "response": []
         },
@@ -814,7 +814,7 @@
             },
             "method": "GET",
             "header": [],
-            "url": "{{ticketingApiUrl}}/api/customer/orders/by-email?email={{customerEmail}}"
+            "url": "{{baseUrl}}/api/orders/by-email?email={{customerEmail}}"
           },
           "response": []
         },
@@ -833,7 +833,7 @@
             },
             "method": "GET",
             "header": [],
-            "url": "{{ticketingApiUrl}}/api/customer/orders/{{customerOrderId}}"
+            "url": "{{baseUrl}}/api/orders/{{customerOrderId}}"
           },
           "response": []
         },
@@ -852,7 +852,7 @@
             },
             "method": "POST",
             "header": [],
-            "url": "{{ticketingApiUrl}}/api/customer/orders/{{customerOrderId}}/confirm-free"
+            "url": "{{baseUrl}}/api/orders/{{customerOrderId}}/confirm-free"
           },
           "response": []
         },
@@ -871,7 +871,7 @@
             },
             "method": "POST",
             "header": [],
-            "url": "{{ticketingApiUrl}}/api/customer/orders/{{customerOrderId}}/cancel"
+            "url": "{{baseUrl}}/api/orders/{{customerOrderId}}/cancel"
           },
           "response": []
         }
@@ -919,7 +919,7 @@
                 }
               }
             },
-            "url": "{{ticketingApiUrl}}/api/events/{{eventId}}/check-ins/"
+            "url": "{{baseUrl}}/api/check-ins/{{eventId}}"
           },
           "response": []
         }
@@ -973,7 +973,7 @@
                 }
               }
             },
-            "url": "{{paymentApiUrl}}/api/payments/intents"
+            "url": "{{baseUrl}}/api/payments/intents"
           },
           "response": []
         },
@@ -1003,7 +1003,7 @@
                 }
               }
             },
-            "url": "{{paymentApiUrl}}/api/payments/simulated-callbacks"
+            "url": "{{baseUrl}}/api/payments/simulated-callbacks"
           },
           "response": []
         },
@@ -1033,7 +1033,7 @@
                 }
               }
             },
-            "url": "{{paymentApiUrl}}/api/payments/simulated-callbacks"
+            "url": "{{baseUrl}}/api/payments/simulated-callbacks"
           },
           "response": []
         }
@@ -1042,20 +1042,8 @@
   ],
   "variable": [
     {
-      "key": "authApiUrl",
-      "value": "http://localhost:8000"
-    },
-    {
-      "key": "eventApiUrl",
-      "value": "http://localhost:8010"
-    },
-    {
-      "key": "ticketingApiUrl",
-      "value": "http://localhost:8020"
-    },
-    {
-      "key": "paymentApiUrl",
-      "value": "http://localhost:8030"
+      "key": "baseUrl",
+      "value": "http://localhost:8050"
     },
     {
       "key": "organizerToken",

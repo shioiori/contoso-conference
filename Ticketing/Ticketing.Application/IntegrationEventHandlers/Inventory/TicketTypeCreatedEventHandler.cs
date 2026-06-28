@@ -10,9 +10,9 @@ namespace Eventbox.Ticketing.Application.IntegrationEventHandlers.Inventory;
 
 public class TicketTypeCreatedEventHandler(
     ITicketTypeAvailabilityRepository ticketTypeAvailabilityRepository,
-    IUnitOfWork unitOfWork) : IIntegrationEventHandler<TicketTypeCreatedEvent>
+    IUnitOfWork unitOfWork) : IIntegrationEventHandler<TicketTypeCreatedIntegrationEvent>
 {
-    public async Task HandleAsync(TicketTypeCreatedEvent @event, CancellationToken cancellationToken = default)
+    public async Task HandleAsync(TicketTypeCreatedIntegrationEvent @event, CancellationToken cancellationToken = default)
     {
         var visibility = Enum.TryParse<TicketVisibility>(@event.Visibility, ignoreCase: true, out var parsedVisibility)
             ? parsedVisibility

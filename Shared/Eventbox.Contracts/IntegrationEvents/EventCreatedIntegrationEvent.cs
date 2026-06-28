@@ -2,7 +2,7 @@ using Eventbox.EventBus.Events;
 
 namespace Eventbox.Contracts.IntegrationEvents;
 
-public class EventCreatedEvent : IntegrationEvent
+public class EventCreatedIntegrationEvent : IntegrationEvent
 {
     public Guid EventId { get; set; }
     public string Name { get; set; } = "";

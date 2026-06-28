@@ -20,7 +20,6 @@ public class PaymentCallbackTests
         var command = new SimulatePaymentSucceededCommand(
             payment.Id,
             ProviderEventId: "evt_123",
-            payment.OrderId,
             payment.Amount,
             payment.Currency,
             DateTimeOffset.UtcNow);

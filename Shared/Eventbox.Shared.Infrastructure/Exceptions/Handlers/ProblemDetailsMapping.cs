@@ -5,6 +5,8 @@ namespace Eventbox.Shared.Exceptions.Handlers;
 
 internal static class ProblemDetailsMapping
 {
+    private const string ProblemTypePrefix = "/problems/";
+
     public static ProblemDetails ToProblemDetails(
         this Exception exception,
         PathString path,
@@ -39,7 +41,7 @@ internal static class ProblemDetailsMapping
             pair => pair.Key,
             pair => pair.Value))
         {
-            Type = "https://eventbox.dev/problems/validation",
+            Type = $"{ProblemTypePrefix}validation",
             Title = "Validation failed",
             Status = StatusCodes.Status400BadRequest,
             Detail = exception.Message,
@@ -54,7 +56,7 @@ internal static class ProblemDetailsMapping
         PathString path)
         => new()
         {
-            Type = $"https://eventbox.dev/problems/{errorCode}",
+            Type = $"{ProblemTypePrefix}{errorCode}",
             Title = title,
             Status = status,
             Detail = detail,

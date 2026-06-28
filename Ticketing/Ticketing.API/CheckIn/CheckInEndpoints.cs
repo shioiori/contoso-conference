@@ -12,7 +12,7 @@ public static class CheckInEndpoints
 {
     public static IEndpointRouteBuilder MapCheckInEndpoints(this IEndpointRouteBuilder app)
     {
-        var organizerApi = app.MapGroup("api/events/{eventId:guid}/check-ins")
+        var organizerApi = app.MapGroup("api/organizer/check-ins/{eventId:guid}")
             .RequireAuthorization(PolicyName.RequireOrganizerAccount);
 
         organizerApi.MapPost("/", CheckInQr);

@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace Eventbox.Shared.Abstractions
+namespace Eventbox.Shared.Repositories
 {
     public interface IRepository<TEntity, TId>
     {

@@ -1,6 +1,6 @@
 using Eventbox.EventManagement.EventApi.Domains;
 using Eventbox.EventManagement.EventApi.Domains.Enums;
-using Eventbox.Shared.Abstractions;
+using Eventbox.Shared.Repositories;
 using Event = Eventbox.EventManagement.EventApi.Domains.Event;
 
 namespace Eventbox.EventManagement.EventApi.Application.Abstractions.Repositories
