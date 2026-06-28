@@ -46,22 +46,23 @@ public static class MessagingExtensions
             }, includeDelayedScheduler: true);
         }
 
+        var exchanges = configuration.GetSection("RabbitMQ:Exchanges");
         return RabbitMQMessagingExtensions.AddMessaging(services, configuration, options =>
         {
-            options.Subscribe<PaymentConfirmedIntegrationEvent>("eventbox.payment");
-            options.Subscribe<PaymentFailedIntegrationEvent>("eventbox.payment");
-            options.Subscribe<EventCreatedIntegrationEvent>("eventbox.events");
-            options.Subscribe<EventUpdatedIntegrationEvent>("eventbox.events");
-            options.Subscribe<EventPublishedIntegrationEvent>("eventbox.events");
-            options.Subscribe<EventUnpublishedIntegrationEvent>("eventbox.events");
-            options.Subscribe<TicketTypeCreatedIntegrationEvent>("eventbox.ticketing");
-            options.Subscribe<TicketCapacityAddedIntegrationEvent>("eventbox.ticketing");
-            options.Subscribe<TicketTypeDeletedIntegrationEvent>("eventbox.ticketing");
+            options.Subscribe<PaymentConfirmedIntegrationEvent>(exchanges["Payment"]!);
+            options.Subscribe<PaymentFailedIntegrationEvent>(exchanges["Payment"]!);
+            options.Subscribe<EventCreatedIntegrationEvent>(exchanges["Events"]!);
+            options.Subscribe<EventUpdatedIntegrationEvent>(exchanges["Events"]!);
+            options.Subscribe<EventPublishedIntegrationEvent>(exchanges["Events"]!);
+            options.Subscribe<EventUnpublishedIntegrationEvent>(exchanges["Events"]!);
+            options.Subscribe<TicketTypeCreatedIntegrationEvent>(exchanges["Ticketing"]!);
+            options.Subscribe<TicketCapacityAddedIntegrationEvent>(exchanges["Ticketing"]!);
+            options.Subscribe<TicketTypeDeletedIntegrationEvent>(exchanges["Ticketing"]!);
             options.Subscribe<OrderExpirationDueMessageIntegrationEvent>(
-                "eventbox.ticketing",
+                exchanges["Ticketing"]!,
                 routingKey: "ticketing.expire",
                 queue: "eventbox.ticketing.expire");
-            options.Publish<OrderConfirmedIntegrationEvent>("eventbox.ticketing");
+            options.Publish<OrderConfirmedIntegrationEvent>(exchanges["Ticketing"]!);
         }, includeDelayedScheduler: true);
     }
 }

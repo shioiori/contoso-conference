@@ -22,15 +22,16 @@ public static class MessagingExtensions
             });
         }
 
+        var exchanges = configuration.GetSection("RabbitMQ:Exchanges");
         return RabbitMQMessagingExtensions.AddMessaging(services, configuration, options =>
         {
-            options.Publish<EventCreatedIntegrationEvent>("eventbox.events");
-            options.Publish<EventUpdatedIntegrationEvent>("eventbox.events");
-            options.Publish<EventPublishedIntegrationEvent>("eventbox.events");
-            options.Publish<EventUnpublishedIntegrationEvent>("eventbox.events");
-            options.Publish<TicketTypeCreatedIntegrationEvent>("eventbox.ticketing");
-            options.Publish<TicketCapacityAddedIntegrationEvent>("eventbox.ticketing");
-            options.Publish<TicketTypeDeletedIntegrationEvent>("eventbox.ticketing");
+            options.Publish<EventCreatedIntegrationEvent>(exchanges["Events"]!);
+            options.Publish<EventUpdatedIntegrationEvent>(exchanges["Events"]!);
+            options.Publish<EventPublishedIntegrationEvent>(exchanges["Events"]!);
+            options.Publish<EventUnpublishedIntegrationEvent>(exchanges["Events"]!);
+            options.Publish<TicketTypeCreatedIntegrationEvent>(exchanges["Ticketing"]!);
+            options.Publish<TicketCapacityAddedIntegrationEvent>(exchanges["Ticketing"]!);
+            options.Publish<TicketTypeDeletedIntegrationEvent>(exchanges["Ticketing"]!);
         });
     }
 }

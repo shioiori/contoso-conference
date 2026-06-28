@@ -17,10 +17,11 @@ public static class MessagingExtensions
             });
         }
 
+        var exchanges = configuration.GetSection("RabbitMQ:Exchanges");
         return RabbitMQMessagingExtensions.AddMessaging(services, configuration, options =>
         {
-            options.Publish<PaymentConfirmedIntegrationEvent>("eventbox.payment");
-            options.Publish<PaymentFailedIntegrationEvent>("eventbox.payment");
+            options.Publish<PaymentConfirmedIntegrationEvent>(exchanges["Payment"]!);
+            options.Publish<PaymentFailedIntegrationEvent>(exchanges["Payment"]!);
         });
     }
 }

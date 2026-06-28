@@ -18,9 +18,10 @@ public static class MessagingExtensions
             });
         }
 
+        var exchanges = configuration.GetSection("RabbitMQ:Exchanges");
         return RabbitMQMessagingExtensions.AddMessaging(services, configuration, options =>
         {
-            options.Subscribe<OrderConfirmedIntegrationEvent>("eventbox.ticketing");
+            options.Subscribe<OrderConfirmedIntegrationEvent>(exchanges["Ticketing"]!);
         });
     }
 }
