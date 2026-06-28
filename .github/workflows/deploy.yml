@@ -20,7 +20,6 @@ jobs:
       ticketing: ${{ steps.filter.outputs.ticketing }}
       notification: ${{ steps.filter.outputs.notification }}
       payment: ${{ steps.filter.outputs.payment }}
-      rabbitmq: ${{ steps.filter.outputs.rabbitmq }}
     steps:
       - uses: actions/checkout@v4
 
@@ -43,8 +42,6 @@ jobs:
             payment:
               - 'Payment/**'
               - 'Shared/**'
-            rabbitmq:
-              - 'rabbitmq/**'
 
   deploy-auth:
     name: Deploy auth-api
@@ -166,20 +163,3 @@ jobs:
             --service payment-api \
             --force-new-deployment
 
-  deploy-rabbitmq:
-    name: Deploy rabbitmq
-    needs: detect-changes
-    if: needs.detect-changes.outputs.rabbitmq == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-      - name: Deploy to ECS
-        run: |
-          aws ecs update-service \
-            --cluster $ECS_CLUSTER \
-            --service eventbox-rabbitmq-service-etjshhmf \
-            --force-new-deployment
