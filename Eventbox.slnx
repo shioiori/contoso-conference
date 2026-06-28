@@ -6,6 +6,7 @@
     <Project Path="Auth/Auth.API/Auth.API.csproj" />
   </Folder>
   <Folder Name="/EventBus/">
+    <Project Path="EventBus/EventBus.Aws/EventBus.Aws.csproj" Id="71dbc8cd-9ed9-4721-89c3-6e9448a7c4a2" />
     <Project Path="EventBus/EventBus.Core/EventBus.Core.csproj" />
     <Project Path="EventBus/EventBus.RabbitMQ/EventBus.RabbitMQ.csproj" />
   </Folder>

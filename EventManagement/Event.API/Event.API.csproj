@@ -28,6 +28,7 @@
 
   <ItemGroup>
 	  <ProjectReference Include="..\..\EventBus\EventBus.Core\EventBus.Core.csproj" />
+	  <ProjectReference Include="..\..\EventBus\EventBus.Aws\EventBus.Aws.csproj" />
 	  <ProjectReference Include="..\..\EventBus\EventBus.RabbitMQ\EventBus.RabbitMQ.csproj" />
 	  <ProjectReference Include="..\..\Shared\Eventbox.Contracts\Eventbox.Contracts.csproj" />
 	  <ProjectReference Include="..\..\Shared\Eventbox.Shared\Eventbox.Shared.csproj" />

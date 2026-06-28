@@ -1,5 +1,5 @@
 using Eventbox.Contracts.IntegrationEvents;
-using Eventbox.EventBus.Core.Abstractions;
+using EventBus.Aws;
 using EventBus.RabbitMQ;
 
 namespace Eventbox.Ticketing.Api.Extensions;
@@ -8,30 +8,61 @@ public static class MessagingExtensions
 {
     public static IServiceCollection AddMessaging(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<RabbitMQOptions>(options =>
+        if (configuration["Messaging:Provider"] == "Aws")
         {
-            configuration.GetSection("RabbitMQ").Bind(options);
-            options.Subscribe<PaymentConfirmedIntegrationEvent>("eventbox.payment");
-            options.Subscribe<PaymentFailedIntegrationEvent>("eventbox.payment");
-            options.Subscribe<EventCreatedIntegrationEvent>("eventbox.events");
-            options.Subscribe<EventUpdatedIntegrationEvent>("eventbox.events");
-            options.Subscribe<EventPublishedIntegrationEvent>("eventbox.events");
-            options.Subscribe<EventUnpublishedIntegrationEvent>("eventbox.events");
-            options.Subscribe<TicketTypeCreatedIntegrationEvent>("eventbox.ticketing");
-            options.Subscribe<TicketCapacityAddedIntegrationEvent>("eventbox.ticketing");
-            options.Subscribe<TicketTypeDeletedIntegrationEvent>("eventbox.ticketing");
+            return AwsMessagingExtensions.AddMessaging(services, configuration, options =>
+            {
+                options.Subscribe<PaymentConfirmedIntegrationEvent>(
+                    configuration["Aws:Queues:Ticketing"]!,
+                    configuration["Aws:Queues:TicketingDlq"]!);
+                options.Subscribe<PaymentFailedIntegrationEvent>(
+                    configuration["Aws:Queues:Ticketing"]!,
+                    configuration["Aws:Queues:TicketingDlq"]!);
+                options.Subscribe<EventCreatedIntegrationEvent>(
+                    configuration["Aws:Queues:Ticketing"]!,
+                    configuration["Aws:Queues:TicketingDlq"]!);
+                options.Subscribe<EventUpdatedIntegrationEvent>(
+                    configuration["Aws:Queues:Ticketing"]!,
+                    configuration["Aws:Queues:TicketingDlq"]!);
+                options.Subscribe<EventPublishedIntegrationEvent>(
+                    configuration["Aws:Queues:Ticketing"]!,
+                    configuration["Aws:Queues:TicketingDlq"]!);
+                options.Subscribe<EventUnpublishedIntegrationEvent>(
+                    configuration["Aws:Queues:Ticketing"]!,
+                    configuration["Aws:Queues:TicketingDlq"]!);
+                options.Subscribe<TicketTypeCreatedIntegrationEvent>(
+                    configuration["Aws:Queues:Ticketing"]!,
+                    configuration["Aws:Queues:TicketingDlq"]!);
+                options.Subscribe<TicketCapacityAddedIntegrationEvent>(
+                    configuration["Aws:Queues:Ticketing"]!,
+                    configuration["Aws:Queues:TicketingDlq"]!);
+                options.Subscribe<TicketTypeDeletedIntegrationEvent>(
+                    configuration["Aws:Queues:Ticketing"]!,
+                    configuration["Aws:Queues:TicketingDlq"]!);
+                options.Subscribe<OrderExpirationDueMessageIntegrationEvent>(
+                    configuration["Aws:Queues:TicketingExpiration"]!,
+                    configuration["Aws:Queues:TicketingExpirationDlq"]!);
+                options.Publish<OrderConfirmedIntegrationEvent>(configuration["Aws:Topics:Ticketing"]!);
+            }, includeDelayedScheduler: true);
+        }
+
+        var exchanges = configuration.GetSection("RabbitMQ:Exchanges");
+        return RabbitMQMessagingExtensions.AddMessaging(services, configuration, options =>
+        {
+            options.Subscribe<PaymentConfirmedIntegrationEvent>(exchanges["Payment"]!);
+            options.Subscribe<PaymentFailedIntegrationEvent>(exchanges["Payment"]!);
+            options.Subscribe<EventCreatedIntegrationEvent>(exchanges["Events"]!);
+            options.Subscribe<EventUpdatedIntegrationEvent>(exchanges["Events"]!);
+            options.Subscribe<EventPublishedIntegrationEvent>(exchanges["Events"]!);
+            options.Subscribe<EventUnpublishedIntegrationEvent>(exchanges["Events"]!);
+            options.Subscribe<TicketTypeCreatedIntegrationEvent>(exchanges["Ticketing"]!);
+            options.Subscribe<TicketCapacityAddedIntegrationEvent>(exchanges["Ticketing"]!);
+            options.Subscribe<TicketTypeDeletedIntegrationEvent>(exchanges["Ticketing"]!);
             options.Subscribe<OrderExpirationDueMessageIntegrationEvent>(
-                "eventbox.ticketing",
+                exchanges["Ticketing"]!,
                 routingKey: "ticketing.expire",
                 queue: "eventbox.ticketing.expire");
-            options.Publish<OrderConfirmedIntegrationEvent>("eventbox.ticketing");
-        });
-
-        services.AddSingleton<RabbitMQEventBus>();
-        services.AddSingleton<IEventBus>(sp => sp.GetRequiredService<RabbitMQEventBus>());
-        services.AddSingleton<IDelayedEventScheduler>(sp => sp.GetRequiredService<RabbitMQEventBus>());
-        services.AddHostedService(sp => sp.GetRequiredService<RabbitMQEventBus>());
-
-        return services;
+            options.Publish<OrderConfirmedIntegrationEvent>(exchanges["Ticketing"]!);
+        }, includeDelayedScheduler: true);
     }
 }

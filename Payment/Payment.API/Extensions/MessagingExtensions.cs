@@ -1,5 +1,5 @@
 using Eventbox.Contracts.IntegrationEvents;
-using Eventbox.EventBus.Core.Abstractions;
+using EventBus.Aws;
 using EventBus.RabbitMQ;
 
 namespace Eventbox.Payment.Api.Extensions;
@@ -8,17 +8,20 @@ public static class MessagingExtensions
 {
     public static IServiceCollection AddMessaging(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<RabbitMQOptions>(options =>
+        if (configuration["Messaging:Provider"] == "Aws")
         {
-            configuration.GetSection("RabbitMQ").Bind(options);
-            options.Publish<PaymentConfirmedIntegrationEvent>("eventbox.payment");
-            options.Publish<PaymentFailedIntegrationEvent>("eventbox.payment");
+            return AwsMessagingExtensions.AddMessaging(services, configuration, options =>
+            {
+                options.Publish<PaymentConfirmedIntegrationEvent>(configuration["Aws:Topics:Payment"]!);
+                options.Publish<PaymentFailedIntegrationEvent>(configuration["Aws:Topics:Payment"]!);
+            });
+        }
+
+        var exchanges = configuration.GetSection("RabbitMQ:Exchanges");
+        return RabbitMQMessagingExtensions.AddMessaging(services, configuration, options =>
+        {
+            options.Publish<PaymentConfirmedIntegrationEvent>(exchanges["Payment"]!);
+            options.Publish<PaymentFailedIntegrationEvent>(exchanges["Payment"]!);
         });
-
-        services.AddSingleton<RabbitMQEventBus>();
-        services.AddSingleton<IEventBus>(sp => sp.GetRequiredService<RabbitMQEventBus>());
-        services.AddHostedService(sp => sp.GetRequiredService<RabbitMQEventBus>());
-
-        return services;
     }
 }
