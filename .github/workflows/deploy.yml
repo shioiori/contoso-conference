@@ -20,6 +20,7 @@ jobs:
       ticketing: ${{ steps.filter.outputs.ticketing }}
       notification: ${{ steps.filter.outputs.notification }}
       payment: ${{ steps.filter.outputs.payment }}
+      gateway: ${{ steps.filter.outputs.gateway }}
     steps:
       - uses: actions/checkout@v4
 
@@ -46,6 +47,8 @@ jobs:
               - 'Payment/**'
               - 'Shared/**'
               - 'EventBus/**'
+            gateway:
+              - 'ApiGateway/**'
 
   deploy-auth:
     name: Deploy auth-api
@@ -165,5 +168,29 @@ jobs:
           aws ecs update-service \
             --cluster $ECS_CLUSTER \
             --service payment-api \
+            --force-new-deployment
+
+  deploy-gateway:
+    name: Deploy api-gateway
+    needs: detect-changes
+    if: needs.detect-changes.outputs.gateway == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - name: Build & push
+        run: |
+          docker build -t $ECR_REGISTRY/eventbox/api-gateway:latest -f ApiGateway/YarpApiGateway/Dockerfile .
+          docker push $ECR_REGISTRY/eventbox/api-gateway:latest
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service api-gateway \
             --force-new-deployment
 
