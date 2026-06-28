@@ -30,23 +30,18 @@ jobs:
             auth:
               - 'Auth/**'
               - 'Shared/**'
-              - 'EventBus/**'
             event:
               - 'EventManagement/**'
               - 'Shared/**'
-              - 'EventBus/**'
             ticketing:
               - 'Ticketing/**'
               - 'Shared/**'
-              - 'EventBus/**'
             notification:
               - 'Notification/**'
               - 'Shared/**'
-              - 'EventBus/**'
             payment:
               - 'Payment/**'
               - 'Shared/**'
-              - 'EventBus/**'
 
   deploy-auth:
     name: Deploy auth-api
