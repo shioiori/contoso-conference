@@ -1,4 +1,4 @@
-# Eventbox API
+﻿# Eventbox API
 
 Eventbox API is an event ticketing backend built with .NET 10, PostgreSQL, RabbitMQ, and an event-driven microservice layout.
 
@@ -14,6 +14,13 @@ Eventbox covers the core flow for organizers publishing events and customers reg
 - Notification consumes order confirmation events and sends email through SMTP.
 - Organizers check attendees in by QR token at the door.
 
+## Branches
+
+| Branch | Purpose |
+| --- | --- |
+| `v2` | Active development branch. |
+| `deploy/v2` | Staging — automatic deploy to ECS Fargate. |
+
 ## Services
 
 | Service | Project | Responsibility |
@@ -24,7 +31,7 @@ Eventbox covers the core flow for organizers publishing events and customers reg
 | Ticketing API | `Ticketing/Ticketing.API` | Public checkout, customer orders, internal payment start endpoint, ticket availability, order expiration jobs, and QR check-in. |
 | Payment API | `Payment/Payment.API` | Payment intent creation, order access verification against Ticketing, and simulated payment provider callbacks. |
 | Notification API | `Notification/Notification.API` | RabbitMQ subscriber that sends transactional emails through SMTP/MailHog. |
-| EventBus | `EventBus/EventBus.Core`, `EventBus/EventBus.RabbitMQ` | Shared abstractions and RabbitMQ implementation for integration events and serialization. |
+| EventBus | `EventBus/EventBus.Core`, `EventBus/EventBus.RabbitMQ`, `EventBus/EventBus.Aws` | Shared abstractions with RabbitMQ and AWS SQS/SNS implementations for integration events. |
 | Contracts | `Shared/Eventbox.Contracts` | Shared integration event contracts across services. |
 | Shared | `Shared/Eventbox.Shared`, `Shared/Eventbox.Shared.Infrastructure` | Cross-cutting concerns: seedwork, exceptions, auditing, logging, repositories, and outbox support. |
 
@@ -68,7 +75,8 @@ Eventbox.slnx
 │   └── Notification.API/
 ├── EventBus/
 │   ├── EventBus.Core/
-│   └── EventBus.RabbitMQ/
+│   ├── EventBus.RabbitMQ/
+│   └── EventBus.Aws/
 ├── Shared/
 │   ├── Eventbox.Contracts/
 │   ├── Eventbox.Shared/
@@ -129,10 +137,10 @@ Organizer routes require a JWT with `account_type = Organizer`:
 | `GET` | `/api/organizations/{id}` | Get organization detail. |
 | `PUT` | `/api/organizations/{id}` | Update an organization. |
 | `DELETE` | `/api/organizations/{id}` | Delete an organization. |
-<<<<<<< HEAD
-| `POST` | `/api/organizations/{id}/organizers?organizerId={organizerId}` | Add an organizer account to an organization. |
-=======
 | `POST` | `/api/organizations/{id}/organizers` | Add an organizer account to an organization. |
+| `DELETE` | `/api/organizations/{id}/organizers/{organizerId}` | Remove an organizer from an organization. |
+| `GET` | `/api/organizations/{organizationId}/events` | List events for an organization. |
+| `GET` | `/api/organizations/{organizationId}/events/{id}` | Get organizer event detail. |
 | `POST` | `/api/organizations/{organizationId}/events` | Create a draft event. |
 | `PUT` | `/api/organizations/{organizationId}/events/{id}` | Update an event. |
 | `GET` | `/api/organizations/{organizationId}/events/{id}/publish-readiness` | Check whether an event can be published. |
@@ -153,11 +161,7 @@ Public routes:
 | Method | Route | Purpose |
 | --- | --- | --- |
 | `GET` | `/api/public/events/{eventId}/ticket-availability` | Get ticket availability by event id. |
-<<<<<<< HEAD
-| `POST` | `/api/public/events/{eventId}/orders` | Create an order/reservation. Supports guest checkout when email is supplied. |
-=======
 | `POST` | `/api/public/events/{eventId}/orders` | Create an order/reservation. Authenticated customers are linked by token; guests must supply email. |
->>>>>>> d8007297ae23d4c4a6801e92b766908f565b99e5
 | `GET` | `/api/public/self-service/orders?token={token}` | Get an order by self-service token. |
 
 Customer routes require a JWT with `account_type = Customer`:
@@ -244,208 +248,11 @@ Compose uses Docker service names for cross-container calls. For example, `payme
 
 PostgreSQL initializes `EventDb` from `POSTGRES_DB`; `AuthDb`, `TicketingDb`, and `PaymentDb` are created by `docker/postgres/initdb/01-create-service-databases.sql` on first volume initialization.
 
-### AWS EC2 Staging With Docker Compose
-
-Use the staging Compose override instead of the local `docker-compose.override.yml` file. Copy the example environment file on the EC2 host and replace every placeholder with staging secrets:
-
-```bash
-cp .env.staging.example .env.staging
-```
-
-Start the stack with explicit Compose files so Docker does not automatically merge the local development override:
-
-```bash
-docker compose --env-file .env.staging -f docker-compose.yml -f docker-compose.staging.yml up -d --build
-```
-
-The staging override:
-
-- runs APIs with `ASPNETCORE_ENVIRONMENT=Staging`
-- serves HTTP inside containers on port `8080`
-- uses Docker service names for PostgreSQL, RabbitMQ, and internal API calls
-- needs `TicketingApi__InternalServiceToken` on Payment API and `InternalApi__ServiceToken` on Ticketing API to share the same secret for payment-start calls
-- stores PostgreSQL and RabbitMQ data in named Docker volumes
-- does not publish PostgreSQL or RabbitMQ ports to the EC2 host
-- creates `AuthDb`, `TicketingDb`, and `PaymentDb` on first PostgreSQL volume initialization; `EventDb` is created by `POSTGRES_DB`
-
-For EC2, keep the instance security group limited to the API or reverse-proxy ports you intend to expose. If you terminate HTTPS at an ALB, Nginx, or Caddy, forward traffic to the API HTTP ports and keep database and RabbitMQ ports private.
-
-### AWS EC2 Staging With Docker Compose
-
-Use the staging Compose override instead of the local `docker-compose.override.yml` file. Copy the example environment file on the EC2 host and replace every placeholder with staging secrets:
-
-```bash
-cp .env.staging.example .env.staging
-```
-
-Start the stack with explicit Compose files so Docker does not automatically merge the local development override:
-
-```bash
-docker compose --env-file .env.staging -f docker-compose.yml -f docker-compose.staging.yml up -d --build
-```
-
-The staging override:
-
-- runs APIs with `ASPNETCORE_ENVIRONMENT=Staging`
-- serves HTTP only inside the containers on port `8080`
-- uses Docker service names for PostgreSQL, RabbitMQ, and internal API calls
-- stores PostgreSQL and RabbitMQ data in named Docker volumes
-- does not publish PostgreSQL or RabbitMQ ports to the EC2 host
-- creates `AuthDb`, `TicketingDb`, and `PaymentDb` on first PostgreSQL volume initialization; `EventDb` is created by `POSTGRES_DB`
-
-For EC2, keep the instance security group limited to the API or reverse-proxy ports you intend to expose. If you terminate HTTPS at an ALB, Nginx, or Caddy, forward traffic to the API HTTP ports and keep database and RabbitMQ ports private.
-
-### Run Locally With Docker Infrastructure
-
-Start only infrastructure services:
-
-```bash
-docker compose up -d eventdb rabbitmq mailhog
-```
-
-Then run the APIs:
-
-```bash
-dotnet run --project ApiGateway/YarpApiGateway
-dotnet run --project Auth/Auth.API
-dotnet run --project EventManagement/Event.API
-dotnet run --project Ticketing/Ticketing.API
-dotnet run --project Payment/Payment.API
-dotnet run --project Notification/Notification.API
-```
-
-Default project launch URLs:
-
-| Service | URL |
-| --- | --- |
-| YarpApiGateway | `http://localhost:53884` |
-| Auth API | `http://localhost:8000` |
-| Event API | `http://localhost:8010` |
-| Ticketing API | `http://localhost:8020` |
-| Payment API | `http://localhost:8030` |
-| Notification API | `http://localhost:50062` |
-
-## Configuration
-
-Each API reads settings from `appsettings.json`, `appsettings.Development.json`, user secrets, or environment variables.
-
-Common settings:
-
-```json
-{
-  "ConnectionStrings": {
-    "Database": "Host=localhost;Port=5432;Database=EventDb;Username=postgres;Password=Eventbox123!"
-  },
-  "RabbitMQ": {
-    "Host": "localhost",
-    "Port": 5672,
-    "VirtualHost": "/",
-    "Username": "guest",
-    "Password": "guest"
-  },
-  "Jwt": {
-    "Issuer": "Eventbox.Auth",
-    "Audience": "Eventbox.Api",
-    "SigningKey": "eventbox-development-signing-key-change-me"
-  }
-}
-```
-
-Ticketing internal API settings:
-
-```json
-{
-  "InternalApi": {
-    "ServiceToken": "dev-internal-service-token"
-  }
-}
-```
-
-Payment API settings:
-
-```json
-{
-  "TicketingApi": {
-    "BaseUrl": "http://localhost:8020",
-    "InternalServiceToken": "dev-internal-service-token"
-  },
-  "Payment": {
-    "ProviderSignature": "your-development-signature"
-  }
-}
-```
-
-Notification SMTP settings:
-
-```json
-{
-  "Smtp": {
-    "Host": "localhost",
-    "Port": 1025,
-    "FromAddress": "noreply@eventbox.com",
-    "FromName": "Eventbox"
-  }
-}
-```
-
-Auth API requires `Jwt:SigningKey` at runtime. The signing key must be at least 32 characters and can be supplied through user secrets or environment variables.
-
-## Database Migrations
-
-Auth API:
-
-```bash
-dotnet ef migrations add <MigrationName> --project Auth/Auth.API
-```
-
-Event API:
-
-```bash
-dotnet ef migrations add <MigrationName> --project EventManagement/Event.API --output-dir Infrastructure/Migrations
-```
-
-Ticketing API:
-
-```bash
-dotnet ef migrations add <MigrationName> --project Ticketing/Ticketing.Infrastructure --startup-project Ticketing/Ticketing.API
-```
-
-Payment API:
-
-```bash
-dotnet ef migrations add <MigrationName> --project Payment/Payment.Infrastructure --startup-project Payment/Payment.API
-```
-
-All database-backed services apply migrations automatically on startup.
-
-## Tests
-
-Run unit tests:
-
-```bash
-dotnet test Eventbox.slnx
-```
-
-Current unit test coverage focuses on:
-
-- Ticketing ticket availability and inventory integration events
-- Ticketing registration, order state, expiration, issuing, and concurrency behavior
-- Ticketing QR token check-in behavior
-- Payment callback behavior
-- Event Management domain behavior
-
 ## Postman
-
-<<<<<<< HEAD
-The v2 API contract is tracked in `specs/event-ticketing-system/16-api-contract.md`. Product features such as attendee list APIs, manual attendee lookup/check-in, order lookup email requests, reporting/export, notification settings, and richer team roles are v3 backlog unless code is added.
-=======
-The API contract is tracked in `specs/event-ticketing-system/16-api-contract.md`. Product features such as attendee list APIs, manual attendee lookup/check-in, order lookup email requests, reporting/export, notification settings APIs, and richer team roles are backlog unless code is added.
->>>>>>> d8007297ae23d4c4a6801e92b766908f565b99e5
 
 The `postman/` folder contains:
 
 - `Event.API.postman_collection.json`
 - `Eventbox.Docker.postman_environment.json`
-- `Eventbox.Staging.postman_environment.json`
 
 Import the collection and select the **Eventbox Docker** environment to test against the Docker Compose setup.
