@@ -1,5 +1,4 @@
 using Eventbox.Contracts.IntegrationEvents;
-using Eventbox.EventBus.Core.Abstractions;
 using EventBus.RabbitMQ;
 
 namespace Eventbox.Ticketing.Api.Extensions;
@@ -8,9 +7,8 @@ public static class MessagingExtensions
 {
     public static IServiceCollection AddMessaging(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<RabbitMQOptions>(options =>
+        return services.AddMessaging(configuration, options =>
         {
-            configuration.GetSection("RabbitMQ").Bind(options);
             options.Subscribe<PaymentConfirmedIntegrationEvent>("eventbox.payment");
             options.Subscribe<PaymentFailedIntegrationEvent>("eventbox.payment");
             options.Subscribe<EventCreatedIntegrationEvent>("eventbox.events");
@@ -25,13 +23,6 @@ public static class MessagingExtensions
                 routingKey: "ticketing.expire",
                 queue: "eventbox.ticketing.expire");
             options.Publish<OrderConfirmedIntegrationEvent>("eventbox.ticketing");
-        });
-
-        services.AddSingleton<RabbitMQEventBus>();
-        services.AddSingleton<IEventBus>(sp => sp.GetRequiredService<RabbitMQEventBus>());
-        services.AddSingleton<IDelayedEventScheduler>(sp => sp.GetRequiredService<RabbitMQEventBus>());
-        services.AddHostedService(sp => sp.GetRequiredService<RabbitMQEventBus>());
-
-        return services;
+        }, includeDelayedScheduler: true);
     }
 }
