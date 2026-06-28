@@ -61,8 +61,8 @@ jobs:
       - uses: aws-actions/amazon-ecr-login@v2
       - name: Build & push
         run: |
-          docker build -t $ECR_REGISTRY/auth-api:latest -f Auth/Auth.API/Dockerfile .
-          docker push $ECR_REGISTRY/auth-api:latest
+          docker build -t $ECR_REGISTRY/eventbox/auth-api:latest -f Auth/Auth.API/Dockerfile .
+          docker push $ECR_REGISTRY/eventbox/auth-api:latest
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
@@ -85,8 +85,8 @@ jobs:
       - uses: aws-actions/amazon-ecr-login@v2
       - name: Build & push
         run: |
-          docker build -t $ECR_REGISTRY/event-api:latest -f EventManagement/Event.API/Dockerfile .
-          docker push $ECR_REGISTRY/event-api:latest
+          docker build -t $ECR_REGISTRY/eventbox/event-api:latest -f EventManagement/Event.API/Dockerfile .
+          docker push $ECR_REGISTRY/eventbox/event-api:latest
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
@@ -109,8 +109,8 @@ jobs:
       - uses: aws-actions/amazon-ecr-login@v2
       - name: Build & push
         run: |
-          docker build -t $ECR_REGISTRY/ticketing-api:latest -f Ticketing/Ticketing.API/Dockerfile .
-          docker push $ECR_REGISTRY/ticketing-api:latest
+          docker build -t $ECR_REGISTRY/eventbox/ticketing-api:latest -f Ticketing/Ticketing.API/Dockerfile .
+          docker push $ECR_REGISTRY/eventbox/ticketing-api:latest
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
@@ -133,8 +133,8 @@ jobs:
       - uses: aws-actions/amazon-ecr-login@v2
       - name: Build & push
         run: |
-          docker build -t $ECR_REGISTRY/notification-api:latest -f Notification/Notification.API/Dockerfile .
-          docker push $ECR_REGISTRY/notification-api:latest
+          docker build -t $ECR_REGISTRY/eventbox/notification-api:latest -f Notification/Notification.API/Dockerfile .
+          docker push $ECR_REGISTRY/eventbox/notification-api:latest
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
@@ -157,8 +157,8 @@ jobs:
       - uses: aws-actions/amazon-ecr-login@v2
       - name: Build & push
         run: |
-          docker build -t $ECR_REGISTRY/payment-api:latest -f Payment/Payment.API/Dockerfile .
-          docker push $ECR_REGISTRY/payment-api:latest
+          docker build -t $ECR_REGISTRY/eventbox/payment-api:latest -f Payment/Payment.API/Dockerfile .
+          docker push $ECR_REGISTRY/eventbox/payment-api:latest
       - name: Deploy to ECS
         run: |
           aws ecs update-service \
