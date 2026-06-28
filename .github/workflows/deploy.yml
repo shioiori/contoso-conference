@@ -1,0 +1,185 @@
+name: Deploy to ECS Fargate
+
+on:
+  push:
+    branches:
+      - deploy/ec2
+
+env:
+  AWS_REGION: ap-southeast-2
+  ECS_CLUSTER: eventbox-staging
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-southeast-2.amazonaws.com
+
+jobs:
+  detect-changes:
+    name: Detect changed services
+    runs-on: ubuntu-latest
+    outputs:
+      auth: ${{ steps.filter.outputs.auth }}
+      event: ${{ steps.filter.outputs.event }}
+      ticketing: ${{ steps.filter.outputs.ticketing }}
+      notification: ${{ steps.filter.outputs.notification }}
+      payment: ${{ steps.filter.outputs.payment }}
+      rabbitmq: ${{ steps.filter.outputs.rabbitmq }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            auth:
+              - 'Auth/**'
+              - 'Shared/**'
+            event:
+              - 'EventManagement/**'
+              - 'Shared/**'
+            ticketing:
+              - 'Ticketing/**'
+              - 'Shared/**'
+            notification:
+              - 'Notification/**'
+              - 'Shared/**'
+            payment:
+              - 'Payment/**'
+              - 'Shared/**'
+            rabbitmq:
+              - 'rabbitmq/**'
+
+  deploy-auth:
+    name: Deploy auth-api
+    needs: detect-changes
+    if: needs.detect-changes.outputs.auth == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - name: Build & push
+        run: |
+          docker build -t $ECR_REGISTRY/auth-api:latest -f Auth/Auth.API/Dockerfile .
+          docker push $ECR_REGISTRY/auth-api:latest
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service auth-api \
+            --force-new-deployment
+
+  deploy-event:
+    name: Deploy event-api
+    needs: detect-changes
+    if: needs.detect-changes.outputs.event == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - name: Build & push
+        run: |
+          docker build -t $ECR_REGISTRY/event-api:latest -f EventManagement/Event.API/Dockerfile .
+          docker push $ECR_REGISTRY/event-api:latest
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service event-api \
+            --force-new-deployment
+
+  deploy-ticketing:
+    name: Deploy ticketing-api
+    needs: detect-changes
+    if: needs.detect-changes.outputs.ticketing == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - name: Build & push
+        run: |
+          docker build -t $ECR_REGISTRY/ticketing-api:latest -f Ticketing/Ticketing.API/Dockerfile .
+          docker push $ECR_REGISTRY/ticketing-api:latest
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service ticketing-api \
+            --force-new-deployment
+
+  deploy-notification:
+    name: Deploy notification-api
+    needs: detect-changes
+    if: needs.detect-changes.outputs.notification == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - name: Build & push
+        run: |
+          docker build -t $ECR_REGISTRY/notification-api:latest -f Notification/Notification.API/Dockerfile .
+          docker push $ECR_REGISTRY/notification-api:latest
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service notification-api \
+            --force-new-deployment
+
+  deploy-payment:
+    name: Deploy payment-api
+    needs: detect-changes
+    if: needs.detect-changes.outputs.payment == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - uses: aws-actions/amazon-ecr-login@v2
+      - name: Build & push
+        run: |
+          docker build -t $ECR_REGISTRY/payment-api:latest -f Payment/Payment.API/Dockerfile .
+          docker push $ECR_REGISTRY/payment-api:latest
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service payment-api \
+            --force-new-deployment
+
+  deploy-rabbitmq:
+    name: Deploy rabbitmq
+    needs: detect-changes
+    if: needs.detect-changes.outputs.rabbitmq == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster $ECS_CLUSTER \
+            --service eventbox-rabbitmq-service-etjshhmf \
+            --force-new-deployment
