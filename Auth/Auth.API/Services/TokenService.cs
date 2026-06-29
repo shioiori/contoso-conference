@@ -9,12 +9,12 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Eventbox.Auth.Api.Services;
 
-public class TokenService(IOptions<JwtOptions> jwtOptions)
+public class TokenService(IOptions<JwtOptions> jwtOptions, TimeProvider timeProvider)
 {
     public AuthResponse CreateToken(ApplicationUser user)
     {
         var options = jwtOptions.Value;
-        var expiresAt = DateTimeOffset.UtcNow.AddMinutes(options.ExpirationMinutes);
+        var expiresAt = timeProvider.GetUtcNow().AddMinutes(options.ExpirationMinutes);
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.SigningKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 

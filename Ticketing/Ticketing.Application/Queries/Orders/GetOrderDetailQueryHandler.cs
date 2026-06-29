@@ -7,7 +7,8 @@ using MediatR;
 namespace Eventbox.Ticketing.Application.Queries.Orders;
 
 public class GetOrderDetailQueryHandler(
-    IUnitOfWork unitOfWork)
+    IUnitOfWork unitOfWork,
+    TimeProvider timeProvider)
     : IRequestHandler<GetOrderDetailQuery, OrderDto>
 {
     public async Task<OrderDto> Handle(GetOrderDetailQuery request, CancellationToken cancellationToken)
@@ -26,7 +27,7 @@ public class GetOrderDetailQueryHandler(
             Id = order.Id,
             EventId = order.EventId,
             UserId = order.UserId,
-            OrderState = order.GetCurrentState(DateTimeOffset.UtcNow),
+            OrderState = order.GetCurrentState(timeProvider.GetUtcNow()),
             AccessCode = order.AccessCode,
             ReservationExpiresAt = order.ReservationExpiresAt,
             Name = order.PersonalInfo.Name,

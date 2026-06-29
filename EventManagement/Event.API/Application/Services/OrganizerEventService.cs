@@ -12,7 +12,7 @@ using Eventbox.EventManagement.EventApi.Application.Extensions;
 
 namespace Eventbox.EventManagement.EventApi.Application.Services
 {
-    public class OrganizerEventService(IUnitOfWork unitOfWork) : IOrganizerEventService
+    public class OrganizerEventService(IUnitOfWork unitOfWork, TimeProvider timeProvider) : IOrganizerEventService
     {
         public async Task<OrganizerEventDto?> GetByIdAsync(Guid organizationId, Guid id, CancellationToken cancellationToken = default)
             => (await unitOfWork.Events.GetByOrganizationAsync(organizationId, id, includeTicketTypes: true, cancellationToken: cancellationToken))?.Adapt<OrganizerEventDto>();
@@ -74,7 +74,7 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
             var eventEntity = await unitOfWork.Events.GetByOrganizationAsync(organizationId, id, asNoTracking: false, cancellationToken: cancellationToken)
                 ?? throw new NotFoundException("Event", id);
 
-            eventEntity.Update(dto.Name, dto.From, dto.To, dto.Description);
+            eventEntity.Update(dto.Name, dto.From, dto.To, dto.Description, timeProvider.GetUtcNow());
 
             var eventUpdatedEvent = new EventUpdatedIntegrationEvent
             {
@@ -148,7 +148,7 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
                 ?? throw new NotFoundException("Event", id);
 
             var wasPublished = eventEntity.IsPublished;
-            eventEntity.Unpublish();
+            eventEntity.Unpublish(timeProvider.GetUtcNow());
             if (!wasPublished) return;
 
             var eventUnpublishedEvent = new EventUnpublishedIntegrationEvent

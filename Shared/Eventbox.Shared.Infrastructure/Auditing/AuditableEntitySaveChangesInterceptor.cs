@@ -4,7 +4,9 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace Eventbox.Shared.Auditing;
 
-public sealed class AuditableEntitySaveChangesInterceptor(IAuditContextAccessor auditContextAccessor)
+public sealed class AuditableEntitySaveChangesInterceptor(
+    IAuditContextAccessor auditContextAccessor,
+    TimeProvider timeProvider)
     : SaveChangesInterceptor
 {
     public override InterceptionResult<int> SavingChanges(
@@ -32,7 +34,7 @@ public sealed class AuditableEntitySaveChangesInterceptor(IAuditContextAccessor 
         }
 
         var auditContext = auditContextAccessor.GetCurrent();
-        var utcNow = DateTimeOffset.UtcNow;
+        var utcNow = timeProvider.GetUtcNow();
 
         foreach (var entry in context.ChangeTracker.Entries<IAuditableEntity>())
         {

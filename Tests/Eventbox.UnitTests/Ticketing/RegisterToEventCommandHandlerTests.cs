@@ -25,7 +25,8 @@ public class RegisterToEventCommandHandlerTests
             isPublished: false);
 
         var handler = new RegisterToEventCommandHandler(
-            new StubUnitOfWork(unpublishedSnapshot));
+            new StubUnitOfWork(unpublishedSnapshot),
+            TimeProvider.System);
 
         var command = new RegisterToEventCommand
         {

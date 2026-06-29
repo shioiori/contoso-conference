@@ -11,14 +11,15 @@ namespace Eventbox.Ticketing.Application.Commands.Orders;
 public class ConfirmOrderCommandHandler(
     IUnitOfWork unitOfWork,
     IQrTokenGenerator qrTokenGenerator,
-    IQrTokenHasher qrTokenHasher) : IRequestHandler<ConfirmOrderCommand, bool>
+    IQrTokenHasher qrTokenHasher,
+    TimeProvider timeProvider) : IRequestHandler<ConfirmOrderCommand, bool>
 {
     public async Task<bool> Handle(ConfirmOrderCommand request, CancellationToken cancellationToken)
     {
         var order = await unitOfWork.Orders.GetByIdWithDetailsAsync(request.OrderId, cancellationToken)
             ?? throw new NotFoundException("Order", request.OrderId);
 
-        var stateChanged = order.Confirm();
+        var stateChanged = order.Confirm(timeProvider.GetUtcNow());
         if (stateChanged)
         {
             var tickets = new List<Ticket>();

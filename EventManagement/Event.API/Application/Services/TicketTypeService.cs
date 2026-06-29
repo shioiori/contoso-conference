@@ -11,7 +11,7 @@ using Eventbox.EventManagement.EventApi.Application.Extensions;
 
 namespace Eventbox.EventManagement.EventApi.Application.Services
 {
-    public class TicketTypeService(IUnitOfWork unitOfWork) : ITicketTypeService
+    public class TicketTypeService(IUnitOfWork unitOfWork, TimeProvider timeProvider) : ITicketTypeService
     {
         public async Task<TicketTypeDto?> GetByIdAsync(Guid organizationId, Guid eventId, Guid id, CancellationToken cancellationToken = default)
         {
@@ -82,7 +82,7 @@ namespace Eventbox.EventManagement.EventApi.Application.Services
         {
             var eventEntity = await EnsureEventBelongsToOrganizationAsync(organizationId, eventId, cancellationToken);
 
-            if (DateTimeOffset.UtcNow >= eventEntity.From)
+            if (timeProvider.GetUtcNow() >= eventEntity.From)
                 throw new ConflictException("Cannot edit ticket types after the event has started.");
 
             var ticketType = await unitOfWork.TicketTypes.GetByIdAsync(ticketTypeId, cancellationToken);

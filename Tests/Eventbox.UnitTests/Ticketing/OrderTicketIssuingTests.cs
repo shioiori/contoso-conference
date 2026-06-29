@@ -17,7 +17,7 @@ public class OrderTicketIssuingTests
             accessCode: "ABC12345",
             DateTimeOffset.UtcNow.AddMinutes(10));
 
-        var changed = order.Confirm();
+        var changed = order.Confirm(DateTimeOffset.UtcNow);
 
         Assert.True(changed);
         Assert.Equal(OrderState.Confirmed, order.OrderState);

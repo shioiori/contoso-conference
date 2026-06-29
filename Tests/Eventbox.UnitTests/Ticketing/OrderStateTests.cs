@@ -11,9 +11,9 @@ public class OrderStateTests
     public void Confirm_WhenAlreadyConfirmed_ReturnsFalse()
     {
         var order = PendingOrder();
-        order.Confirm();
+        order.Confirm(DateTimeOffset.UtcNow);
 
-        var changed = order.Confirm();
+        var changed = order.Confirm(DateTimeOffset.UtcNow);
 
         Assert.False(changed);
         Assert.Equal(OrderState.Confirmed, order.OrderState);
@@ -25,7 +25,7 @@ public class OrderStateTests
         var order = PendingOrder();
         order.Cancel();
 
-        Assert.Throws<InvalidOperationException>(() => order.Confirm());
+        Assert.Throws<InvalidOperationException>(() => order.Confirm(DateTimeOffset.UtcNow));
     }
 
     [Fact]
@@ -33,7 +33,7 @@ public class OrderStateTests
     {
         var order = OrderExpiringAt(DateTimeOffset.UtcNow.AddSeconds(-1));
 
-        Assert.Throws<InvalidOperationException>(() => order.Confirm());
+        Assert.Throws<InvalidOperationException>(() => order.Confirm(DateTimeOffset.UtcNow));
     }
 
     // ── Cancel ────────────────────────────────────────────────────────────
@@ -42,7 +42,7 @@ public class OrderStateTests
     public void Cancel_WhenConfirmed_Throws()
     {
         var order = PendingOrder();
-        order.Confirm();
+        order.Confirm(DateTimeOffset.UtcNow);
 
         Assert.Throws<InvalidOperationException>(() => order.Cancel());
     }
@@ -98,7 +98,7 @@ public class OrderStateTests
     public void Expire_WhenConfirmed_ReturnsFalse()
     {
         var order = PendingOrder();
-        order.Confirm();
+        order.Confirm(DateTimeOffset.UtcNow);
 
         var expired = order.Expire(DateTimeOffset.UtcNow.AddDays(1));
 
@@ -146,7 +146,7 @@ public class OrderStateTests
     public void GetCurrentState_WhenConfirmed_ReturnsConfirmed()
     {
         var order = PendingOrder();
-        order.Confirm();
+        order.Confirm(DateTimeOffset.UtcNow);
 
         // Even if we pass a time far in the future, Confirmed orders never expire
         var state = order.GetCurrentState(DateTimeOffset.MaxValue);
@@ -160,7 +160,7 @@ public class OrderStateTests
     public void MarkPaymentFailed_WhenConfirmed_ReturnsFalse()
     {
         var order = PendingOrder();
-        order.Confirm();
+        order.Confirm(DateTimeOffset.UtcNow);
 
         var marked = order.MarkPaymentFailed();
 

@@ -16,7 +16,8 @@ namespace Eventbox.Payment.Api.Controllers
         IMediator mediator,
         IOptions<PaymentOptions> paymentOptions,
         IOrderAccessVerifier orderAccessVerifier,
-        IOrderPaymentStarter orderPaymentStarter) : ControllerBase
+        IOrderPaymentStarter orderPaymentStarter,
+        TimeProvider timeProvider) : ControllerBase
     {
         [HttpPost("intents")]
         public async Task<IActionResult> CreatePaymentIntent(
@@ -69,7 +70,7 @@ namespace Eventbox.Payment.Api.Controllers
                         request.ProviderEventId,
                         request.Amount,
                         request.Currency,
-                        request.PaidAt ?? DateTimeOffset.UtcNow),
+                        request.PaidAt ?? timeProvider.GetUtcNow()),
                     cancellationToken);
             }
             else if (string.Equals(request.Status, "Failed", StringComparison.OrdinalIgnoreCase))
@@ -80,7 +81,7 @@ namespace Eventbox.Payment.Api.Controllers
                         request.ProviderEventId,
                         request.Amount,
                         request.Currency,
-                        request.FailedAt ?? DateTimeOffset.UtcNow,
+                        request.FailedAt ?? timeProvider.GetUtcNow(),
                         request.FailureReason),
                     cancellationToken);
             }

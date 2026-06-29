@@ -45,7 +45,7 @@ namespace Eventbox.Ticketing.Domain.Orders
             return OrderState;
         }
 
-        public bool StartPayment()
+        public bool StartPayment(DateTimeOffset utcNow)
         {
             if (OrderState == OrderState.PaymentInProgress)
                 return false;
@@ -53,14 +53,14 @@ namespace Eventbox.Ticketing.Domain.Orders
             if (OrderState is not OrderState.Pending)
                 throw new InvalidOperationException($"Cannot start payment for an order in '{OrderState}' state.");
 
-            if (ReservationExpiresAt <= DateTimeOffset.UtcNow)
+            if (ReservationExpiresAt <= utcNow)
                 throw new InvalidOperationException("Reservation has expired.");
 
             OrderState = OrderState.PaymentInProgress;
             return true;
         }
 
-        public bool Confirm()
+        public bool Confirm(DateTimeOffset utcNow)
         {
             if (OrderState == OrderState.Confirmed)
                 return false;
@@ -68,7 +68,7 @@ namespace Eventbox.Ticketing.Domain.Orders
             if (OrderState is OrderState.Cancelled or OrderState.Expired)
                 throw new InvalidOperationException("Cancelled or expired orders cannot be confirmed.");
 
-            if (OrderState != OrderState.PaymentInProgress && ReservationExpiresAt <= DateTimeOffset.UtcNow)
+            if (OrderState != OrderState.PaymentInProgress && ReservationExpiresAt <= utcNow)
                 throw new InvalidOperationException("Expired reservations cannot be confirmed.");
 
             OrderState = OrderState.Confirmed;

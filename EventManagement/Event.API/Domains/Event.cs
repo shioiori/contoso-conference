@@ -44,15 +44,13 @@ namespace Eventbox.EventManagement.EventApi.Domains
             AccessCode = accessCode;
         }
 
-        public void Update(string name, DateTimeOffset from, DateTimeOffset to, string? description)
+        public void Update(string name, DateTimeOffset from, DateTimeOffset to, string? description, DateTimeOffset utcNow)
         {
             from = from.ToUniversalTime();
             to = to.ToUniversalTime();
 
             if (to <= from)
                 throw new ArgumentException("To must be after From.", nameof(to));
-
-            var utcNow = DateTimeOffset.UtcNow;
 
             if (utcNow < From && from < utcNow && IsPublished)
                 throw new ValidationApiException("Start date cannot be set to a past time.");
@@ -91,11 +89,10 @@ namespace Eventbox.EventManagement.EventApi.Domains
             IsPublished = true;
         }
 
-        public void Unpublish()
+        public void Unpublish(DateTimeOffset utcNow)
         {
             if (!IsPublished) return;
 
-            var utcNow = DateTimeOffset.UtcNow;
             if (From <= utcNow && utcNow <= To)
                 throw new ValidationApiException("Cannot unpublish an event while it is in progress.");
 
