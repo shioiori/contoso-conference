@@ -34,16 +34,6 @@ Pushing to `deploy/v2` triggers the GitHub Actions workflow at `.github/workflow
 | Cluster | `eventbox-staging` (ECS Fargate) |
 | Registry | ECR — one repository per service |
 
-### Services
-
-| Service | ECR repository | ECS service |
-| --- | --- | --- |
-| Auth API | `eventbox/auth-api` | `auth-api` |
-| Event API | `eventbox/event-api` | `event-api` |
-| Ticketing API | `eventbox/ticketing-api` | `ticketing-api` |
-| Payment API | `eventbox/payment-api` | `payment-api` |
-| Notification API | `eventbox/notification-api` | `notification-api` |
-
 ### Change detection
 
 Each service is redeployed only when its source paths change:
@@ -55,14 +45,6 @@ Each service is redeployed only when its source paths change:
 | Ticketing API | `Ticketing/**`, `Shared/**`, `EventBus/**` |
 | Payment API | `Payment/**`, `Shared/**`, `EventBus/**` |
 | Notification API | `Notification/**`, `Shared/**`, `EventBus/**` |
-
-### Required secrets
-
-| Secret | Used for |
-| --- | --- |
-| `AWS_ACCOUNT_ID` | ECR registry URL |
-| `AWS_ACCESS_KEY_ID` | AWS credentials |
-| `AWS_SECRET_ACCESS_KEY` | AWS credentials |
 
 ### Deploy flow
 
