@@ -1,20 +1,30 @@
-﻿using Amazon.SQS.Model;
+using Amazon.SQS.Model;
 using Eventbox.EventBus.Core.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Collections.Concurrent;
 using System.Text.Json;
+using SnsModel = Amazon.SimpleNotificationService.Model;
 
 namespace EventBus.Aws
 {
     public class AwsEventBus : IEventBus, IDelayedEventScheduler, IHostedService
     {
+        private const string EventTypeAttribute = "EventType";
+
         private readonly AwsClient _awsClient;
         private readonly AwsOptions _awsOptions;
         private readonly ILogger<AwsEventBus> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly TimeProvider _timeProvider;
+
+        // queueUrl -> (eventTypeName -> dispatch delegate that deserializes + handles the payload)
+        private readonly ConcurrentDictionary<string, ConcurrentDictionary<string, Func<string, CancellationToken, Task>>> _dispatchers = new();
+        // queueUrl -> the single consumer loop polling that queue
+        private readonly ConcurrentDictionary<string, Task> _consumers = new();
+        private readonly object _consumerLock = new();
 
         public AwsEventBus(IOptions<AwsOptions> options, ILogger<AwsEventBus> logger, IServiceProvider serviceProvider, TimeProvider timeProvider)
         {
@@ -24,7 +34,7 @@ namespace EventBus.Aws
             _serviceProvider = serviceProvider;
             _timeProvider = timeProvider;
         }
-        
+
         public async Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default) where TEvent : IIntegrationEvent
         {
             var eventType = @event.GetType();
@@ -34,7 +44,15 @@ namespace EventBus.Aws
                 _logger.LogWarning($"No publish mapping found for event type: {eventType.Name}");
                 return;
             }
-            await _awsClient.SnsClient.PublishAsync(mapping.TopicArn, JsonSerializer.Serialize(@event, eventType), cancellationToken);
+            await _awsClient.SnsClient.PublishAsync(new SnsModel.PublishRequest
+            {
+                TopicArn = mapping.TopicArn,
+                Message = JsonSerializer.Serialize(@event, eventType),
+                MessageAttributes = new Dictionary<string, SnsModel.MessageAttributeValue>
+                {
+                    [EventTypeAttribute] = new() { DataType = "String", StringValue = eventType.Name }
+                }
+            }, cancellationToken);
             _logger.LogInformation($"Published {eventType.Name} to {mapping.TopicArn}");
         }
 
@@ -52,12 +70,16 @@ namespace EventBus.Aws
             {
                 DelaySeconds = delaySeconds,
                 QueueUrl = mapping.QueueUrl,
-                MessageBody = JsonSerializer.Serialize(@event, eventType)
-            });
+                MessageBody = JsonSerializer.Serialize(@event, eventType),
+                MessageAttributes = new Dictionary<string, MessageAttributeValue>
+                {
+                    [EventTypeAttribute] = new() { DataType = "String", StringValue = eventType.Name }
+                }
+            }, cancellationToken);
             _logger.LogInformation($"Scheduled {eventType.Name} for delivery in {delaySeconds} seconds");
         }
 
-        public async Task SubscribeAsync<TEvent, THandler>(CancellationToken cancellationToken = default)
+        public Task SubscribeAsync<TEvent, THandler>(CancellationToken cancellationToken = default)
             where TEvent : IIntegrationEvent
             where THandler : IIntegrationEventHandler<TEvent>
         {
@@ -66,48 +88,128 @@ namespace EventBus.Aws
             if (mapping == null)
             {
                 _logger.LogWarning($"No subscribe mapping found for event type: {eventType.Name}");
-                return;
+                return Task.CompletedTask;
             }
-            while (!cancellationToken.IsCancellationRequested)
+
+            var queueDispatchers = _dispatchers.GetOrAdd(mapping.QueueUrl, _ => new());
+            queueDispatchers[eventType.Name] = async (payload, token) =>
             {
-                try
+                var @event = JsonSerializer.Deserialize<TEvent>(payload)
+                    ?? throw new InvalidOperationException($"Failed to deserialize {eventType.Name}");
+                using var scope = _serviceProvider.CreateScope();
+                var handler = scope.ServiceProvider.GetRequiredService<THandler>();
+                await handler.HandleAsync(@event, token);
+            };
+
+            // start a single consumer loop per queue, regardless of how many event types share it.
+            if (!_consumers.ContainsKey(mapping.QueueUrl))
+            {
+                lock (_consumerLock)
                 {
-                    var responses = await _awsClient.SqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
-                    {
-                        QueueUrl = mapping.QueueUrl,
-                        MaxNumberOfMessages = 10,
-                        WaitTimeSeconds = 20
-                    }, cancellationToken);
+                    if (!_consumers.ContainsKey(mapping.QueueUrl))
+                        _consumers[mapping.QueueUrl] = ConsumeQueueAsync(mapping.QueueUrl, cancellationToken);
+                }
+            }
 
-                    _logger.LogInformation($"Received {responses.Messages.Count} messages for {eventType.Name}");
+            return Task.CompletedTask;
+        }
 
-                    foreach (var message in responses.Messages)
+        private async Task ConsumeQueueAsync(string queueUrl, CancellationToken cancellationToken)
+        {
+            var dispatchers = _dispatchers[queueUrl];
+            try
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    try
                     {
-                        try
+                        var response = await _awsClient.SqsClient.ReceiveMessageAsync(new ReceiveMessageRequest
                         {
-                            var @event = JsonSerializer.Deserialize<TEvent>(message.Body);
-                            using var scope = _serviceProvider.CreateScope();
-                            var handler = scope.ServiceProvider.GetRequiredService<THandler>();
-                            await handler.HandleAsync(@event, CancellationToken.None);
-                            await _awsClient.SqsClient.DeleteMessageAsync(mapping.QueueUrl, message.ReceiptHandle, cancellationToken);
-                            _logger.LogInformation($"Handled {eventType.Name} with {typeof(THandler).Name}");
-                        }
-                        catch (Exception ex)
+                            QueueUrl = queueUrl,
+                            MaxNumberOfMessages = 10,
+                            WaitTimeSeconds = 20,
+                            MessageAttributeNames = new List<string> { "All" }
+                        }, cancellationToken);
+
+                        // AWS SDK v4 returns null (not an empty list) when no messages are available.
+                        var messages = response.Messages ?? new List<Message>();
+
+                        foreach (var message in messages)
                         {
-                            _logger.LogError(ex, $"Failed to handle message for {eventType.Name}, will retry");
+                            try
+                            {
+                                var (eventTypeName, payload) = ParseMessage(message);
+                                if (eventTypeName == null || !dispatchers.TryGetValue(eventTypeName, out var dispatch))
+                                {
+                                    _logger.LogWarning($"No handler registered for message type '{eventTypeName}' on {queueUrl}");
+                                    continue;
+                                }
+                                await dispatch(payload, CancellationToken.None);
+                                await _awsClient.SqsClient.DeleteMessageAsync(queueUrl, message.ReceiptHandle, cancellationToken);
+                                _logger.LogInformation($"Handled {eventTypeName} from {queueUrl}");
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex, $"Failed to handle message from {queueUrl}, will retry");
+                            }
                         }
                     }
-                }
-                catch (OperationCanceledException)
-                {
-                    break;
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, $"Error receiving messages for {eventType.Name}");
-                    await Task.Delay(5000, cancellationToken); 
+                    catch (OperationCanceledException)
+                    {
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, $"Error receiving messages from {queueUrl}");
+                        await Task.Delay(5000, cancellationToken);
+                    }
                 }
             }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+
+        private static (string? eventTypeName, string payload) ParseMessage(Message message)
+        {
+            var body = message.Body;
+
+            // SNS->SQS without Raw Message Delivery: body is an SNS envelope carrying the payload
+            // and the published message attributes.
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                var root = doc.RootElement;
+                if (root.ValueKind == JsonValueKind.Object
+                    && root.TryGetProperty("Type", out var type)
+                    && type.GetString() == "Notification"
+                    && root.TryGetProperty("Message", out var msg)
+                    && msg.ValueKind == JsonValueKind.String)
+                {
+                    string? typeName = null;
+                    if (root.TryGetProperty("MessageAttributes", out var attrs)
+                        && attrs.ValueKind == JsonValueKind.Object
+                        && attrs.TryGetProperty(EventTypeAttribute, out var attr)
+                        && attr.TryGetProperty("Value", out var value))
+                    {
+                        typeName = value.GetString();
+                    }
+                    return (typeName, msg.GetString() ?? body);
+                }
+            }
+            catch (JsonException)
+            {
+            }
+
+            // Raw Message Delivery or a message sent directly to SQS (e.g. ScheduleAsync):
+            // body is the raw payload and the type is an SQS message attribute.
+            string? rawTypeName = null;
+            if (message.MessageAttributes != null
+                && message.MessageAttributes.TryGetValue(EventTypeAttribute, out var rawAttr))
+            {
+                rawTypeName = rawAttr.StringValue;
+            }
+            return (rawTypeName, body);
         }
 
         public Task StartAsync(CancellationToken cancellationToken) => Task.CompletedTask;
