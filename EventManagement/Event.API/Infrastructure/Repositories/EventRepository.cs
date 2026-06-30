@@ -6,7 +6,7 @@ using Event = Eventbox.EventManagement.EventApi.Domains.Event;
 
 namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
 {
-    public class EventRepository(EventDbContext dbContext) 
+    public class EventRepository(EventDbContext dbContext, TimeProvider timeProvider)
         : BaseRepository<EventDbContext, Event, Guid>(dbContext), IEventRepository
     {
         public async Task<bool> SlugExistsAsync(string slug, CancellationToken cancellationToken = default)
@@ -41,7 +41,7 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
                     .ThenInclude(t => t.PricingPhases)
                 .Where(c => c.OrganizationId == organizationId);
 
-            events = ApplyFilters(events, status, query, dateFrom, dateTo);
+            events = ApplyFilters(events, status, query, dateFrom, dateTo, timeProvider.GetUtcNow());
 
             return await events
                 .OrderByDescending(c => c.From)
@@ -58,7 +58,7 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
                     .ThenInclude(t => t.PricingPhases)
                 .Where(c => c.IsPublished);
 
-            events = ApplyFilters(events, status, query, dateFrom, dateTo);
+            events = ApplyFilters(events, status, query, dateFrom, dateTo, timeProvider.GetUtcNow());
 
             return await events
                 .OrderBy(c => c.From)
@@ -67,11 +67,11 @@ namespace Eventbox.EventManagement.EventApi.Infrastructure.Repositories
                 .ToListAsync(cancellationToken);
         }
 
-        private static IQueryable<Event> ApplyFilters(IQueryable<Event> events, EventStatus? status, string? query, DateOnly? dateFrom, DateOnly? dateTo)
+        private static IQueryable<Event> ApplyFilters(IQueryable<Event> events, EventStatus? status, string? query, DateOnly? dateFrom, DateOnly? dateTo, DateTimeOffset utcNow)
         {
             if (status.HasValue)
             {
-                var now = DateTimeOffset.UtcNow;
+                var now = utcNow;
                 events = status.Value switch
                 {
                     EventStatus.Published => events.Where(c => c.IsPublished),

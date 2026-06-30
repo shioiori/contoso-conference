@@ -26,7 +26,7 @@ public class RegisterToEventCommandHandlerConcurrencyTests
         var eventSnapshotRepository = new InMemoryEventSnapshotRepository(
             new EventSnapshot(eventId, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(1), isPublished: true));
         var unitOfWork = new InMemoryRegistrationUnitOfWork(orderRepository, ticketTypeAvailabilityRepository, eventSnapshotRepository);
-        var handler = new RegisterToEventCommandHandler(unitOfWork);
+        var handler = new RegisterToEventCommandHandler(unitOfWork, TimeProvider.System);
 
         var firstRequest = CreateRequest(eventId, ticketTypeId, "first@example.com");
         var secondRequest = CreateRequest(eventId, ticketTypeId, "second@example.com");

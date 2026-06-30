@@ -6,7 +6,7 @@ using MediatR;
 
 namespace Eventbox.Ticketing.Application.Queries.Orders;
 
-public class GetOrdersByEmailQueryHandler(IUnitOfWork unitOfWork)
+public class GetOrdersByEmailQueryHandler(IUnitOfWork unitOfWork, TimeProvider timeProvider)
     : IRequestHandler<GetOrdersByEmailQuery, IEnumerable<OrderDto>>
 {
     public async Task<IEnumerable<OrderDto>> Handle(GetOrdersByEmailQuery request, CancellationToken cancellationToken)
@@ -24,7 +24,7 @@ public class GetOrdersByEmailQueryHandler(IUnitOfWork unitOfWork)
             Id = order.Id,
             EventId = order.EventId,
             UserId = order.UserId,
-            OrderState = order.GetCurrentState(DateTimeOffset.UtcNow),
+            OrderState = order.GetCurrentState(timeProvider.GetUtcNow()),
             AccessCode = order.AccessCode,
             ReservationExpiresAt = order.ReservationExpiresAt,
             Name = order.PersonalInfo.Name,

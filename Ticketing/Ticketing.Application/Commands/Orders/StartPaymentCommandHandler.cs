@@ -5,7 +5,7 @@ using MediatR;
 
 namespace Eventbox.Ticketing.Application.Commands.Orders;
 
-public class StartPaymentCommandHandler(IUnitOfWork unitOfWork) : IRequestHandler<StartPaymentCommand, OrderAmountDto>
+public class StartPaymentCommandHandler(IUnitOfWork unitOfWork, TimeProvider timeProvider) : IRequestHandler<StartPaymentCommand, OrderAmountDto>
 {
     public async Task<OrderAmountDto> Handle(StartPaymentCommand request, CancellationToken cancellationToken)
     {
@@ -14,7 +14,7 @@ public class StartPaymentCommandHandler(IUnitOfWork unitOfWork) : IRequestHandle
 
         try
         {
-            var changed = order.StartPayment();
+            var changed = order.StartPayment(timeProvider.GetUtcNow());
             if (changed)
             {
                 unitOfWork.Orders.Update(order);

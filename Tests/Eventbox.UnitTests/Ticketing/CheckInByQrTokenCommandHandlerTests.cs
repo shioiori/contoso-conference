@@ -21,7 +21,7 @@ public class CheckInByQrTokenCommandHandlerTests
         var ticketRepository = new InMemoryTicketRepository(ticket);
         var snapshotRepository = new InMemoryEventSnapshotRepository(
             new EventSnapshot(eventId, DateTimeOffset.UtcNow.AddMinutes(-5), DateTimeOffset.UtcNow.AddMinutes(5), isPublished: true));
-        var handler = new CheckInByQrTokenCommandHandler(ticketRepository, snapshotRepository, new PassthroughQrTokenHasher());
+        var handler = new CheckInByQrTokenCommandHandler(ticketRepository, snapshotRepository, new PassthroughQrTokenHasher(), TimeProvider.System);
 
         var command = new CheckInByQrTokenCommand
         {

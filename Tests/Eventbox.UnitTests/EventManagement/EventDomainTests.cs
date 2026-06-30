@@ -52,7 +52,7 @@ public class EventAggregateTests
         AddTicketType(ev);
 
         ev.Publish();
-        ev.Unpublish();
+        ev.Unpublish(DateTimeOffset.UtcNow);
 
         Assert.Equal(EventStatus.Cancelled, ev.Status);
     }
@@ -66,7 +66,7 @@ public class EventAggregateTests
         AddTicketType(ev);
         ev.Publish();
 
-        Assert.Throws<ValidationApiException>(() => ev.Unpublish());
+        Assert.Throws<ValidationApiException>(() => ev.Unpublish(now));
     }
 
     [Fact]
@@ -75,7 +75,7 @@ public class EventAggregateTests
         var ev = CreateFutureEvent();
         var at = DateTimeOffset.UtcNow.AddDays(5);
 
-        Assert.Throws<ArgumentException>(() => ev.Update("Name", at, at, null));
+        Assert.Throws<ArgumentException>(() => ev.Update("Name", at, at, null, DateTimeOffset.UtcNow));
     }
 
     // --- Update From restrictions ---
@@ -90,7 +90,7 @@ public class EventAggregateTests
         ev.Publish();
 
         Assert.Throws<ValidationApiException>(() =>
-            ev.Update("Live", now.AddHours(-2), now.AddHours(3), null));
+            ev.Update("Live", now.AddHours(-2), now.AddHours(3), null, now));
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public class EventAggregateTests
         AddTicketType(ev);
         ev.Publish();
 
-        ev.Update("Live", from, now.AddHours(4), null);
+        ev.Update("Live", from, now.AddHours(4), null, now);
 
         Assert.Equal(now.AddHours(4).ToUniversalTime(), ev.To);
     }
@@ -116,7 +116,7 @@ public class EventAggregateTests
             now.AddHours(-1), now.AddHours(3), null, "");
 
         Assert.Throws<ValidationApiException>(() =>
-            ev.Update("Fest", now.AddHours(-2), now.AddHours(3), null));
+            ev.Update("Fest", now.AddHours(-2), now.AddHours(3), null, now));
     }
 
     // --- Update To restrictions ---
@@ -131,19 +131,20 @@ public class EventAggregateTests
         ev.Publish();
 
         Assert.Throws<ValidationApiException>(() =>
-            ev.Update("Fest", now.AddDays(-3), now.AddHours(-1), null));
+            ev.Update("Fest", now.AddDays(-3), now.AddHours(-1), null, now));
     }
 
     [Fact]
     public void Event_Update_WhenPublishedAndNewToIsInFuture_Succeeds()
     {
-        var from = DateTimeOffset.UtcNow.AddDays(1);
+        var now = DateTimeOffset.UtcNow;
+        var from = now.AddDays(1);
         var ev = new Event(Guid.NewGuid(), Guid.NewGuid(), "Fest", "fest",
             from, from.AddHours(2), null, "");
         AddTicketType(ev);
         ev.Publish();
 
-        ev.Update("Fest", from, from.AddHours(4), null);
+        ev.Update("Fest", from, from.AddHours(4), null, now);
 
         Assert.Equal(from.AddHours(4).ToUniversalTime(), ev.To);
     }
@@ -156,7 +157,7 @@ public class EventAggregateTests
             now.AddDays(-3), now.AddDays(1), null, "");
 
         Assert.Throws<ValidationApiException>(() =>
-            ev.Update("Fest", now.AddDays(-3), now.AddHours(-1), null));
+            ev.Update("Fest", now.AddDays(-3), now.AddHours(-1), null, now));
     }
 
     // --- Unpublish happy paths ---
@@ -167,7 +168,7 @@ public class EventAggregateTests
         var ev = CreateFutureEvent();
         ev.Publish();
 
-        ev.Unpublish();
+        ev.Unpublish(DateTimeOffset.UtcNow);
 
         Assert.False(ev.IsPublished);
     }
@@ -181,7 +182,7 @@ public class EventAggregateTests
         AddTicketType(ev);
         ev.Publish();
 
-        ev.Unpublish();
+        ev.Unpublish(DateTimeOffset.UtcNow);
 
         Assert.False(ev.IsPublished);
     }
@@ -191,7 +192,7 @@ public class EventAggregateTests
     {
         var ev = CreateFutureEvent();
 
-        ev.Unpublish();
+        ev.Unpublish(DateTimeOffset.UtcNow);
 
         Assert.False(ev.IsPublished);
     }

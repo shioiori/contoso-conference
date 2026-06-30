@@ -14,7 +14,8 @@ using System.Text.Json;
 namespace Eventbox.Ticketing.Application.Commands.Orders
 {
     public class RegisterToEventCommandHandler(
-        IUnitOfWork unitOfWork) : IRequestHandler<RegisterToEventCommand, OrderDto>
+        IUnitOfWork unitOfWork,
+        TimeProvider timeProvider) : IRequestHandler<RegisterToEventCommand, OrderDto>
     {
         public async Task<OrderDto> Handle(RegisterToEventCommand request, CancellationToken cancellationToken)
         {
@@ -29,7 +30,7 @@ namespace Eventbox.Ticketing.Application.Commands.Orders
             if (!eventSnapshot.IsPublished)
                 throw new NotFoundException($"Event '{request.EventId}' is not published.");
 
-            var utcNow = DateTimeOffset.UtcNow;
+            var utcNow = timeProvider.GetUtcNow();
             var reservationExpiresAt = utcNow.AddMinutes(TicketingConstants.ReservationExpirationMinutes);
 
             var ticketType = await unitOfWork.TicketTypeAvailabilities.GetByIdWithPricingAsync(request.TicketTypeId, cancellationToken)
@@ -80,7 +81,7 @@ namespace Eventbox.Ticketing.Application.Commands.Orders
                 var orderExpiration = new OrderExpirationDueMessageIntegrationEvent
                 {
                     OrderId = order.Id,
-                    ExpiresAt = order.ReservationExpiresAt ?? DateTimeOffset.UtcNow.AddMinutes(TicketingConstants.ReservationExpirationMinutes),
+                    ExpiresAt = order.ReservationExpiresAt ?? timeProvider.GetUtcNow().AddMinutes(TicketingConstants.ReservationExpirationMinutes),
                 };
                 await unitOfWork.Outbox.AddAsync(new OutboxMessage
                 {

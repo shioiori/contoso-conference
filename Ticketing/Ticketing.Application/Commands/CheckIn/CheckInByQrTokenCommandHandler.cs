@@ -11,7 +11,8 @@ namespace Eventbox.Ticketing.Application.Commands.CheckIn;
 public class CheckInByQrTokenCommandHandler(
     ITicketRepository ticketRepository,
     IEventSnapshotRepository eventSnapshotRepository,
-    IQrTokenHasher qrTokenHasher) : IRequestHandler<CheckInByQrTokenCommand, CheckInResultDto>
+    IQrTokenHasher qrTokenHasher,
+    TimeProvider timeProvider) : IRequestHandler<CheckInByQrTokenCommand, CheckInResultDto>
 {
     public async Task<CheckInResultDto> Handle(CheckInByQrTokenCommand request, CancellationToken cancellationToken)
     {
@@ -23,7 +24,7 @@ public class CheckInByQrTokenCommandHandler(
 
         var qrTokenHash = qrTokenHasher.Hash(request.QrToken);
         var ticket = await ticketRepository.GetByQrTokenHashAsync(qrTokenHash, cancellationToken);
-        var now = DateTimeOffset.UtcNow;
+        var now = timeProvider.GetUtcNow();
 
         if (ticket is null)
             return new CheckInResultDto{

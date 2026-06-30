@@ -51,7 +51,7 @@ public class PaymentFailedIntegrationEventHandlerTests
     public async Task HandleAsync_WhenOrderAlreadyConfirmed_DoesNotSave()
     {
         var order = PendingOrder();
-        order.Confirm();
+        order.Confirm(DateTimeOffset.UtcNow);
         var uow = new CountingUnitOfWork(new StubOrderRepository(order));
         var handler = new PaymentFailedIntegrationEventHandler(uow);
 

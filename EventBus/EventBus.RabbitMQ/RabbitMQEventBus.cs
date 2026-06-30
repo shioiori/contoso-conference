@@ -19,6 +19,7 @@ namespace EventBus.RabbitMQ
         private readonly ILogger<RabbitMQEventBus> _logger;
         private readonly ILogger<RabbitMQClient> _rabbitMqLogger;
         private readonly RabbitMQOptions _options;
+        private readonly TimeProvider _timeProvider;
         private RabbitMQClient _rabbitMQ { get; set; }
         private SemaphoreSlim _publishLock { get; }
 
@@ -26,12 +27,14 @@ namespace EventBus.RabbitMQ
             IOptions<RabbitMQOptions> options,
             IServiceProvider serviceProvider,
             ILogger<RabbitMQEventBus> logger,
-            ILogger<RabbitMQClient> rabbitMqLogger)
+            ILogger<RabbitMQClient> rabbitMqLogger,
+            TimeProvider timeProvider)
         {
             _options = options.Value;
             _serviceProvider = serviceProvider;
             _logger = logger;
             _rabbitMqLogger = rabbitMqLogger;
+            _timeProvider = timeProvider;
             _rabbitMQ = new RabbitMQClient(_options, _rabbitMqLogger);
             _publishLock = new SemaphoreSlim(1, 1);
         }
@@ -45,7 +48,7 @@ namespace EventBus.RabbitMQ
             await PublishSafeAsync(
                 exchange: mapping.Exchange,
                 routingKey: mapping.RoutingKey,
-                basicProperties: CreateBasicProperties(@event, mapping.Exchange, mapping.RoutingKey),
+                basicProperties: CreateBasicProperties(@event, mapping.Exchange, mapping.RoutingKey, _timeProvider.GetUtcNow()),
                 body: JsonSerializer.SerializeToUtf8Bytes(@event, @event.GetType()),
                 cancellationToken: cancellationToken);
         }
@@ -60,9 +63,9 @@ namespace EventBus.RabbitMQ
             var mapping = _options.SubscribeMappings.FirstOrDefault(m => m.EventType == eventType)
                 ?? throw new InvalidOperationException($"No subscribe mapping registered for scheduled event {eventType.Name}");
 
-            var delay = deliverAt - DateTimeOffset.UtcNow;
+            var delay = deliverAt - _timeProvider.GetUtcNow();
             var ttlMilliseconds = Math.Max(0, (long)delay.TotalMilliseconds);
-            var props = CreateBasicProperties(@event, mapping.Exchange, mapping.RoutingKey);
+            var props = CreateBasicProperties(@event, mapping.Exchange, mapping.RoutingKey, _timeProvider.GetUtcNow());
             props.Expiration = ttlMilliseconds.ToString();
 
             await PublishSafeAsync(
@@ -146,12 +149,13 @@ namespace EventBus.RabbitMQ
         private static BasicProperties CreateBasicProperties(
             IIntegrationEvent @event,
             string originalExchange,
-            string originalRoutingKey) => new()
+            string originalRoutingKey,
+            DateTimeOffset utcNow) => new()
             {
                 ContentType = "application/json",
                 DeliveryMode = DeliveryModes.Persistent,
                 MessageId = @event.IntegrationEventId.ToString(),
-                Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds()),
+                Timestamp = new AmqpTimestamp(utcNow.ToUnixTimeSeconds()),
                 Type = @event.EventType,
                 Headers = new Dictionary<string, object?>
                 {

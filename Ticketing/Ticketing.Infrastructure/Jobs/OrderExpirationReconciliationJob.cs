@@ -5,11 +5,12 @@ using Eventbox.Ticketing.Domain.Enums;
 namespace Eventbox.Ticketing.Infrastructure.Jobs
 {
     public class OrderExpirationReconciliationJob(
-        IUnitOfWork unitOfWork) : IOrderExpirationReconciliationJob
+        IUnitOfWork unitOfWork,
+        TimeProvider timeProvider) : IOrderExpirationReconciliationJob
     {
         public async Task RunAsync(CancellationToken cancellationToken)
         {
-            var utcNow = DateTimeOffset.UtcNow;
+            var utcNow = timeProvider.GetUtcNow();
             var expiredOrders = unitOfWork.Orders
                 .Get(
                     x => x.OrderState == OrderState.Pending

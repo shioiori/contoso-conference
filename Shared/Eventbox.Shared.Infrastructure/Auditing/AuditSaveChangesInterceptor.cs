@@ -7,7 +7,8 @@ namespace Eventbox.Shared.Auditing;
 
 public sealed class AuditSaveChangesInterceptor(
     ILogger<AuditSaveChangesInterceptor> logger,
-    IAuditContextAccessor auditContextAccessor)
+    IAuditContextAccessor auditContextAccessor,
+    TimeProvider timeProvider)
     : SaveChangesInterceptor
 {
     public override InterceptionResult<int> SavingChanges(
@@ -35,9 +36,10 @@ public sealed class AuditSaveChangesInterceptor(
         }
 
         var auditContext = auditContextAccessor.GetCurrent();
+        var utcNow = timeProvider.GetUtcNow();
         foreach (var entry in context.ChangeTracker.Entries().Where(ShouldAudit))
         {
-            var auditEntry = CreateAuditEntry(entry, context.GetType().Name);
+            var auditEntry = CreateAuditEntry(entry, context.GetType().Name, utcNow);
             if (auditEntry is null)
             {
                 continue;
@@ -67,7 +69,7 @@ public sealed class AuditSaveChangesInterceptor(
         => entry.State is EntityState.Added or EntityState.Modified or EntityState.Deleted
             && !entry.Metadata.IsOwned();
 
-    private static EntityAuditEntry? CreateAuditEntry(EntityEntry entry, string dbContextName)
+    private static EntityAuditEntry? CreateAuditEntry(EntityEntry entry, string dbContextName, DateTimeOffset utcNow)
     {
         var keyValues = entry.Properties
             .Where(property => property.Metadata.IsPrimaryKey())
@@ -113,7 +115,7 @@ public sealed class AuditSaveChangesInterceptor(
             keyValues,
             oldValues,
             newValues,
-            DateTimeOffset.UtcNow);
+            utcNow);
     }
 
     private sealed record EntityAuditEntry(

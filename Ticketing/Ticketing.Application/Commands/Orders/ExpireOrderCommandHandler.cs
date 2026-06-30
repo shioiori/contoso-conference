@@ -4,7 +4,8 @@ using MediatR;
 namespace Eventbox.Ticketing.Application.Commands.Orders
 {
     public class ExpireOrderCommandHandler(
-        IUnitOfWork unitOfWork) : IRequestHandler<ExpireOrderCommand, bool>
+        IUnitOfWork unitOfWork,
+        TimeProvider timeProvider) : IRequestHandler<ExpireOrderCommand, bool>
     {
         public async Task<bool> Handle(ExpireOrderCommand request, CancellationToken cancellationToken)
         {
@@ -17,7 +18,7 @@ namespace Eventbox.Ticketing.Application.Commands.Orders
             if (order is null)
                 return true;
 
-            var stateChanged = order.Expire(DateTimeOffset.UtcNow);
+            var stateChanged = order.Expire(timeProvider.GetUtcNow());
             if (stateChanged)
             {
                 var ticketTypes = await unitOfWork.TicketTypeAvailabilities.GetByEventIdAsync(order.EventId, cancellationToken);
