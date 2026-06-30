@@ -23,7 +23,7 @@ builder.Services.AddIntegrationEventHandlers();
 builder.Services.AddMessaging(builder.Configuration);
 builder.Services.AddHangfireWithPostgres(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
-builder.Services.AddHostedService<RabbitMqSubscriptionHostedService>();
+builder.Services.AddHostedService<IntegrationEventSubscriptionHostedService>();
 
 var app = builder.Build();
 

@@ -4,7 +4,7 @@ using Eventbox.Notification.Api.IntegrationEvents.EventHandlers;
 
 namespace Eventbox.Notification.Api.HostedServices;
 
-public sealed class RabbitMqSubscriptionHostedService(IEventBus eventBus, ILogger<RabbitMqSubscriptionHostedService> logger) 
+public sealed class IntegrationEventSubscriptionHostedService(IEventBus eventBus, ILogger<IntegrationEventSubscriptionHostedService> logger)
     : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)

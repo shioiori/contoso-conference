@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Serilog;
 
 namespace Eventbox.Shared.Auditing;
@@ -25,6 +26,7 @@ public static class AuditLoggingExtensions
 
     public static IServiceCollection AddEventboxAuditLogging(this IServiceCollection services)
     {
+        services.TryAddSingleton(TimeProvider.System);
         services.AddHttpContextAccessor();
         services.AddScoped<IAuditContextAccessor, HttpAuditContextAccessor>();
         services.AddTransient<SerilogPropertiesMiddleware>();

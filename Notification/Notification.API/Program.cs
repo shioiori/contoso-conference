@@ -10,7 +10,7 @@ builder.Services.AddEventboxExceptionHandling();
 
 builder.Services.AddApplicationServices(builder.Configuration);
 builder.Services.AddMessaging(builder.Configuration);
-builder.Services.AddHostedService<RabbitMqSubscriptionHostedService>();
+builder.Services.AddHostedService<IntegrationEventSubscriptionHostedService>();
 
 var app = builder.Build();
 
